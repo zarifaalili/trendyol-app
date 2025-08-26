@@ -15,11 +15,9 @@ import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Role;
 import org.example.trendyolfinalproject.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.request.UserRequest;
-import org.example.trendyolfinalproject.response.AuthResponse;
-import org.example.trendyolfinalproject.response.SellerResponse;
-import org.example.trendyolfinalproject.response.UserProfileResponse;
-import org.example.trendyolfinalproject.response.UserResponse;
+import org.example.trendyolfinalproject.response.*;
 import org.example.trendyolfinalproject.util.JwtUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -345,18 +343,23 @@ public class UserService {
     }
 
 
-    public List<UserResponse> searchUser(String keyword) {
+    public ApiResponse<List<UserResponse>> searchUser(String keyword) {
         log.info("Actionlog.searchUser.start : ");
         var users = userRepository.searchByKeyword(keyword);
         if (users.isEmpty()) {
             throw new NotFoundException("User not found");
         }
         log.info("Actionlog.searchUser.end : ");
-        return userMapper.toResponseList(users);
+        var response = userMapper.toResponseList(users);
+        return ApiResponse.<List<UserResponse>>builder()
+                .data(response)
+                .status(HttpStatus.OK.value())
+                .message("Search User").
+                build();
     }
 
 
-    public List<SellerResponse> getFollowedSellers() {
+    public ApiResponse<List<SellerResponse>> getFollowedSellers() {
         log.info("Actionlog.getFollowedSellers.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -371,7 +374,11 @@ public class UserService {
                 .toList();
 
         log.info("Actionlog.getFollowedSellers.end : ");
-        return response;
+        return ApiResponse.<List<SellerResponse>>builder()
+                .data(response)
+                .status(HttpStatus.OK.value())
+                .message("Followed Sellers").
+                build();
     }
 
 

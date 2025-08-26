@@ -5,10 +5,7 @@ import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.request.UserRequest;
-import org.example.trendyolfinalproject.response.AuthResponse;
-import org.example.trendyolfinalproject.response.SellerResponse;
-import org.example.trendyolfinalproject.response.UserProfileResponse;
-import org.example.trendyolfinalproject.response.UserResponse;
+import org.example.trendyolfinalproject.response.*;
 import org.example.trendyolfinalproject.service.SellerFollowService;
 import org.example.trendyolfinalproject.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -90,20 +87,20 @@ public class UserController {
 
     @GetMapping("/searchUser")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponse> searchUser(@PathParam("keyword") String keyword) {
+    public ApiResponse<List<UserResponse>> searchUser(@PathParam("keyword") String keyword) {
         return userService.searchUser(keyword);
     }
 
     @GetMapping("/followed/sellers")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<SellerResponse> getFollowedSellers() {
+    public ApiResponse<List<SellerResponse>> getFollowedSellers() {
         return userService.getFollowedSellers();
     }
 
 
     @DeleteMapping("/unfollow/seller/{sellerId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public String unfollowSeller(@PathVariable Long sellerId) {
+    public ApiResponse<String> unfollowSeller(@PathVariable Long sellerId) {
         return sellerFollowService.unfollow(sellerId);
     }
 

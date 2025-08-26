@@ -22,12 +22,12 @@ public class ReviewController {
 
     @PostMapping("/createReview")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public String createReview(@RequestBody @Valid ReviewCreateRequest request) {
+    public ApiResponse<String>  createReview(@RequestBody @Valid ReviewCreateRequest request) {
         return reviewService.createReview(request);
     }
 
     @GetMapping("/getAverageRating/{productId}")
-    public Double getAverageRating(@PathVariable Long productId) {
+    public ApiResponse<Double> getAverageRating(@PathVariable Long productId) {
         return reviewService.getAverageRating(productId);
     }
 
@@ -40,34 +40,33 @@ public class ReviewController {
 
     @GetMapping("/getTopRatedProducts")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<TopRatedProductResponse> getTopRatedProducts() {
+    public ApiResponse<List<TopRatedProductResponse>> getTopRatedProducts() {
         return reviewService.getTopRatedProducts();
     }
 
 
     @GetMapping("/getUserReviews")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<ReviewResponse> getUserReviews() {
+    public ApiResponse<List<ReviewResponse>> getUserReviews() {
         return reviewService.getUserReviews();
     }
 
     @GetMapping("/getUserReviewsByAdmin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<ReviewResponse> getUserReviewsByAdmin(@PathVariable Long userId) {
+    public ApiResponse<List<ReviewResponse>> getUserReviewsByAdmin(@PathVariable Long userId) {
         return reviewService.getUserReviewsByAdmin(userId);
     }
 
     @GetMapping("/getNegativeReview")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<NegativeReviewProjection> getNegativeReview() {
+    public ApiResponse<List<NegativeReviewProjection>> getNegativeReview() {
         return reviewService.getNegativeReview();
     }
 
 
     @GetMapping("/getReviewsWithFilter/{productId}")
     public ApiResponse<List<ReviewResponse>> getProductReviewsWithFilter(@PathVariable Long productId,
-                                                                         @RequestParam(required = false) Integer[] rating,
-                                                                         @RequestParam(required = false) String subject) {
+                                                                         @RequestParam(required = false) Integer[] rating, @RequestParam(required = false) String subject) {
         return reviewService.getProductReviewsWithFilter(productId, rating, subject);
     }
 //    @DeleteMapping("/deleteReview/{id}")

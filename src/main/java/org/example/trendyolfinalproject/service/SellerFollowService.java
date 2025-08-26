@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.dao.repository.SellerRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.SellerFollowResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -27,7 +28,7 @@ public class SellerFollowService {
     private final SellerRepository sellerRepository;
 
 
-    public String follow(Long sellerId) {
+    public ApiResponse<String> follow(Long sellerId) {
         log.info("Actionlog.follow.start : sellerId={}", sellerId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -43,11 +44,11 @@ public class SellerFollowService {
         notificationService.sendNotification(user, "You have new follower " + user.getName(), NotificationType.NEW_FOLLOWER, user.getId());
 
         log.info("Actionlog.follow.end : sellerId={}", sellerId);
-        return "You have followed " + seller.getUser().getName();
+        return ApiResponse.success("You have followed " + seller.getUser().getName());
     }
 
 
-    public List<SellerFollowResponse> getAllFollowers() {
+    public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
         log.info("Actionlog.getAllFollowers.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -64,10 +65,14 @@ public class SellerFollowService {
 
 
         log.info("Actionlog.getAllFollowers.end : ");
-        return response;
+        return ApiResponse.<List<SellerFollowResponse>>builder()
+                .data(response)
+                .message("All followers fetched successfully")
+                .status(200)
+                .build();
     }
 
-    public String unfollow(Long sellerId) {
+    public ApiResponse<String> unfollow(Long sellerId) {
         log.info("Actionlog.unfollow.start : sellerId={}", sellerId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -78,7 +83,7 @@ public class SellerFollowService {
         auditLogService.createAuditLog(user, "unfollow", "unfollowed seller");
         notificationService.sendNotification(seller.getUser(), "Follower " + user.getName() + " has unfollowed you", NotificationType.UNFOLLOWER, user.getId());
         log.info("Actionlog.unfollow.end : sellerId={}", sellerId);
-        return "You have unfollowed " + seller.getUser().getName();
+        return ApiResponse.success("You have unfollowed " + seller.getUser().getName());
     }
 
 

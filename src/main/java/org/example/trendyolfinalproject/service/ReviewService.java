@@ -37,7 +37,7 @@ public class ReviewService {
     private final AuditLogService auditLogService;
 
 
-    public String createReview(ReviewCreateRequest request) {
+    public ApiResponse<String> createReview(ReviewCreateRequest request) {
         log.info("Actionlog.createReview.start : productId={}", request.getProductId());
         var userId = getCurrentUserId();
 
@@ -108,11 +108,11 @@ public class ReviewService {
         auditLogService.createAuditLog(user, "Review created", "Review created with id: " + savedReview.getId());
         log.info("Actionlog.createReview.end : productId={}", request.getProductId());
 
-        return "Review is waiting for approval";
+        return ApiResponse.success("Review is waiting for approval");
 
     }
 
-    public Double getAverageRating(Long productId) {
+    public ApiResponse<Double> getAverageRating(Long productId) {
         var user = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
 
@@ -121,7 +121,7 @@ public class ReviewService {
 //        var approved=reviewRepository.findByProduct_IdAndIsApproved(productId,true);
 
         if (productfromReview.isEmpty()) {
-            return 0.0;
+            return ApiResponse.success(0.0);
         }
         Double totalRating = 0.0;
         for (Review review : productfromReview) {
@@ -132,7 +132,8 @@ public class ReviewService {
 
         }
         log.info("Actionlog.getAverageRating.end : productId={}", productId);
-        return !productfromReview.isEmpty() ? totalRating / (double) productfromReview.size() : 0.0;
+        var averageRating = !productfromReview.isEmpty() ? totalRating / (double) productfromReview.size() : 0.0;
+        return ApiResponse.success(averageRating);
 
 
     }
@@ -165,7 +166,7 @@ public class ReviewService {
     }
 
 
-    public List<TopRatedProductResponse> getTopRatedProducts() {
+    public ApiResponse<List<TopRatedProductResponse>> getTopRatedProducts() {
         log.info("Actionlog.getTopRatedProducts.start");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow();
@@ -183,12 +184,16 @@ public class ReviewService {
 
         auditLogService.createAuditLog(user, "Get top rated products", "Get top rated products");
         log.info("Actionlog.getTopRatedProducts.end");
-        return response;
+        return ApiResponse.<List<TopRatedProductResponse>>builder()
+                .status(200)
+                .message("Top rated products fetched successfully")
+                .data(response)
+                .build();
 
     }
 
 
-    public List<ReviewResponse> getUserReviews() {
+    public ApiResponse<List<ReviewResponse>> getUserReviews() {
         log.info("ActionLog.getUserReviews.start");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(
@@ -199,10 +204,14 @@ public class ReviewService {
         var response = reviewMapper.toResponseList(userReviews);
         auditLogService.createAuditLog(user, "Get user reviews", "Get user reviews");
         log.info("ActionLog.getUserReviews.end");
-        return response;
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .status(200)
+                .message("User reviews fetched successfully")
+                .data(response)
+                .build();
     }
 
-    public List<ReviewResponse> getUserReviewsByAdmin(Long userId) {
+    public ApiResponse<List<ReviewResponse>> getUserReviewsByAdmin(Long userId) {
         log.info("ActionLog.getUserReviewsByAdmin.start");
         var user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found with id: " + userId)
@@ -212,13 +221,16 @@ public class ReviewService {
         var response = reviewMapper.toResponseList(userReviews);
         auditLogService.createAuditLog(user, "Get user reviews", "Get user reviews");
         log.info("ActionLog.getUserReviewsByAdmin.end");
-        return response;
-
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .status(200)
+                .message("User reviews fetched by Admin successfully")
+                .data(response)
+                .build();
 
     }
 
 
-    public List<NegativeReviewProjection> getNegativeReview() {
+    public ApiResponse<List<NegativeReviewProjection>> getNegativeReview() {
         log.info("ActionLog.getNegativeReview.start");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(
@@ -228,8 +240,11 @@ public class ReviewService {
         var response = reviewMapper.toNegativeReviewProjectionList(negativeReview);
         auditLogService.createAuditLog(user, "Get negative reviews", "Get negative reviews");
         log.info("ActionLog.getNegativeReview.end");
-        return response;
-
+        return ApiResponse.<List<NegativeReviewProjection>>builder()
+                .status(200)
+                .message("Negative reviews fetched successfully")
+                .data(response)
+                .build();
 
     }
 
