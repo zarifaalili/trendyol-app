@@ -2,23 +2,18 @@ package org.example.trendyolfinalproject.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.trendyolfinalproject.dao.entity.AuditLog;
-import org.example.trendyolfinalproject.dao.entity.Basket;
 import org.example.trendyolfinalproject.dao.entity.BasketElement;
-import org.example.trendyolfinalproject.dao.repository.AuditLogRepository;
 import org.example.trendyolfinalproject.dao.repository.BasketElementRepository;
 import org.example.trendyolfinalproject.dao.repository.BasketRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.BasketMapper;
-import org.example.trendyolfinalproject.request.BasketCreateRequest;
-import org.example.trendyolfinalproject.response.BasketResponse;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -56,10 +51,10 @@ public class BasketService {
 //    }
 
 
-    public BigDecimal getTotalAmount() {
+    public ApiResponse<BigDecimal> getTotalAmount() {
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
-        var basket1=basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
+        var basket1 = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
 
         log.info("Actionlog.getTotalAmount.start : basketId={}", basket1.getId());
 
@@ -69,7 +64,7 @@ public class BasketService {
 
         BigDecimal currentTotal = basket1.getFinalAmount();
         if (currentTotal == null) {
-            currentTotal = calculateRawTotalAmount();
+            currentTotal = calculateRawTotalAmount().getData();
         }
 //        BigDecimal total = BigDecimal.ZERO;
 //        for (BasketElement basketElement : basketElements) {
@@ -84,14 +79,18 @@ public class BasketService {
         auditLogService.createAuditLog(user, "Get total amount of basket", "Get total price of basket successfully. Basket id: " + basket1.getId());
 
         log.info("Actionlog.getTotalAmount.end : basketId={}", basket1.getId());
-        return currentTotal;
+        return ApiResponse.<BigDecimal>builder()
+                .status(200)
+                .message("Basket total retrieved successfully")
+                .data(currentTotal)
+                .build();
     }
 
-    public BigDecimal calculateRawTotalAmount() {
+    public ApiResponse<BigDecimal>  calculateRawTotalAmount() {
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
-        var basket1=basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
-        log.info("Actionlog.getTotalPrice.start : basketId={}", basket1.getId(),"userId="+currentUserId);
+        var basket1 = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
+        log.info("Actionlog.getTotalPrice.start : basketId={}", basket1.getId(), "userId=" + currentUserId);
 
         var basketElements = basketElementRepository.findByBasket_Id(basket1.getId());
         BigDecimal rawTotal = BigDecimal.ZERO;
@@ -105,7 +104,11 @@ public class BasketService {
             rawTotal = rawTotal.add(subtotal);
         }
         log.info("Actionlog.getTotalPrice.end : basketId={}", basket1.getId());
-        return rawTotal;
+        return ApiResponse.<BigDecimal>builder()
+                .status(200)
+                .message("Basket raw total retrieved successfully")
+                .data(rawTotal)
+                .build();
     }
 
 }

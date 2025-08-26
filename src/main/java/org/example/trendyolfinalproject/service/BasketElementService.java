@@ -3,12 +3,15 @@ package org.example.trendyolfinalproject.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.trendyolfinalproject.dao.entity.BasketElement;
-import org.example.trendyolfinalproject.dao.repository.*;
+import org.example.trendyolfinalproject.dao.repository.BasketElementRepository;
+import org.example.trendyolfinalproject.dao.repository.BasketRepository;
+import org.example.trendyolfinalproject.dao.repository.ProductRepository;
+import org.example.trendyolfinalproject.dao.repository.ProductVariantRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.BasketElementMapper;
 import org.example.trendyolfinalproject.request.BasketElementRequest;
 import org.example.trendyolfinalproject.request.DeleteBasketElementRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.BasketElementResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -29,12 +32,12 @@ public class BasketElementService {
     private final BasketElementMapper basketElementMapper;
     private final BasketService basketService;
 
-    public BasketElementResponse createBasketElement(BasketElementRequest request) {
+    public ApiResponse<BasketElementResponse> createBasketElement(BasketElementRequest request) {
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
 
-        if(currentUserId==null){
+        if (currentUserId == null) {
             throw new RuntimeException("Firstly you should login");
         }
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
@@ -42,11 +45,10 @@ public class BasketElementService {
         log.info("Actionlog.createBasketElement.start :  basketId={}", basket.getId());
         var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(
                 () -> new RuntimeException("ProductVariant not found with id: " + request.getProductVariantId()));
-        var productId=productVariant.getProduct().getId();
+        var productId = productVariant.getProduct().getId();
 
         var product = productRepository.findById(productId).orElseThrow(
                 () -> new RuntimeException("Product not found with id: " + productId));
-
 
 
         updateFinalAndDiscountAmount();
@@ -68,8 +70,11 @@ public class BasketElementService {
             updateFinalAndDiscountAmount();
 
             log.info("Actionlog.createBasketElement.end : basketId={}", basket.getId());
-            return response;
-
+            return ApiResponse.<BasketElementResponse>builder()
+                    .status(200)
+                    .message("Basket element created successfully")
+                    .data(response)
+                    .build();
         }
 
         var entity = basketElementMapper.toEntity(request);
@@ -87,11 +92,15 @@ public class BasketElementService {
         updateFinalAndDiscountAmount();
 
         log.info("Actionlog.createBasketElement.end : basketId={}", basket.getId());
-        return response;
+        return ApiResponse.<BasketElementResponse>builder()
+                .status(200)
+                .message("Basket element created successfully")
+                .data(response)
+                .build();
     }
 
     @Transactional
-    public void deleteBasketElement(DeleteBasketElementRequest request) {
+    public ApiResponse<String> deleteBasketElement(DeleteBasketElementRequest request) {
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -117,9 +126,15 @@ public class BasketElementService {
 
         log.info("Actionlog.deleteBasketElement.end : basketId={}", basket.getId());
 
+
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Basket element deleted successfully")
+                .data("Deleted element id: " + request.getBasketElementId())
+                .build();
     }
 
-    public BasketElementResponse decrieceQuantity(DeleteBasketElementRequest request) {
+    public ApiResponse<BasketElementResponse> decrieceQuantity(DeleteBasketElementRequest request) {
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -152,7 +167,11 @@ public class BasketElementService {
         updateFinalAndDiscountAmount();
 
         log.info("Actionlog.decreaseQuantity.end : basketId={}", basket.getId());
-        return response;
+        return ApiResponse.<BasketElementResponse>builder()
+                .status(200)
+                .message("Basket element quantity decreased successfully")
+                .data(response)
+                .build();
     }
 
     public void updateFinalAndDiscountAmount() {
@@ -168,7 +187,7 @@ public class BasketElementService {
         basketRepository.save(basket);
     }
 
-    public List<BasketElementResponse> getBasketElements() {
+    public ApiResponse<List<BasketElementResponse>> getBasketElements() {
         log.info("Actionlog.getBasketElements.start");
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -176,7 +195,12 @@ public class BasketElementService {
         var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
         var response = basketElementMapper.toResponseList(basketElements);
         log.info("Actionlog.getBasketElements.end");
-        return response;
+
+        return ApiResponse.<List<BasketElementResponse>>builder()
+                .status(200)
+                .message("Basket elements retrieved successfully")
+                .data(response)
+                .build();
     }
 
 }
