@@ -10,6 +10,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.AlreadyExcept
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.BrandMapper;
 import org.example.trendyolfinalproject.request.BrandCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.BrandResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -27,7 +28,7 @@ public class BrandService {
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
 
-    public BrandResponse createBrand(BrandCreateRequest request) {
+    public ApiResponse<BrandResponse> createBrand(BrandCreateRequest request) {
 
         log.info("Actionlog.createBrand.start : name={}", request.getName());
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
@@ -41,10 +42,14 @@ public class BrandService {
         log.info("Actionlog.createBrand.end : name={}", request.getName());
         auditLogService.createAuditLog(user, "Create Brand", "Brand created successfully. Brand id: " + saved.getName());
 
-        return response;
+        return ApiResponse.<BrandResponse>builder()
+                .status(200)
+                .message("Brand created successfully")
+                .data(response)
+                .build();
     }
 
-    public void deleteBrand(Long id) {
+    public ApiResponse<String> deleteBrand(Long id) {
         log.info("Actionlog.deleteBrand.start : id={}", id);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -53,9 +58,15 @@ public class BrandService {
         brandRepository.deleteById(id);
         auditLogService.createAuditLog(user, "Delete Brand", "Brand deleted successfully. Brand id: " + brand.getName());
         log.info("Actionlog.deleteBrand.end : id={}", id);
+
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Brand deleted successfully")
+                .data("Brand with id " + id + " deleted successfully")
+                .build();
     }
 
-    public BrandResponse updateBrand(Long id, BrandCreateRequest request) {
+    public ApiResponse<BrandResponse> updateBrand(Long id, BrandCreateRequest request) {
         log.info("Actionlog.updateBrand.start : id={}", id);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -68,10 +79,14 @@ public class BrandService {
         var response = brandMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Update Brand", "Brand updated successfully. Brand id: " + saved.getName());
         log.info("Actionlog.updateBrand.end : id={}", id);
-        return response;
+        return ApiResponse.<BrandResponse>builder()
+                .status(200)
+                .message("Brand updated successfully")
+                .data(response)
+                .build();
     }
 
-    public BrandResponse getBrandbyName(String name) {
+    public ApiResponse<BrandResponse> getBrandbyName(String name) {
         log.info("Actionlog.getBrandbyName.start : name={}", name);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
 
@@ -80,7 +95,11 @@ public class BrandService {
         var response = brandMapper.toResponse(brand);
         auditLogService.createAuditLog(user, "Get Brand by name", "Get Brand by name successfully. Brand id: " + brand.getId());
         log.info("Actionlog.getBrandbyName.end : name={}", name);
-        return response;
+        return ApiResponse.<BrandResponse>builder()
+                .status(200)
+                .message("Brand retrieved successfully")
+                .data(response)
+                .build();
     }
 
 }

@@ -33,7 +33,7 @@ public class BrandController {
     }
 
     @GetMapping("/getBrandbyName/{name}")
-    public ApiResponse<BrandResponse> getBrandbyName(@PathVariable String name) {
+    public BrandResponse getBrandbyName(@PathVariable String name) {
         return brandService.getBrandbyName(name);
     }
 

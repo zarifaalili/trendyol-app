@@ -95,7 +95,7 @@ public class CategoryService {
                 .build();
     }
 
-    public ApiResponse<List<CategoryResponse>> getParentCategory() {
+    public ApiResponse<List<CategoryResponse>>  getParentCategory() {
         log.info("Actionlog.getParentCategory.start : ");
         List<Category> parent = categoryRepository.findAllParentCategories();
 
@@ -112,11 +112,7 @@ public class CategoryService {
         auditLogRepository.save(auditLog);
 
         log.info("Actionlog.getParentCategory.end : ");
-        return ApiResponse.<List<CategoryResponse>>builder()
-                .status(200)
-                .message("Parent categories fetched successfully")
-                .data(response)
-                .build();
+        return response;
     }
 
 }
