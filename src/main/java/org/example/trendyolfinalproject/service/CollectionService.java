@@ -11,6 +11,7 @@ import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.request.CollectionCreateRequest;
 import org.example.trendyolfinalproject.request.CollectionItemFromWishListRequest;
 import org.example.trendyolfinalproject.request.CollectionItemRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.CollectionItemFromWishListResponse;
 import org.example.trendyolfinalproject.response.CollectionItemResponse;
 import org.example.trendyolfinalproject.response.CollectionResponse;
@@ -35,7 +36,7 @@ public class CollectionService {
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
 
-    public CollectionResponse createCollection(CollectionCreateRequest request) {
+    public ApiResponse<CollectionResponse> createCollection(CollectionCreateRequest request) {
         log.info("Actionlog.createCollection.start : request={}", request);
 
 
@@ -59,11 +60,14 @@ public class CollectionService {
         auditLogService.createAuditLog(user, "Create Collection", "Collection created successfully. Collection id: " + saved.getId());
 
         log.info("Actionlog.createCollection.end : request={}", request);
-        return response;
-
+        return ApiResponse.<CollectionResponse>builder()
+                .status(200)
+                .message("Collection created successfully")
+                .data(response)
+                .build();
     }
 
-    public CollectionItemResponse addProductToCollection(CollectionItemRequest request) {
+    public ApiResponse<CollectionItemResponse> addProductToCollection(CollectionItemRequest request) {
         log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
 
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
@@ -92,12 +96,15 @@ public class CollectionService {
         auditLogService.createAuditLog(collection.getUser(), "Add Product to Collection", "Product added to collection successfully. Product id: " + saved.getId());
 
         log.info("Actionlog.addProductToCollection.end : userId={}", request.getProductVariantId());
-        return response;
-
+        return ApiResponse.<CollectionItemResponse>builder()
+                .status(200)
+                .message("Product added to collection successfully")
+                .data(response)
+                .build();
     }
 
 
-    public CollectionItemFromWishListResponse addProductToCollectionFromWishList(CollectionItemFromWishListRequest request) {
+    public ApiResponse<CollectionItemFromWishListResponse> addProductToCollectionFromWishList(CollectionItemFromWishListRequest request) {
         log.info("Actionlog.addProductToCollectionFromWishList.start : wishListId={}", request.getWishListId());
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -129,8 +136,11 @@ public class CollectionService {
         auditLogService.createAuditLog(collection.getUser(), "Add Product to Collection", "Product added to collection successfully. Product id: " + saved.getId());
 
         log.info("Actionlog.addProductToCollectionFromWishList.end : wishListId={}", request.getWishListId());
-        return response;
-
+        return ApiResponse.<CollectionItemFromWishListResponse>builder()
+                .status(200)
+                .message("Product added to collection from wishlist successfully")
+                .data(response)
+                .build();
 
 //        log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
 //        var collectionItem = collectionItemRepository.findByProductVariant_IdAndCollection_Id(request.getProductVariantId(), request.getCollectionId()).orElse(null);
@@ -154,17 +164,21 @@ public class CollectionService {
 
     }
 
-    public List<CollectionResponse> getAllCollections() {
+    public ApiResponse<List<CollectionResponse>> getAllCollections() {
         log.info("Actionlog.getAllCollections.start : ");
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var collections = collectionRepository.findByUser_Id(userId);
         var response = collectionMapper.toResponseList(collections);
         log.info("Actionlog.getAllCollections.end : ");
-        return response;
+        return ApiResponse.<List<CollectionResponse>>builder()
+                .status(200)
+                .message("Collections retrieved successfully")
+                .data(response)
+                .build();
     }
 
 
-    public void shareCollection(Long collectionId, Long targetUserId) {
+    public ApiResponse<Void> shareCollection(Long collectionId, Long targetUserId) {
         log.info("Actionlog.shareCollection.start : collectionId={}", collectionId);
 
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found"));
@@ -184,10 +198,15 @@ public class CollectionService {
         auditLogService.createAuditLog(user, "Share Collection", "Collection shared successfully. Collection id: " + collection.getId());
         notificationService.sendNotification(targetUser, "New collection shared with you", NotificationType.COLLECTION_SHARED, collectionId);
         log.info("Actionlog.shareCollection.end : collectionId={}", collectionId);
+        return ApiResponse.<Void>builder()
+                .status(200)
+                .message("Collection shared successfully")
+                .data(null)
+                .build();
     }
 
 
-    public CollectionResponse readSharedCollection(Long collectionId, Long userId) {
+    public ApiResponse<CollectionResponse> readSharedCollection(Long collectionId, Long userId) {
         log.info("Actionlog.readSharedCollection.start : collectionId={}", collectionId);
         var collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Collection not found"));
@@ -236,12 +255,15 @@ public class CollectionService {
         auditLogService.createAuditLog(collection.getUser(), "Read Shared Collection", "Collection read successfully. Collection id: " + collection.getId());
         notificationService.sendNotification(owner, "Shared collection read", NotificationType.COLLECTION_READ, collectionId);
         log.info("Actionlog.readSharedCollection.end : collectionId={}", collectionId);
-        return response;
+        return ApiResponse.<CollectionResponse>builder()
+                .status(200)
+                .message("Shared collection read successfully")
+                .data(response)
+                .build();
     }
 
 
-
-    public CollectionResponse renameCollection(Long collectionId, String newName) {
+    public ApiResponse<CollectionResponse> renameCollection(Long collectionId, String newName) {
         log.info("Actionlog.renameCollection.start : collectionId={}", collectionId);
         var collection = collectionRepository.findById(collectionId).orElseThrow(() -> new NotFoundException("Collection not found"));
         var user = collection.getUser();
@@ -253,7 +275,11 @@ public class CollectionService {
         var response = collectionMapper.toResponse(collection);
         auditLogService.createAuditLog(user, "Rename Collection", "Collection renamed successfully. Collection id: " + collection.getId());
         log.info("Actionlog.renameCollection.end : collectionId={}", collectionId);
-        return response;
+        return ApiResponse.<CollectionResponse>builder()
+                .status(200)
+                .message("Collection renamed successfully")
+                .data(response)
+                .build();
     }
 
     public Long getCurrentUserId() {

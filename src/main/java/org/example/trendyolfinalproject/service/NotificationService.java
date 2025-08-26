@@ -11,6 +11,7 @@ import org.example.trendyolfinalproject.mapper.NotificationMapper;
 import org.example.trendyolfinalproject.model.DeliveryChannelType;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.NotificationResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -139,7 +140,7 @@ public class NotificationService {
     }
 
 
-    public List<NotificationResponse> getAllNotificationsByUserId() {
+    public ApiResponse<List<NotificationResponse>> getAllNotificationsByUserId() {
         Long userId = getCurrentUserId();
 
         log.info("Actionlog.getNotification.start : userId={}", userId);
@@ -151,11 +152,14 @@ public class NotificationService {
         var response = notificationMapper.toResponseList(notification);
         log.info("Actionlog.getNotification.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL NOTIFICATION", "Notification get successfully.");
-        return response;
-
+        return ApiResponse.<List<NotificationResponse>>builder()
+                .status(200)
+                .message("Notifications retrieved successfully")
+                .data(response)
+                .build();
     }
 
-    public NotificationResponse readSingleNotification(Long id) {
+    public ApiResponse<NotificationResponse> readSingleNotification(Long id) {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getSingleNotification.start : userId={}", userId);
         var notification = notificationRepository.findByUserIdAndIdAndDeliveryChannelType(userId, id, DeliveryChannelType.IN_APP).orElseThrow(
@@ -170,11 +174,14 @@ public class NotificationService {
         var response = notificationMapper.toResponse(notification);
         log.info("Actionlog.getSingleNotification.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET SINGLE NOTIFICATION", "Notification get successfully.");
-        return response;
-
+        return ApiResponse.<NotificationResponse>builder()
+                .status(200)
+                .message("Notification marked as read and retrieved successfully")
+                .data(response)
+                .build();
     }
 
-    public List<NotificationResponse> getUnreadNotifications() {
+    public ApiResponse<List<NotificationResponse>> getUnreadNotifications() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getUnreadNotification.start : userId={}", userId);
         var notification = notificationRepository.findByUserIdAndReadStatus(userId, ReadStatus.UNREAD);
@@ -184,38 +191,56 @@ public class NotificationService {
         var response = notificationMapper.toResponseList(notification);
         log.info("Actionlog.getUnreadNotification.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET UNREAD NOTIFICATIONS", "Notification get successfully.");
-        return response;
+        return ApiResponse.<List<NotificationResponse>>builder()
+                .status(200)
+                .message("Unread notifications retrieved successfully")
+                .data(response)
+                .build();
     }
 
 
-    public List<NotificationResponse> searchNotification(String message) {
+    public ApiResponse<List<NotificationResponse>> searchNotification(String message) {
         Long userId = getCurrentUserId();
         log.info("Actionlog.searchNotification.start : userId={}", userId);
         var notification = notificationRepository.search(message);
         if (notification.isEmpty()) {
-            throw new NotFoundException("Notification not found");
+            return ApiResponse.<List<NotificationResponse>>builder()
+                    .status(404)
+                    .message("No notifications found matching the search criteria")
+                    .data(List.of())
+                    .build();
         }
         var response = notificationMapper.toResponseList(notification);
         log.info("Actionlog.searchNotification.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "SEARCH NOTIFICATION", "Notification get successfully.");
-        return response;
+        return ApiResponse.<List<NotificationResponse>>builder()
+                .status(200)
+                .message("Notifications retrieved successfully")
+                .data(response)
+                .build();
     }
 
-    public String markAllAsRead() {
+    public ApiResponse<String> markAllAsRead() {
         var userId = getCurrentUserId();
         log.info("Actionlog.markAllNotificationAsRead.start : userId={}", userId);
         var unreadNnotification = notificationRepository.findByReadStatus(ReadStatus.UNREAD);
 
         if (unreadNnotification.isEmpty()) {
-            return "Notification already marked as read";
-        }
+            return ApiResponse.<String>builder()
+                    .status(200)
+                    .message("Notifications already marked as read")
+                    .data(null)
+                    .build();        }
         unreadNnotification.forEach(notification -> notification.setReadStatus(ReadStatus.READ));
         notificationRepository.saveAll(unreadNnotification);
 
         log.info("Actionlog.markAllNotificationAsRead.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "Change all notification as read", "MARK ALL NOTIFICATION AS READ");
-        return "Notification marked as read";
-
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("All notifications marked as read")
+                .data(null)
+                .build();
     }
 
     private Long getCurrentUserId() {
@@ -224,7 +249,7 @@ public class NotificationService {
     }
 
 
-    public Integer getUnreadNotificationCount() {
+    public  ApiResponse<Integer> getUnreadNotificationCount() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getUnreadNotificationCount.start : userId={}", userId);
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -232,8 +257,11 @@ public class NotificationService {
         var count = notification.size();
         log.info("Actionlog.getUnreadNotificationCount.end : userId={}", userId);
         auditLogService.createAuditLog(user, "GET UNREAD NOTIFICATION COUNT", "Notification get successfully.");
-        return count;
-    }
+        return ApiResponse.<Integer>builder()
+                .status(200)
+                .message("Unread notification count retrieved successfully")
+                .data(count)
+                .build();    }
 
 
 }

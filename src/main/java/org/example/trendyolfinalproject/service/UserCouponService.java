@@ -180,7 +180,7 @@ public class UserCouponService {
         }
 
         var basket1 = basketRepository.findByUserId(userId);
-        BigDecimal rawTotal = basketService.calculateRawTotalAmount();
+        BigDecimal rawTotal = basketService.calculateRawTotalAmount().getData();
         if (basket1.isPresent()) {
             var basket = basket1.get();
             basket.setDiscountAmount(BigDecimal.ZERO);

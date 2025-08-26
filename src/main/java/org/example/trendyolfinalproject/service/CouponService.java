@@ -9,7 +9,9 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.mapper.CouponMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.request.CouponCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.CouponResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -27,7 +29,7 @@ public class CouponService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
-    public CouponResponse createCoupon(CouponCreateRequest request) {
+    public ApiResponse<CouponResponse> createCoupon(CouponCreateRequest request) {
 
         log.info("Actionlog.createCoupon.start : ");
 
@@ -75,10 +77,11 @@ public class CouponService {
 
         log.info("Actionlog.createCoupon.end : ");
 
-        return response;
+        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon created successfully", response);
+
     }
 
-    public void deleteCoupon(Long id) {
+    public ApiResponse<Void> deleteCoupon(Long id) {
         log.info("Actionlog.deleteCoupon.start : id={}", id);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -86,10 +89,12 @@ public class CouponService {
         couponRepository.deleteById(id);
         auditLogService.createAuditLog(user, "Delete Coupon", "Coupon deleted successfully. Coupon id: " + coupon.getCode());
         log.info("Actionlog.deleteCoupon.end : id={}", id);
+        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon deleted successfully", null);
+
     }
 
 
-    public String deactiveCoupon(Long id) {
+    public  ApiResponse<String> deactiveCoupon(Long id) {
         log.info("Actionlog.deactiveCoupon.start : id={}", id);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -98,10 +103,10 @@ public class CouponService {
         couponRepository.save(coupon);
         auditLogService.createAuditLog(user, "Deactive Coupon", "Coupon deactive successfully. Coupon id: " + coupon.getCode());
         log.info("Actionlog.deactiveCoupon.end : id={}", id);
-        return "Coupon deactive successfully";
+        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon deactivated successfully", null);
     }
 
-    public String activeCoupon(Long id) {
+    public ApiResponse<String> activeCoupon(Long id) {
         log.info("Actionlog.activeCoupon.start : id={}", id);
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -110,45 +115,49 @@ public class CouponService {
         couponRepository.save(coupon);
         auditLogService.createAuditLog(user, "Active Coupon", "Coupon active successfully. Coupon id: " + coupon.getCode());
         log.info("Actionlog.activeCoupon.end : id={}", id);
-        return "Coupon active successfully";
+        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon activated successfully", null);
     }
 
-    public List<CouponResponse> getActiveCoupons() {
+    public ApiResponse<List<CouponResponse>> getActiveCoupons() {
         log.info("Actionlog.getActiveCoupons.start : ");
         var coupons = couponRepository.findByIsActive(true);
         var response = couponMapper.toResponseList(coupons);
         log.info("Actionlog.getActiveCoupons.end : ");
-        return response;
+        return new ApiResponse<>(HttpStatus.OK.value(), "Active coupons fetched", response);
     }
 
-    public List<CouponResponse> getAllCoupons() {
+    public ApiResponse<List<CouponResponse>> getAllCoupons() {
         log.info("Actionlog.getAllCoupons.start : ");
         var coupons = couponRepository.findAll();
         var response = couponMapper.toResponseList(coupons);
         log.info("Actionlog.getAllCoupons.end : ");
-        return response;
+        return new ApiResponse<>(HttpStatus.OK.value(), "All coupons fetched", response);
     }
 
-    public List<CouponResponse> getExpiredCoupons() {
+    public ApiResponse<List<CouponResponse>> getExpiredCoupons() {
         log.info("Actionlog.getExpiredCoupons.start : ");
         var coupons = couponRepository.findByEndDateBefore(LocalDateTime.now());
         var response = couponMapper.toResponseList(coupons);
         log.info("Actionlog.getExpiredCoupons.end : ");
-        return response;
+        return new ApiResponse<>(HttpStatus.OK.value(), "Expired coupons fetched", response);
     }
 
-    public String checkValidCoupon(String code) {
+    public ApiResponse<String> checkValidCoupon(String code) {
         log.info("Actionlog.checkValidCoupon.start : code={}", code);
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found"));
         var codee = code.toUpperCase();
         var coupon = couponRepository.findByCode(codee).orElseThrow(() -> new NotFoundException("Coupon not found"));
+
+        String message;
         if (coupon.getIsActive()) {
             auditLogService.createAuditLog(user, "Check Valid Coupon", "Coupon is valid. Coupon id: " + coupon.getCode());
-            return "Coupon is valid";
+            message = "Coupon is valid";
         } else {
             auditLogService.createAuditLog(user, "Check Valid Coupon", "Coupon is not valid. Coupon id: " + coupon.getCode());
-            return "Coupon is not valid";
+            message = "Coupon is not valid";
         }
+        return new ApiResponse<>(HttpStatus.OK.value(), message, null);
+
     }
 
 

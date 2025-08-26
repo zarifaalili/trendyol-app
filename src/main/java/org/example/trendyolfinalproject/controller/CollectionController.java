@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.CollectionCreateRequest;
 import org.example.trendyolfinalproject.request.CollectionItemFromWishListRequest;
 import org.example.trendyolfinalproject.request.CollectionItemRequest;
-import org.example.trendyolfinalproject.response.CollectionItemFromWishListResponse;
-import org.example.trendyolfinalproject.response.CollectionItemResponse;
-import org.example.trendyolfinalproject.response.CollectionResponse;
-import org.example.trendyolfinalproject.response.WishListResponse;
+import org.example.trendyolfinalproject.response.*;
 import org.example.trendyolfinalproject.service.CollectionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,39 +23,39 @@ public class CollectionController {
 
     @PostMapping("/createCollection")
     @PreAuthorize("hasRole('CUSTOMER')")
-    CollectionResponse createCollection(@RequestBody @Valid CollectionCreateRequest request) {
+    ApiResponse<CollectionResponse> createCollection(@RequestBody @Valid CollectionCreateRequest request) {
         return collectionService.createCollection(request);
     }
 
     @PostMapping("/addProductToCollection")
     @PreAuthorize("hasRole('CUSTOMER')")
-    CollectionItemResponse addProductToCollection(@RequestBody @Valid CollectionItemRequest request) {
+    ApiResponse<CollectionItemResponse> addProductToCollection(@RequestBody @Valid CollectionItemRequest request) {
         return collectionService.addProductToCollection(request);
     }
 
 
     @PostMapping("/addProductToCollectionFromWishList")
     @PreAuthorize("hasRole('CUSTOMER')")
-    CollectionItemFromWishListResponse addProductToCollectionFromWishList(@RequestBody @Valid CollectionItemFromWishListRequest request) {
+    ApiResponse<CollectionItemFromWishListResponse> addProductToCollectionFromWishList(@RequestBody @Valid CollectionItemFromWishListRequest request) {
         return collectionService.addProductToCollectionFromWishList(request);
     }
 
     @GetMapping("/getAllCollectionsOfUser")
     @PreAuthorize("hasRole('CUSTOMER')")
-    List<CollectionResponse> getAllCollections() {
+    ApiResponse<List<CollectionResponse>> getAllCollections() {
         return collectionService.getAllCollections();
     }
 
     @PostMapping("/share/{collectionId}/{targetUserId}")
-    public ResponseEntity<String> shareCollection(
+    public ResponseEntity<ApiResponse<Void>> shareCollection(
             @PathVariable Long collectionId,
             @PathVariable Long targetUserId) {
-        collectionService.shareCollection(collectionId, targetUserId);
-        return ResponseEntity.ok("Collection shared successfully");
+        var response = collectionService.shareCollection(collectionId, targetUserId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/shared/{collectionId}")
-    public ResponseEntity<CollectionResponse> readSharedCollection(
+    public ResponseEntity<ApiResponse<CollectionResponse>> readSharedCollection(
             @PathVariable Long collectionId) {
 
         Long currentUserId =collectionService.getCurrentUserId();
@@ -68,7 +65,7 @@ public class CollectionController {
     }
 
     @PatchMapping("/{collectionId}/rename")
-    public CollectionResponse renameCollection(@PathVariable Long collectionId, @PathParam("newName") String newName) {
-        return collectionService.renameCollection(collectionId, newName);
-    }
+    public ResponseEntity<ApiResponse<CollectionResponse>> renameCollection(@PathVariable Long collectionId, @PathParam("newName") String newName) {
+        var response = collectionService.renameCollection(collectionId, newName);
+        return ResponseEntity.ok(response);    }
 }

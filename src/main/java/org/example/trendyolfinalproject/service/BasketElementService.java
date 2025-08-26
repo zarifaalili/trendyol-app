@@ -179,7 +179,7 @@ public class BasketElementService {
                 .getRequest().getAttribute("userId");
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
 
-        BigDecimal finalAmount = basketService.calculateRawTotalAmount();
+        BigDecimal finalAmount = basketService.calculateRawTotalAmount().getData();
         basket.setFinalAmount(finalAmount);
         if (basket.getDiscountAmount() == null) {
             basket.setDiscountAmount(BigDecimal.ZERO);
