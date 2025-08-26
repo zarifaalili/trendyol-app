@@ -9,6 +9,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Role;
 import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.AuditLogResponse;
 import org.example.trendyolfinalproject.response.SalesReportResponse;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +39,7 @@ public class AdminService {
     private final AuditLogService auditLogService;
 
 
-    public void approveSeller(Long sellerId) {
+    public ApiResponse<String> approveSeller(Long sellerId) {
         log.info("Actionlog.approveSeller.start : sellerId={}", sellerId);
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
@@ -64,10 +65,12 @@ public class AdminService {
         notificationService.sendNotification(user, "Your seller account has been approved", NotificationType.SELLER_APPROVED, sellerId);
 
         log.info("Actionlog.approveSeller.end : sellerId={}", sellerId);
+        return new ApiResponse<>(200, "Seller approved successfully", null);
+
     }
 
 
-    public void rejectSeller(Long sellerId) {
+    public ApiResponse<String> rejectSeller(Long sellerId) {
         log.info("Actionlog.rejectSeller.start : sellerId={}", sellerId);
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -92,10 +95,11 @@ public class AdminService {
         notificationService.sendNotification(user, "Your seller account has been rejected", NotificationType.SELLER_REJECTED, sellerId);
 
         log.info("Actionlog.rejectSeller.end : sellerId={}", sellerId);
+        return new ApiResponse<>(200, "Seller rejected successfully", null);
     }
 
 
-    public List<User> getAllAdmins() {
+    public ApiResponse<List<User>> getAllAdmins() {
         log.info("Actionlog.getAllAdmins.start : ");
         List<User> admins = userRepository.findAllByRole(Role.ADMIN);
 
@@ -103,7 +107,7 @@ public class AdminService {
             throw new NotFoundException("No admins found");
         }
         log.info("Actionlog.getAllAdmins.end : ");
-        return admins;
+        return new ApiResponse<>(200, "Admins fetched successfully", admins);
     }
 
 
@@ -118,7 +122,7 @@ public class AdminService {
     }
 
 
-    public SalesReportResponse getSalesReport(LocalDateTime since) {
+    public ApiResponse<SalesReportResponse> getSalesReport(LocalDateTime since) {
         log.info("Actionlog.getSalesReport.start : ");
 
         var totalRevenue = orderItemRepository.getTotalRevenue();
@@ -130,11 +134,11 @@ public class AdminService {
 
         var salesReport = new SalesReportResponse(totalRevenue, totalCouponsUsed.longValue(), product, activeUsers);
         log.info("Actionlog.getSalesReport.end : ");
-        return salesReport;
+        return new ApiResponse<>(200, "Sales report fetched successfully", salesReport);
     }
 
 
-    public List<AuditLogResponse> getUserAuditLogs(Long userId) {
+    public ApiResponse<List<AuditLogResponse>> getUserAuditLogs(Long userId) {
         log.info("Actionlog.getUserAuditLogs.start : userId={}", userId);
         var curentUserId = getCurrentUserId();
         var currentUser = userRepository.findById(curentUserId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -159,7 +163,7 @@ public class AdminService {
 
         auditLogService.createAuditLog(currentUser, "Get user audit logs", "User id: " + user.getId());
         log.info("Actionlog.getUserAuditLogs.end : userId={}", userId);
-        return response;
+        return new ApiResponse<>(200, "User audit logs fetched successfully", response);
     }
 
 

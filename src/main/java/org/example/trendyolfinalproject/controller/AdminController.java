@@ -3,6 +3,7 @@ package org.example.trendyolfinalproject.controller;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.AuditLogResponse;
 import org.example.trendyolfinalproject.response.SalesReportResponse;
 import org.example.trendyolfinalproject.service.AdminService;
@@ -20,19 +21,22 @@ public class AdminController {
 
     @PostMapping("/approveSeller/{sellerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void approveSeller(@PathVariable Long sellerId) {
-        adminService.approveSeller(sellerId);
+    public ApiResponse<String> approveSeller(@PathVariable Long sellerId) {
+
+        return adminService.approveSeller(sellerId);
     }
 
     @PostMapping("/rejectSeller/{sellerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void rejectSeller(@PathVariable Long sellerId) {
-        adminService.rejectSeller(sellerId);
+    public ApiResponse<String> rejectSeller(@PathVariable Long sellerId) {
+
+        return adminService.rejectSeller(sellerId);
     }
 
     @GetMapping("/getAdmins")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAdmins() {
+    public ApiResponse<List<User>> getAdmins() {
+
         return adminService.getAllAdmins();
     }
 
@@ -45,14 +49,14 @@ public class AdminController {
 
     @GetMapping("/getSalesReport")
     @PreAuthorize("hasRole('ADMIN')")
-    public SalesReportResponse getSalesReport(@PathParam("startDate") LocalDateTime startDate) {
+    public ApiResponse<SalesReportResponse> getSalesReport(@PathParam("startDate") LocalDateTime startDate) {
         return adminService.getSalesReport(startDate);
     }
 
 
     @GetMapping("/getUserActivity/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AuditLogResponse> getUserActivity(@PathVariable Long userId) {
+    public ApiResponse<List<AuditLogResponse>> getUserActivity(@PathVariable Long userId) {
         return adminService.getUserAuditLogs(userId);
     }
 
