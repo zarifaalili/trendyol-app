@@ -19,6 +19,7 @@ import org.example.trendyolfinalproject.mapper.ProductVariantMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.request.ProductVariantCreateRequest;
 import org.example.trendyolfinalproject.request.ProductVariantFilterRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductVariantDetailResponse;
 import org.example.trendyolfinalproject.response.ProductVariantResponse;
 import org.springframework.stereotype.Service;
@@ -26,9 +27,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,7 +54,7 @@ public class ProductVariantService {
 
 
     @Transactional
-    public ProductVariantResponse createProductVariant(ProductVariantCreateRequest request) {
+    public ApiResponse<ProductVariantResponse> createProductVariant(ProductVariantCreateRequest request) {
 
         log.info("Actionlog.createProductVariant.start : productId={}", request.getProductId());
 
@@ -111,11 +110,14 @@ public class ProductVariantService {
         notificationService.sendToAllCustomers("There is a new product variant : " + saved.getSku(), NotificationType.PRODUCT, saved.getId());
         auditLogService.createAuditLog(user1, "Create ProductVariant", "ProductVariant created successfully. ProductVariant id: " + saved.getId());
         log.info("Actionlog.createProductVariant.end : productId={}", request.getProductId());
-        return response;
-
+        return ApiResponse.<ProductVariantResponse>builder()
+                .status(200)
+                .message("Product variant created successfully")
+                .data(response)
+                .build();
     }
 
-    public void deleteProductVariant(Long id) {
+    public ApiResponse<Void> deleteProductVariant(Long id) {
         log.info("Actionlog.deleteProductVariant.start : id={}", id);
         var user = getCurrentUserId();
         var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
@@ -132,34 +134,43 @@ public class ProductVariantService {
         auditLogService.createAuditLog(userRepository.findById(user).orElseThrow(() -> new RuntimeException("User not found")), "Delete ProductVariant", "ProductVariant deleted successfully. ProductVariant id: " + id);
 
         productVariantMapper.toResponse(productVariant);
+
+        return ApiResponse.<Void>builder()
+                .status(200)
+                .message("Product variant deleted successfully")
+                .data(null)
+                .build();
     }
 
-    public ProductVariantResponse getProductVariant(Long id) {
+    public ApiResponse<ProductVariantResponse> getProductVariant(Long id) {
         log.info("Actionlog.getProductVariant.start : id={}", id);
         var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
         recommendationService.saveUserView(getCurrentUserId(), productVariant.getId());
         log.info("Actionlog.getProductVariant.end : id={}", id);
-        return productVariantMapper.toResponse(productVariant);
+        var mapper = productVariantMapper.toResponse(productVariant);
+        return ApiResponse.<ProductVariantResponse>builder()
+                .status(200)
+                .message("Product variant retrieved successfully")
+                .data(mapper)
+                .build();
     }
 
 
-    public ProductVariantDetailResponse getProductVariantDetails(Long id) {
+    public ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(Long id) {
         var productVariant = productVariantRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
 
-        // DB-də saxlanmış bütün image URL-ləri
         List<String> imageUrls = productVariant.getVariantImages()
                 .stream()
                 .map(ProductImage::getImageUrl)
                 .toList();
 
-        // Base64 üçün hər image-i oxu
         List<String> imageBase64s = productVariant.getVariantImages()
                 .stream()
                 .map(img -> encodeImageToBase64(img.getImageUrl()))
                 .toList();
 
-        return new ProductVariantDetailResponse(
+        var response = new ProductVariantDetailResponse(
                 productVariant.getId(),
                 productVariant.getProduct().getId(),
                 productVariant.getColor(),
@@ -173,6 +184,12 @@ public class ProductVariantService {
                 imageUrls,
                 imageBase64s
         );
+
+        return ApiResponse.<ProductVariantDetailResponse>builder()
+                .status(200)
+                .message("Product variant details retrieved successfully")
+                .data(response)
+                .build();
     }
 
     private String encodeImageToBase64(String imagePath) {
@@ -187,7 +204,6 @@ public class ProductVariantService {
     }
 
 
-
 //    public ProductVariantSimpleResponse getProductVariant(Long id) {
 //        log.info("Actionlog.getProductVariant.start : id={}", id);
 //        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
@@ -196,22 +212,26 @@ public class ProductVariantService {
 //        return productVariantMapper.toSimpleResponse(productVariant);
 //    }
 
-    public List<ProductVariantResponse> getUserRecommendations() {
+    public ApiResponse<List<ProductVariantResponse>> getUserRecommendations() {
         var userId = getCurrentUserId();
         var ids = recommendationService.getLastViewedIds(userId);
 
-        return ids.stream()
+        var response = ids.getData().stream()
                 .map(pid -> productVariantRepository.findById(pid)
                         .map(productVariantMapper::toResponse)
                         .orElse(null))
                 .filter(Objects::nonNull)
                 .toList();
+
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .status(200)
+                .message("User recommendations retrieved successfully")
+                .data(response)
+                .build();
     }
 
 
-
-
-    public List<ProductVariantResponse> getProductVariantsByFilter(ProductVariantFilterRequest filter) {
+    public ApiResponse<List<ProductVariantResponse>> getProductVariantsByFilter(ProductVariantFilterRequest filter) {
         log.info("Actionlog.getProductVariantsByFilter.start : ");
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -252,17 +272,21 @@ public class ProductVariantService {
         if (variants.isEmpty()) {
             throw new RuntimeException("ProductVariants not found");
         }
-        var responseLoist = variants.stream()
+        var responseList = variants.stream()
                 .map(productVariantMapper::toResponse)
                 .toList();
 
         log.info("Actionlog.getProductVariantsByFilter.end : ");
-        return responseLoist;
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .status(200)
+                .message("Product variants filtered successfully")
+                .data(responseList)
+                .build();
     }
 
 
     @Transactional
-    public ProductVariantResponse addImages(Long variantId, List<MultipartFile> images) {
+    public ApiResponse<ProductVariantResponse> addImages(Long variantId, List<MultipartFile> images) {
         var variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
 
@@ -285,37 +309,46 @@ public class ProductVariantService {
 
         variant.setVariantImages(variantImages);
         var saved = productVariantRepository.save(variant);
-        return productVariantMapper.toResponse(saved);
+        var mapper = productVariantMapper.toResponse(saved);
+
+        return ApiResponse.<ProductVariantResponse>builder()
+                .status(200)
+                .message("Images added successfully to product variant")
+                .data(mapper)
+                .build();
     }
 
 
-
-    public ProductVariantResponse updateProductVariantStock(Long productVariantId, Integer newStock) {
+    public ApiResponse<ProductVariantResponse> updateProductVariantStock(Long productVariantId, Integer newStock) {
         log.info("Actionlog.updateProductVariantStock.start : productId={}", productVariantId);
         var currentUserId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + currentUserId));
         var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new RuntimeException("Product not found with id: " + productVariantId));
-        var product=productVariant.getProduct();
-        var oldStock=productVariant.getStockQuantity();
+        var product = productVariant.getProduct();
+        var oldStock = productVariant.getStockQuantity();
         var seller1 = productVariant.getProduct().getSeller();
         if (!seller.getId().equals(seller1.getId())) {
             throw new RuntimeException("You are not authorized to update this product");
         }
         productVariant.setStockQuantity(newStock);
-        if(newStock>oldStock){
-            product.setStockQuantity(product.getStockQuantity()+newStock-oldStock);
+        if (newStock > oldStock) {
+            product.setStockQuantity(product.getStockQuantity() + newStock - oldStock);
 
-        }else{
-            product.setStockQuantity(product.getStockQuantity()-oldStock-newStock);
+        } else {
+            product.setStockQuantity(product.getStockQuantity() - oldStock - newStock);
         }
         var updated = productVariantRepository.save(productVariant);
         var response = productVariantMapper.toResponse(updated);
         auditLogService.createAuditLog(seller.getUser(), "Update product variant stock", "Update product variant stock successfully. Product id: " + updated.getId());
-        if(oldStock<newStock){
+        if (oldStock < newStock) {
             notificationService.sendToAllUsers("HURRY UP Product stock increased", NotificationType.PRODUCT_STOCK_UPDATE, updated.getId());
         }
         log.info("Actionlog.updateProductVariantStock.end : productId={}", productVariantId);
-        return response;
+        return ApiResponse.<ProductVariantResponse>builder()
+                .status(200)
+                .message("Product variant stock updated successfully")
+                .data(response)
+                .build();
     }
 
 
@@ -323,7 +356,6 @@ public class ProductVariantService {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
 
 
 //    private ProductVariantResponse mapToResponse(ProductVariant variant) {

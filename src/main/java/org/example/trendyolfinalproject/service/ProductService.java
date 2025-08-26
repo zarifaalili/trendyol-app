@@ -10,8 +10,8 @@ import org.example.trendyolfinalproject.mapper.ProductVariantMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.ProductRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductResponse;
-import org.example.trendyolfinalproject.response.ProductVariantResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -38,7 +38,7 @@ public class ProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantMapper productVariantMapper;
 
-    public ProductResponse createProduct(ProductRequest request) {
+    public ApiResponse<ProductResponse> createProduct(ProductRequest request) {
         log.info("Actionlog.createProduct.start : name={}", request.getName());
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
@@ -77,12 +77,15 @@ public class ProductService {
         auditLogService.createAuditLog(user, "Product created", "Product created successfully. Product id: " + saved.getId());
 
         log.info("Actionlog.createProduct.end : name={}", request.getName());
-        return response;
-
+        return ApiResponse.<ProductResponse>builder()
+                .status(201)
+                .message("Product created successfully")
+                .data(response)
+                .build();
     }
 
 
-    public List<ProductResponse> getProducts() {
+    public ApiResponse<List<ProductResponse>> getProducts() {
         log.info("Actionlog.getProducts.start : ");
 
         List<Product> products = productRepository.findAll();
@@ -93,10 +96,15 @@ public class ProductService {
 //        if (user.getId() != null) {
 //            auditLogService.createAuditLog(user, "Get all products", "Get all products successfully. Product id: " + products.get(0).getId());
 //        }
-        return productMapper.toResponseList(products);
+        var response = productMapper.toResponseList(products);
+        return ApiResponse.<List<ProductResponse>>builder()
+                .status(200)
+                .message("Products fetched successfully")
+                .data(response)
+                .build();
     }
 
-    public List<ProductResponse> getProductByName(String name) {
+    public ApiResponse<List<ProductResponse>> getProductByName(String name) {
         log.info("Actionlog.getProductByName.start : name={}", name);
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -110,10 +118,14 @@ public class ProductService {
         auditLogService.createAuditLog(user, "Get product by name", "Get product by name successfully. Product id: " + products.get(0).getId());
 
         log.info("Actionlog.getProductByName.end : name={}", name);
-        return mapper;
+        return ApiResponse.<List<ProductResponse>>builder()
+                .status(200)
+                .message("Products fetched successfully by name")
+                .data(mapper)
+                .build();
     }
 
-    public ProductResponse updateProductPrice(Long productId, BigDecimal newPrice) {
+    public ApiResponse<ProductResponse> updateProductPrice(Long productId, BigDecimal newPrice) {
         log.info("Actionlog.updateProductPrice.start : productId={}", productId);
         var currentUserId = getCurrentUserId();
         var seller1 = sellerRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + currentUserId));
@@ -137,34 +149,40 @@ public class ProductService {
         }
 
         log.info("Actionlog.updateProductPrice.end : productId={}", productId);
-        return response;
-
+        return ApiResponse.<ProductResponse>builder()
+                .status(200)
+                .message("Product price updated successfully")
+                .data(response)
+                .build();
 
     }
 
-    public List<ProductResponse> getSellerProducts() {
+    public ApiResponse<List<ProductResponse>> getSellerProducts() {
         log.info("Actionlog.getSellerProducts.start : ");
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
         var products = productRepository.findBySellerId(seller.getId());
         var mapper = productMapper.toResponseList(products);
         log.info("Actionlog.getSellerProducts.end : ");
-        return mapper;
-
+        return ApiResponse.<List<ProductResponse>>builder()
+                .status(200)
+                .message("Seller products fetched successfully")
+                .data(mapper)
+                .build();
     }
 
 
-    public List<ProductResponse> getTotalProductsBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
+    public ApiResponse<List<ProductResponse>> getTotalProductsBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Actionlog.getTotalProductsBetweenDates.start : productId={}", startDate);
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
 
-        if(startDate.isAfter(endDate)){
+        if (startDate.isAfter(endDate)) {
             throw new RuntimeException("Start date must be before end date");
         }
         var orderItems = orderItemRepository.findByCreatedAtBetweenAndProductId_Seller_Id(startDate, endDate, seller.getId());
 
-        if(orderItems.isEmpty()){
+        if (orderItems.isEmpty()) {
             throw new NotFoundException("No products found between these dates");
         }
 
@@ -175,10 +193,12 @@ public class ProductService {
         var products = productRepository.findAllById(productIds);
         var mapper = productMapper.toResponseList(products);
         log.info("Actionlog.getTotalProductsBetweenDates.end : productId={}", startDate);
-        return mapper;
-
+        return ApiResponse.<List<ProductResponse>>builder()
+                .status(200)
+                .message("Products fetched successfully between dates")
+                .data(mapper)
+                .build();
     }
-
 
 
     private Long getCurrentUserId() {

@@ -7,6 +7,7 @@ import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ProductVariantMapper;
 import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductVariantResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class RecommendationService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public void saveUserView(Long userId, Long productVariantId) {
+    public ApiResponse<Void> saveUserView(Long userId, Long productVariantId) {
         String key = "user:views:" + userId;
         long timestamp = System.currentTimeMillis();
 
@@ -39,16 +40,32 @@ public class RecommendationService {
         redisTemplate.opsForZSet().add(key, productVariantId.toString(), timestamp);
 
         redisTemplate.opsForZSet().removeRange(key, 0, -11);
+        return ApiResponse.<Void>builder()
+                .status(200)
+                .message("User view saved successfully")
+                .data(null)
+                .build();
     }
 
-    public List<Long> getLastViewedIds(Long userId) {
+    public ApiResponse<List<Long>> getLastViewedIds(Long userId) {
         String key = "user:views:" + userId;
         var ids = redisTemplate.opsForZSet().reverseRange(key, 0, 9);
-        if (ids == null) return List.of();
-        return ids.stream().map(x -> Long.parseLong(x.toString())).toList();
+        if (ids == null || ids.isEmpty()) {
+            return ApiResponse.<List<Long>>builder()
+                    .status(200)
+                    .message("No viewed products found")
+                    .data(List.of())
+                    .build();
+        }
+        var idList = ids.stream().map(x -> Long.parseLong(x.toString())).toList();
+        return ApiResponse.<List<Long>>builder()
+                .status(200)
+                .message("Last viewed products fetched successfully")
+                .data(idList)
+                .build();
     }
 
-    public List<ProductVariantResponse> getSimilarProduct(Long productId) {
+    public ApiResponse<List<ProductVariantResponse>> getSimilarProduct(Long productId) {
         log.info("Actionlog.getSimilarProduct.start : product={}", productId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -70,13 +87,15 @@ public class RecommendationService {
 
         auditLogService.createAuditLog(user, "Get similar product", "Get similar product successfully. Product id: " + product.getId());
         log.info("Actionlog.getSimilarProduct.end : product={}", productId);
-        return mapper;
-
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .status(200)
+                .message("Similar products fetched successfully")
+                .data(mapper)
+                .build();
 
     }
 
-    // Sizin xidmət (service) sinifinizdə
-    public List<ProductVariantResponse> getTrendingProducts() {
+    public ApiResponse<List<ProductVariantResponse>> getTrendingProducts() {
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -95,10 +114,12 @@ public class RecommendationService {
                 .toList();
 
         auditLogService.createAuditLog(user, "Get trending product", "Get trending product successfully.");
-        return trending;
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .status(200)
+                .message("Trending products fetched successfully")
+                .data(trending)
+                .build();
     }
-
-
 
 
 //    public List<ProductVariantResponse> getTrendingProduct() {
@@ -115,7 +136,6 @@ public class RecommendationService {
 //        log.info("Actionlog.getTrendingProduct.end");
 //        return mapper;
 //    }
-
 
 
     private Long getCurrentUserId() {

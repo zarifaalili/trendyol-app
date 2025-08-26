@@ -12,5 +12,21 @@ public class ApiResponse<T> {
     private String message;
     private T data;
 
+
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .status(200)
+                .message("success")
+                .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return ApiResponse.<T>builder()
+                .status(400)
+                .message(message)
+                .data(null)
+                .build();
+    }
 }
 

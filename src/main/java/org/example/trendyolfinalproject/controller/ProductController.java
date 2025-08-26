@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.ProductRequest;
 import org.example.trendyolfinalproject.request.ProductVariantCreateRequest;
 import org.example.trendyolfinalproject.request.ProductVariantFilterRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductResponse;
 import org.example.trendyolfinalproject.response.ProductVariantDetailResponse;
 import org.example.trendyolfinalproject.response.ProductVariantResponse;
@@ -30,49 +31,49 @@ public class ProductController {
 
     @PostMapping("/createProduct")
 //    @PreAuthorize("hasRole('SELLER')")
-    ProductResponse createProduct(@RequestBody ProductRequest request) {
+    ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request) {
         return productService.createProduct(request);
     }
 
     @GetMapping("/getProducts")
-    public List<ProductResponse> getProducts() {
+    public ApiResponse<List<ProductResponse>> getProducts() {
         return productService.getProducts();
     }
 
     @GetMapping("/getProductByName/{name}")
-    public List<ProductResponse> getProductByName(@PathVariable String name) {
+    public ApiResponse<List<ProductResponse>> getProductByName(@PathVariable String name) {
         return productService.getProductByName(name);
     }
 
     @PatchMapping("/updateProductPrice/{productId}/{newPrice}")
     @PreAuthorize("hasRole('SELLER')")
-    public ProductResponse updateProductPrice(@PathVariable Long productId, @PathVariable BigDecimal newPrice) {
+    public  ApiResponse<ProductResponse> updateProductPrice(@PathVariable Long productId, @PathVariable BigDecimal newPrice) {
         return productService.updateProductPrice(productId, newPrice);
     }
 
 
     @GetMapping("/getSellerProducts")
     @PreAuthorize("hasRole('SELLER')")
-    public List<ProductResponse> getSellerProducts() {
+    public  ApiResponse<List<ProductResponse>> getSellerProducts() {
         return productService.getSellerProducts();
     }
 
 
     @GetMapping("/getProductsBetweenDates")
-    public List<ProductResponse> getTotalProductsBetweenDates(@PathParam("startDate") LocalDateTime startDate, @PathParam("endDate") LocalDateTime endDate) {
+    public ApiResponse<List<ProductResponse>> getTotalProductsBetweenDates(@PathParam("startDate") LocalDateTime startDate, @PathParam("endDate") LocalDateTime endDate) {
         return productService.getTotalProductsBetweenDates(startDate, endDate);
     }
 
 
     @PostMapping("/productVariant/createProductVariant")
     @PreAuthorize("hasRole('SELLER')")
-    public ProductVariantResponse createProductVariant(@RequestBody ProductVariantCreateRequest requess) {
+    public ApiResponse<ProductVariantResponse> createProductVariant(@RequestBody ProductVariantCreateRequest requess) {
         return productVariantService.createProductVariant(requess);
     }
 
     @PostMapping(value = "/productVariant/addImages/{variantId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    @PreAuthorize("hasRole('SELLER')")
-    public ProductVariantResponse addImagesToVariant(
+    public ApiResponse<ProductVariantResponse> addImagesToVariant(
             @PathVariable Long variantId,
             @RequestPart("images") List<MultipartFile> images) {
         return productVariantService.addImages(variantId, images);
@@ -81,30 +82,30 @@ public class ProductController {
 
     @DeleteMapping("/productVariant/deleteProductVariant/{id}")
     @PreAuthorize("hasRole('SELLER')")
-    public void deleteProductVariant(@PathVariable Long id) {
-        productVariantService.deleteProductVariant(id);
+    public ApiResponse<Void> deleteProductVariant(@PathVariable Long id) {
+        return productVariantService.deleteProductVariant(id);
     }
 
     @GetMapping("/productVariant/getProductVariant/{id}")
-    public ProductVariantResponse getProductVariant(@PathVariable Long id) {
+    public ApiResponse<ProductVariantResponse> getProductVariant(@PathVariable Long id) {
         return productVariantService.getProductVariant(id);
     }
 
     @GetMapping("/productVariant/filter")
-    public ResponseEntity<List<ProductVariantResponse>> getVariantsByFilter(
+    public ApiResponse<List<ProductVariantResponse>> getVariantsByFilter(
             @ModelAttribute ProductVariantFilterRequest filter) {
-        return ResponseEntity.ok(productVariantService.getProductVariantsByFilter(filter));
+        return productVariantService.getProductVariantsByFilter(filter);
     }
 
     @GetMapping("/productVariant/getProductVariantDetails/{id}")
-    public ProductVariantDetailResponse getProductVariantDetails(@PathVariable Long id) {
+    public ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(@PathVariable Long id) {
         return productVariantService.getProductVariantDetails(id);
     }
 
 
     @PatchMapping("/prouctVariant/updateStock/{productVariantId}/{newStock}")
     @PreAuthorize("hasRole('SELLER')")
-    public ProductVariantResponse updateProductVariantStock(@PathVariable Long productVariantId, @PathVariable Integer newStock) {
+    public ApiResponse<ProductVariantResponse> updateProductVariantStock(@PathVariable Long productVariantId, @PathVariable Integer newStock) {
         return productVariantService.updateProductVariantStock(productVariantId, newStock);
     }
 

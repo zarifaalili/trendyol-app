@@ -1,6 +1,7 @@
 package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.ProductVariantService;
 import org.example.trendyolfinalproject.service.RecommendationService;
@@ -18,25 +19,27 @@ public class RecommendationController {
 
 
     @PostMapping("/view/{userId}/{productId}")
-    public void saveView(@PathVariable Long userId, @PathVariable Long productId) {
+    public ApiResponse<String> saveView(@PathVariable Long userId, @PathVariable Long productId) {
         var product = productVariantService.getProductVariant(productId);
-        recommendationService.saveUserView(userId, product.getId());
+        recommendationService.saveUserView(userId, product.getData().getProductId());
+        return ApiResponse.success("View saved successfully");
+
     }
 
 
     @GetMapping("/personalized")
-    public List<ProductVariantResponse> getUserRecommendations() {
+    public ApiResponse<List<ProductVariantResponse>> getUserRecommendations() {
         return productVariantService.getUserRecommendations();
     }
 
     @GetMapping("/similar/{productId}")
-    public List<ProductVariantResponse> getSimilarProducts(@PathVariable Long productId) {
+    public ApiResponse<List<ProductVariantResponse>> getSimilarProducts(@PathVariable Long productId) {
         return recommendationService.getSimilarProduct(productId);
     }
 
 
     @GetMapping("/trending")
-    public List<ProductVariantResponse> getTrendingProducts() {
+    public ApiResponse<List<ProductVariantResponse>> getTrendingProducts() {
         return recommendationService.getTrendingProducts();
     }
 }
