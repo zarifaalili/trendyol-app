@@ -4,10 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.AdressCreateRequest;
 import org.example.trendyolfinalproject.response.AdressResponse;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.service.AdressService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/adress")
@@ -16,26 +15,24 @@ public class AdressController {
     private final AdressService adressService;
 
     @PostMapping("/createAdress")
-    AdressResponse createAdress(@RequestBody @Valid AdressCreateRequest request) {
+    ApiResponse<AdressResponse> createAdress(@RequestBody @Valid AdressCreateRequest request) {
         return adressService.createAdress(request);
     }
 
     @DeleteMapping("/deleteAdress/{id}")
-    public void deleteAdress(@PathVariable Long id) {
-        adressService.deleteAdress(id);
+    public ApiResponse<String> deleteAdress(@PathVariable Long id) {
+        return adressService.deleteAdress(id);
     }
 
     @GetMapping("/getAdresses")
-    public List<AdressResponse> getAdresses() {
+    public ApiResponse<java.util.List<AdressResponse>> getAdresses() {
         return adressService.getAdresses();
     }
 
     @PatchMapping("/updateAdress/{id}")
-    public AdressResponse updateAdress(@PathVariable Long id, @RequestBody @Valid AdressCreateRequest request) {
+    public ApiResponse<AdressResponse> updateAdress(@PathVariable Long id, @RequestBody @Valid AdressCreateRequest request) {
         return adressService.updateAdress(id, request);
     }
-
-
 
 
 }

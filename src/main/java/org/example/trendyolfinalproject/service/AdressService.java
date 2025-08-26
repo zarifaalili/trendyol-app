@@ -3,20 +3,18 @@ package org.example.trendyolfinalproject.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.Adress;
-import org.example.trendyolfinalproject.dao.entity.AuditLog;
 import org.example.trendyolfinalproject.dao.repository.AdressRepository;
-import org.example.trendyolfinalproject.dao.repository.AuditLogRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.AdressMapper;
 import org.example.trendyolfinalproject.request.AdressCreateRequest;
 import org.example.trendyolfinalproject.response.AdressResponse;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,7 +27,7 @@ public class AdressService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
-    public AdressResponse createAdress(AdressCreateRequest request) {
+    public ApiResponse<AdressResponse> createAdress(AdressCreateRequest request) {
 
         Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
         log.info("Actionlog.createAdress.start : userId={}", userId);
@@ -58,11 +56,15 @@ public class AdressService {
         var response = adressMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Create Adress", "Adress created successfully. Adress id: " + saved.getId());
         log.info("Actionlog.createAdress.end : userId={}", userId);
-        return response;
 
+        return ApiResponse.<AdressResponse>builder()
+                .status(200)
+                .message("Adress created successfully")
+                .data(response)
+                .build();
     }
 
-    public void deleteAdress(Long id) {
+    public ApiResponse<String> deleteAdress(Long id) {
 
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -86,9 +88,15 @@ public class AdressService {
         adressRepository.save(adreses.get(0));
         auditLogService.createAuditLog(adress.getUserId(), "Delete Adress", "Adress deleted successfully. Adress id: " + id);
         log.info("Actionlog.deleteAdress.end : id={}", id);
+
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Adress deleted successfully")
+                .data(null)
+                .build();
     }
 
-    public List<AdressResponse> getAdresses() {
+    public ApiResponse<List<AdressResponse>> getAdresses() {
         log.info("Actionlog.getAdresses.start : ");
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -103,10 +111,14 @@ public class AdressService {
 
         auditLogService.createAuditLog(user, "Get all adresses", "Get all adresses successfully.");
         log.info("Actionlog.getAdresses.end : ");
-        return response;
+        return ApiResponse.<List<AdressResponse>>builder()
+                .status(200)
+                .message("Adresses fetched successfully")
+                .data(response)
+                .build();
     }
 
-    public AdressResponse updateAdress(Long id, AdressCreateRequest request) {
+    public ApiResponse<AdressResponse> updateAdress(Long id, AdressCreateRequest request) {
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
         log.info("Actionlog.updateAdress.start : id={}", id);
@@ -134,7 +146,11 @@ public class AdressService {
         auditLogService.createAuditLog(user, "Update Adress", "Adress updated successfully. Adress id: " + id);
 
         log.info("Actionlog.updateAdress.end : id={}", id);
-        return response;
+        return ApiResponse.<AdressResponse>builder()
+                .status(200)
+                .message("Adress updated successfully")
+                .data(response)
+                .build();
     }
 
 
