@@ -1,0 +1,40 @@
+package org.example.trendyolfinalproject.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.request.BrandCreateRequest;
+import org.example.trendyolfinalproject.response.BrandResponse;
+import org.example.trendyolfinalproject.service.BrandService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/v1/brand")
+@RequiredArgsConstructor
+public class BrandController {
+    private final BrandService brandService;
+
+
+    @PostMapping("/createBrand")
+    @PreAuthorize("hasRole('ADMIN')")
+    public BrandResponse createBrand(@RequestBody @Valid BrandCreateRequest request) {
+        return brandService.createBrand(request);
+    }
+    @PatchMapping("/updateBrand/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public BrandResponse updateBrand(@PathVariable Long id, @RequestBody @Valid BrandCreateRequest request) {
+        return brandService.updateBrand(id, request);
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/deleteBrand/{id}")
+    public void deleteBrand(@PathVariable Long id) {
+        brandService.deleteBrand(id);
+    }
+
+    @GetMapping("/getBrandbyName/{name}")
+    public BrandResponse getBrandbyName(@PathVariable String name) {
+        return brandService.getBrandbyName(name);
+    }
+
+
+}

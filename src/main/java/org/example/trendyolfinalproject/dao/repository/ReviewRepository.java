@@ -1,0 +1,50 @@
+package org.example.trendyolfinalproject.dao.repository;
+
+import io.lettuce.core.dynamic.annotation.Param;
+import org.example.trendyolfinalproject.dao.entity.Product;
+import org.example.trendyolfinalproject.dao.entity.Review;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.projection.NegativeReviewProjection;
+import org.example.trendyolfinalproject.projection.TopProductProjection;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+   List<Review> findByProduct_Id(Long id);
+   List<Review> findByProduct_IdAndIsApproved(Long id, boolean isApproved);
+   Review findByProductId_IdAndUserId_Id(Long productId, Long userId);
+
+   @Query("SELECT r.product.id AS productId, r.product.name AS productName, AVG(r.rating) AS avgRating " +
+           "FROM Review r " +
+           "WHERE r.isApproved = true " +
+           "GROUP BY r.product.id, r.product.name " +
+           "ORDER BY avgRating DESC")
+   List<TopProductProjection> findTopRatedProducts();
+
+   List<Review> findByUser(User user);
+
+   @Query("SELECT r.product.id AS productId, r.product.name AS productName, AVG(r.rating) AS avgRating " +
+           "FROM Review r " +
+           "WHERE r.isApproved = true " +
+           "GROUP BY r.product.id, r.product.name " +
+           "HAVING AVG(r.rating) < 3 " +
+           "ORDER BY avgRating ASC")
+   List<NegativeReviewProjection> findNegativeReviews();
+
+
+   @Query(value = "SELECT * FROM reviews r " +
+           "WHERE r.product_id = :productId " +
+           "AND (:rating IS NULL OR r.rating = ANY(:rating)) " +
+           "AND (:subject IS NULL OR LOWER(r.comment) LIKE LOWER(CONCAT('%', :subject, '%')))",
+           nativeQuery = true)
+   List<Review> findByProductAndFilterNative(@Param("productId") Long productId,
+                                             @Param("rating") Integer[] rating,
+                                             @Param("subject") String subject);
+
+
+
+
+}

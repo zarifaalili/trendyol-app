@@ -1,0 +1,4 @@
+package org.example.trendyolfinalproject.exception.customExceptions;
+
+public class NotFoundException {
+}

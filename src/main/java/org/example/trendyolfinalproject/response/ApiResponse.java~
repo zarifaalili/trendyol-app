@@ -1,0 +1,4 @@
+package org.example.trendyolfinalproject.response;
+
+public class ApiResponse {
+}

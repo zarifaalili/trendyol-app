@@ -1,0 +1,68 @@
+package org.example.trendyolfinalproject.mapper;
+
+import org.example.trendyolfinalproject.dao.entity.Product;
+import org.example.trendyolfinalproject.dao.entity.ProductImage;
+import org.example.trendyolfinalproject.request.ProductRequest;
+import org.example.trendyolfinalproject.response.ProductResponse;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+import org.mapstruct.factory.Mappers;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Mapper(componentModel = "spring")
+public interface ProductMapper {
+
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "brand", ignore = true)
+    @Mapping(target = "previousPrice", ignore = true)
+//    @Mapping(target = "productImages", source = "imageUrls", qualifiedByName = "mapImageUrlsToProductImages")
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "status", expression = "java(org.example.trendyolfinalproject.model.Status.ACTIVE)")
+    @Mapping(target = "stockQuantity", expression = "java(0)")
+    Product toEntity(ProductRequest request);
+
+
+    @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "brand.name", target = "brandName")
+    @Mapping(source = "seller.companyName", target = "sellerCompanyName")
+//    @Mapping(target = "imageUrls", source = "productImages", qualifiedByName = "mapProductImagesToImageUrls")
+    ProductResponse toResponse(Product product);
+
+    List<ProductResponse> toResponseList(List<Product> products);
+
+//    List<ProductResponse> toResponseStringList(List<String> products);
+
+//    @Named("mapImageUrlsToProductImages")
+//    default Set<ProductImage> mapImageUrlsToProductImages(List<String> imageUrls) {
+//        if (imageUrls == null) {
+//            return new HashSet<>();
+//        }
+//        return imageUrls.stream()
+//                .map(url -> {
+//                    ProductImage image = new ProductImage();
+//                    image.setImageUrl(url);
+//                    // image.setProduct(product); // Product buradan set edilə bilməz, Service qatında edilməlidir
+//                    return image;
+//                })
+//                .collect(Collectors.toSet());
+//    }
+
+//    @Named("mapProductImagesToImageUrls")
+//    default List<String> mapProductImagesToImageUrls(Set<ProductImage> productImages) {
+//        if (productImages == null) {
+//            return List.of();
+//        }
+//        return productImages.stream()
+//                .map(ProductImage::getImageUrl)
+//                .collect(Collectors.toList());
+//    }
+
+}

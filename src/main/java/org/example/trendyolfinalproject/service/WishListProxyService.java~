@@ -1,0 +1,43 @@
+package org.example.trendyolfinalproject.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
+import org.example.trendyolfinalproject.response.WishListResponse;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class WishListProxyService {
+
+    private final WishlistRepository wishListRepository;
+
+
+
+    public WishListResponse getWishListForUser(Long wishListId, User currentUser) {
+
+        var var= wishListRepository.findById(wishListId)
+                .orElseThrow(() -> new RuntimeException("WishList not found"));
+
+        if (!wishList.getUser().equals(currentUser) &&
+                !wishList.getSharedWith().contains(currentUser)) {
+            throw new RuntimeException("Access denied: You cannot view this wishlist");
+        }
+
+
+        WishListResponse response = new WishListResponse();
+        response.setId(wishList.getId());
+        response.setUserId(wishList.getUser().getId());
+        response.setUserName(wishList.getUser().getName());
+        response.setProductVariantId(firstProduct.getId());
+        response.setProductName(firstProduct.getProduct().getName());
+        response.setProductImageUrl(firstProduct.getImages().isEmpty() ? null : firstProduct.getImages().get(0).getUrl());
+        response.setAddedAt(wishList.getAddedAt());
+        response.setProductPrice(firstProduct.getPrice());
+        response.setPreviousPrice(firstProduct.getPreviousPrice());
+
+        return response;
+    }
+
+}
+
