@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.ProductAnswerRequest;
 import org.example.trendyolfinalproject.request.ProductQuestionRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductQuestionResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -30,7 +31,7 @@ public class ProductQuestionService {
     private final AuditLogService auditLogService;
     private final ProductRepository productRepository;
 
-    public String createProductQuestion(ProductQuestionRequest productQuestionRequest) {
+    public ApiResponse<String> createProductQuestion(ProductQuestionRequest productQuestionRequest) {
         log.info("Actionlog.createProductQuestion.start : ");
 
         var userId = getCurrentUserId();
@@ -54,10 +55,14 @@ public class ProductQuestionService {
         auditLogService.createAuditLog(user, "ProductQuestion", "ProductQuestion created");
         notificationService.sendNotification(sellerUserId, "You have a new question from " + user.getName() + " " + user.getSurname(), NotificationType.PRODUCT_QUESTION, productVariant.getId());
         log.info("Actionlog.createProductQuestion.end : ");
-        return "your question has been sent successfully";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Your question has been sent successfully")
+                .data("Your question has been sent successfully")
+                .build();
     }
 
-    public ProductQuestionResponse answerProductQuestion(ProductAnswerRequest productAnswerRequest) {
+    public ApiResponse<ProductQuestionResponse> answerProductQuestion(ProductAnswerRequest productAnswerRequest) {
 
         log.info("Actionlog.answerProductQuestion.start : ");
         var userId = getCurrentUserId();
@@ -77,11 +82,14 @@ public class ProductQuestionService {
         notificationService.sendNotification(question.getCustomer(), "Your question has been answered", NotificationType.PRODUCT_QUESTION, question.getId());
         log.info("Actionlog.answerProductQuestion.end : ");
 
-        return response;
-
+        return ApiResponse.<ProductQuestionResponse>builder()
+                .status(200)
+                .message("Question answered successfully")
+                .data(response)
+                .build();
     }
 
-    public String deleteProductQuestion(Long id) {
+    public ApiResponse<String> deleteProductQuestion(Long id) {
         log.info("Actionlog.deleteProductQuestion.start : ");
         var userdId = getCurrentUserId();
         var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
@@ -93,11 +101,15 @@ public class ProductQuestionService {
         productQuestionRepository.delete(question);
         auditLogService.createAuditLog(user, "ProductQuestion", "ProductQuestion deleted");
         log.info("Actionlog.deleteProductQuestion.end : ");
-        return "Your question has been deleted successfully";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Question deleted successfully")
+                .data("Your question has been deleted successfully")
+                .build();
     }
 
 
-    public String deleteProductAnswer(Long id) {
+    public ApiResponse<String> deleteProductAnswer(Long id) {
         log.info("Actionlog.deleteProductAnswer.start : ");
         var userdId = getCurrentUserId();
         var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
@@ -112,10 +124,14 @@ public class ProductQuestionService {
         productQuestionRepository.save(question);
         auditLogService.createAuditLog(user, "ProductQuestion", "ProductQuestion answer deleted");
         log.info("Actionlog.deleteProductAnswer.end : ");
-        return "Your answer has been deleted successfully";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Answer deleted successfully")
+                .data("Your answer has been deleted successfully")
+                .build();
     }
 
-    public List<ProductQuestionResponse> getAllProductQuestions(Long productVariantId) {
+    public ApiResponse<List<ProductQuestionResponse>> getAllProductQuestions(Long productVariantId) {
         log.info("Actionlog.getAllProductQuestions.start : ");
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -129,11 +145,15 @@ public class ProductQuestionService {
         var productQuestions = productQuestionRepository.findAllByProductVariantId(productVariantId);
         var response = productQuestionMapper.toResponseList(productQuestions);
         log.info("Actionlog.getAllProductQuestions.end : ");
-        return response;
+        return ApiResponse.<List<ProductQuestionResponse>>builder()
+                .status(200)
+                .message("All product questions retrieved successfully")
+                .data(response)
+                .build();
     }
 
 
-    public List<ProductQuestionResponse> getProductQuestionsWithStatus(Long productVariantId, String status) {
+    public ApiResponse<List<ProductQuestionResponse>> getProductQuestionsWithStatus(Long productVariantId, String status) {
         log.info("Actionlog.getAnsweredProductQuestions.start : ");
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -150,7 +170,11 @@ public class ProductQuestionService {
         var productQuestions = productQuestionRepository.findAllByProductVariantIdAndStatus(productVariantId, status1);
         var response = productQuestionMapper.toResponseList(productQuestions);
         log.info("Actionlog.getAnsweredProductQuestions.end : ");
-        return response;
+        return ApiResponse.<List<ProductQuestionResponse>>builder()
+                .status(200)
+                .message("Product questions with status retrieved successfully")
+                .data(response)
+                .build();
     }
 
 

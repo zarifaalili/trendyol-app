@@ -13,6 +13,7 @@ import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.OrderCreateRequest;
 import org.example.trendyolfinalproject.request.TransactionRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.OrderResponse;
 import org.example.trendyolfinalproject.response.ReturnRequestResponse;
 import org.example.trendyolfinalproject.response.SellerRevenueResponse;
@@ -59,7 +60,7 @@ public class OrderService {
     private final CardClient cardClient;
 
     @Transactional
-    public OrderResponse createOrder(OrderCreateRequest request) {
+    public ApiResponse<OrderResponse> createOrder(OrderCreateRequest request) {
 
         Long userId = getCurrentUserId();
 
@@ -158,7 +159,11 @@ public class OrderService {
             auditLogService.createAuditLog(user, "Order", "Order created successfully. Order id: " + savedOrder.getId());
             notificationService.sendNotification(user, "Order created successfully. Order id: " + savedOrder.getId(), NotificationType.ORDER_CREATED, savedOrder.getId());
             log.info("Actionlog.createOrder.end : userId={}", userId);
-            return mapper;
+            return ApiResponse.<OrderResponse>builder()
+                    .status(200)
+                    .message("Order created successfully.")
+                    .data(mapper)
+                    .build();
         }
 
 
@@ -177,7 +182,7 @@ public class OrderService {
     }
 
 
-    public void cancelOrder(Long orderId) {
+    public ApiResponse<String>  cancelOrder(Long orderId) {
 
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
         Long userId = getCurrentUserId();
@@ -231,10 +236,12 @@ public class OrderService {
         paymentTransactionService.returnedPaymentTransaction(order, orderId);
 
 
+        return new ApiResponse<>(200, "Order cancelled successfully.", "Order id: " + orderId);
+
     }
 
 
-    public List<OrderResponse> getOrders() {
+    public ApiResponse<List<OrderResponse>> getOrders() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getOrdersByUserId.start : userId={}", userId);
         var orders = orderRepository.findByUserId_Id(userId);
@@ -246,7 +253,7 @@ public class OrderService {
         var response = orderMapper.toResponseList(orders);
         log.info("Actionlog.getOrdersByUserId.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL ORDERS", "Orders get successfully.");
-        return response;
+        return new ApiResponse<>(200, "Orders retrieved successfully.", response);
 
 //orderin iceriyine baxmagi folan hamisina baxmagi get etmeyi yaz
 
@@ -254,7 +261,7 @@ public class OrderService {
 
     }
 
-    public List<OrderResponse> getContinuedOrders() {
+    public ApiResponse<List<OrderResponse>> getContinuedOrders() {
 
         Long userId = getCurrentUserId();
         log.info("Actionlog.getContinuedOrdersByUserId.start : userId={}", userId);
@@ -265,11 +272,11 @@ public class OrderService {
         var response = orderMapper.toResponseList(continuedOrders);
         log.info("Actionlog.getContinuedOrdersByUserId.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL CONTINUED ORDERS", "Continued orders get successfully.");
-        return response;
+        return new ApiResponse<>(200, "Continued orders retrieved successfully.", response);
     }
 
 
-    public List<OrderResponse> getCancelledOrders() {
+    public ApiResponse<List<OrderResponse>> getCancelledOrders() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getCancelledOrdersByUserId.start : userId={}", userId);
         var orders = orderRepository.findByUserId_Id(userId);
@@ -281,11 +288,11 @@ public class OrderService {
         var response = orderMapper.toResponseList(cancelledOrders);
         log.info("Actionlog.getCancelledOrdersByUserId.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL CANCELLED ORDERS", "Cancelled orders get successfully.");
-        return response;
+        return new ApiResponse<>(200, "Cancelled orders retrieved successfully.", response);
     }
 
 
-    public List<OrderResponse> searchProductInOrders(String productName) {
+    public ApiResponse<List<OrderResponse>> searchProductInOrders(String productName) {
 
         Long userId = getCurrentUserId();
 
@@ -302,7 +309,7 @@ public class OrderService {
         var response = orderMapper.toResponseList(product);
         log.info("Actionlog.searchProductInOrders.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "Search product in orders", "Product in Orders get successfully.");
-        return response;
+        return new ApiResponse<>(200, "Product orders retrieved successfully.", response);
 
     }
 
@@ -355,7 +362,7 @@ public class OrderService {
         return sellerEarnings;
     }
 
-    public List<OrderResponse> getOrdersBySeller(Long sellerId) {
+    public ApiResponse<List<OrderResponse>> getOrdersBySeller(Long sellerId) {
         log.info("Actionlog.getOrdersBySeller.start : sellerId={}", sellerId);
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found with id: " + sellerId));
         var orders = orderRepository.findOrdersBySellerId(sellerId);
@@ -363,21 +370,30 @@ public class OrderService {
             throw new NotFoundException("No orders found for seller id: " + sellerId);
         }
         log.info("Actionlog.getOrdersBySeller.end : sellerId={}", sellerId);
-        return orderMapper.toResponseList(orders);
+        var list=orderMapper.toResponseList(orders);
+        return ApiResponse.<List<OrderResponse>>builder()
+                .status(200)
+                .message("Orders retrieved successfully for seller id: " + sellerId)
+                .data(list)
+                .build();
     }
 
 
-    public SellerRevenueResponse getSellerRevenueStats(Long sellerId) {
+    public ApiResponse<SellerRevenueResponse> getSellerRevenueStats(Long sellerId) {
         log.info("Actionlog.getSellerRevenueStats.start : sellerId={}", sellerId);
         BigDecimal revenue = orderRepository.getTotalRevenueBySeller(sellerId);
         Long orderCount = orderRepository.getTotalOrdersBySeller(sellerId);
 
         var response = new SellerRevenueResponse(revenue != null ? revenue : BigDecimal.ZERO, orderCount != null ? orderCount : 0L);
         log.info("Actionlog.getSellerRevenueStats.end : sellerId={}", sellerId);
-        return response;
+        return ApiResponse.<SellerRevenueResponse>builder()
+                .status(200)
+                .message("Seller revenue stats retrieved successfully for seller id: " + sellerId)
+                .data(response)
+                .build();
     }
 
-    public String sendReturnRequest(Long orderItemId, String reason, MultipartFile imageFile) {
+    public ApiResponse<String> sendReturnRequest(Long orderItemId, String reason, MultipartFile imageFile) {
         log.info("Actionlog.sendReturnRequest.start : orderItem={}", orderItemId);
 
         Long userId = getCurrentUserId();
@@ -416,11 +432,15 @@ public class OrderService {
         notificationService.sendToAllUsers("New return request", NotificationType.RETURN_REQUEST, returnRequest.getId());
         notificationService.sendNotification(user, "Your return request has been sent successfully. Please wait for admin approval.", NotificationType.RETURN_REQUEST, returnRequest.getId());
         log.info("Actionlog.sendReturnRequest.end : orderItem={}", orderItemId);
-        return "Your return request has been sent successfully. Please wait for admin approval.";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Return request sent successfully.")
+                .data("Your return request has been sent successfully. Please wait for admin approval.")
+                .build();
     }
 
 
-    public String getReturnRequestStatus(Long returnRequestId) {
+    public ApiResponse<String> getReturnRequestStatus(Long returnRequestId) {
         log.info("Actionlog.getReturnRequestStatus.start : returnRequestId={}", returnRequestId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -432,11 +452,16 @@ public class OrderService {
         }
 
         log.info("Actionlog.getReturnRequestStatus.end : returnRequestId={}", returnRequestId);
-        return returnRequest.isApproved() ? "Approved" : "Pending";
+        String status = returnRequest.isApproved() ? "Approved" : "Pending";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Return request status retrieved successfully.")
+                .data(status)
+                .build();
     }
 
 
-    public List<ReturnRequestResponse> getReturnRequests() {
+    public ApiResponse<List<ReturnRequestResponse>> getReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getReturnRequestsByUserId.start : userId={}", userId);
 
@@ -452,10 +477,14 @@ public class OrderService {
                 "Return requests retrieved successfully."
         );
 
-        return responseList;
+        return ApiResponse.<List<ReturnRequestResponse>>builder()
+                .status(200)
+                .message("Return requests retrieved successfully.")
+                .data(responseList)
+                .build();
     }
 
-    public List<ReturnRequestResponse> getReturnRequestsByUser() {
+    public ApiResponse<List<ReturnRequestResponse>> getReturnRequestsByUser() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getReturnRequestsByUser.start : userId={}", userId);
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -463,7 +492,7 @@ public class OrderService {
         var list = maptoList(returnRequests);
         log.info("Actionlog.getReturnRequestsByUser.end : userId={}, size={}", userId, list.size());
         auditLogService.createAuditLog(user, "GET ALL RETURN REQUESTS", "Return requests retrieved successfully.");
-        return list;
+        return new ApiResponse<>(200, "Return requests retrieved successfully.", list);
     }
 
     public List<ReturnRequestResponse> maptoList(List<ReturnRequest> returnRequests) {
@@ -482,7 +511,7 @@ public class OrderService {
     }
 
 
-    public List<ReturnRequestResponse> getNotApprovedReturnRequests() {
+    public ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getNotApprovedReturnRequests.start : userId={}", userId);
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -490,10 +519,14 @@ public class OrderService {
         var list = maptoList(returnRequests);
         log.info("Actionlog.getNotApprovedReturnRequests.end : userId={}, size={}", userId, list.size());
         auditLogService.createAuditLog(user, "GET ALL RETURN REQUESTS", "Return requests retrieved successfully.");
-        return list;
+        return ApiResponse.<List<ReturnRequestResponse>>builder()
+                .status(200)
+                .message(" Not Approved Return requests retrieved successfully.")
+                .data(list)
+                .build();
     }
 
-    public List<ReturnRequestResponse> getApprovedReturnRequests() {
+    public ApiResponse<List<ReturnRequestResponse>> getApprovedReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getApprovedReturnRequests.start : userId={}", userId);
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -501,11 +534,15 @@ public class OrderService {
         var list = maptoList(returnRequests);
         log.info("Actionlog.getApprovedReturnRequests.end : userId={}, size={}", userId, list.size());
         auditLogService.createAuditLog(user, "GET ALL RETURN REQUESTS", "Return requests retrieved successfully.");
-        return list;
+        return ApiResponse.<List<ReturnRequestResponse>>builder()
+                .status(200)
+                .message("Approved Return requests retrieved successfully.")
+                .data(list)
+                .build();
     }
 
     @Transactional
-    public String approveReturnRequest(Long returnRequestId) {
+    public ApiResponse<String> approveReturnRequest(Long returnRequestId) {
         log.info("Actionlog.approveReturnRequest.start : returnRequestId={}", returnRequestId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -594,7 +631,11 @@ public class OrderService {
         auditLogService.createAuditLog(user, "APPROVE RETURN REQUEST", "Return request approved successfully. Return request id: " + returnRequestId);
         notificationService.sendNotification(returnRequest.getUser(), "Your return request has been approved.", NotificationType.RETURN_REQUEST_APPROVED, returnRequestId);
         log.info("Actionlog.approveReturnRequest.end : returnRequestId={}", returnRequestId);
-        return "Return request approved successfully.";
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Return request approved successfully.")
+                .data("Return request approved successfully.")
+                .build();
     }
 
     private Integer generateTransactionId() {

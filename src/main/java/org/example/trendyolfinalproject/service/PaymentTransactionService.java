@@ -13,6 +13,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.mapper.PaymentTransactionMapper;
 import org.example.trendyolfinalproject.model.Currency;
 import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.PaymentTransactionResponse;
 import org.example.trendyolfinalproject.response.TransactionResponse;
 import org.springframework.stereotype.Service;
@@ -105,7 +106,7 @@ public class PaymentTransactionService {
     }
 
 
-    public List<PaymentTransactionResponse> getPaymentTransaction(Long paymentMethodId) {
+    public ApiResponse<List<PaymentTransactionResponse>> getPaymentTransaction(Long paymentMethodId) {
         log.info("Actionlog.getPaymentTransaction.start : ");
         var userId = getCurrentUserId();
         var payment = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() -> new NotFoundException("PaymentMethod not found with id: " + paymentMethodId));
@@ -135,11 +136,15 @@ public class PaymentTransactionService {
                 .toList();
 
         log.info("Actionlog.getPaymentTransaction.end : ");
-        return responses;
+        return ApiResponse.<List<PaymentTransactionResponse>>builder()
+                .status(200)
+                .message("Transactions retrieved successfully")
+                .data(responses)
+                .build();
     }
 
 
-    public List<TransactionResponse> getAllTransactions() {
+    public ApiResponse<List<TransactionResponse>> getAllTransactions() {
         log.info("Actionlog.getAllTransactions.start : ");
 
         var userId = getCurrentUserId();
@@ -149,7 +154,11 @@ public class PaymentTransactionService {
             throw new NotFoundException("Transactions not found");
         }
         log.info("Actionlog.getAllTransactions.end : ");
-        return transactions;
+        return ApiResponse.<List<TransactionResponse>>builder()
+                .status(200)
+                .message("All transactions retrieved successfully")
+                .data(transactions)
+                .build();
     }
 
 

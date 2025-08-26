@@ -52,6 +52,7 @@ public class PaymentMethodController {
     }
 
     @GetMapping("/transactions/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<TransactionResponse>> getAllTransactions() {
         return paymentTransactionService.getAllTransactions();
     }

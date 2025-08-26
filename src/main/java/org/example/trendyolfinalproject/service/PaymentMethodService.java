@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.client.CardClient;
 import org.example.trendyolfinalproject.client.TransactionClient;
 import org.example.trendyolfinalproject.dao.entity.Seller;
-import org.example.trendyolfinalproject.dao.repository.AuditLogRepository;
 import org.example.trendyolfinalproject.dao.repository.PaymentMethodRepository;
 import org.example.trendyolfinalproject.dao.repository.PaymentTransactionRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
@@ -14,6 +13,7 @@ import org.example.trendyolfinalproject.mapper.PaymentMethodMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.*;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.PaymentMethodResponse;
 import org.example.trendyolfinalproject.response.PaymentResponse;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,6 @@ public class PaymentMethodService {
     private final PaymentMethodRepository paymentMethodRepository;
     private final PaymentMethodMapper paymentMethodMapper;
     private final UserRepository userRepository;
-    private final AuditLogRepository auditLogRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final PaymentTransactionService paymentTransactionService;
@@ -41,12 +40,12 @@ public class PaymentMethodService {
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final TransactionClient transactionClient;
 
-    public PaymentMethodResponse createPaymentMethod(PaymentMethodCreateRequest request) {
+    public ApiResponse<PaymentMethodResponse> createPaymentMethod(PaymentMethodCreateRequest request) {
         log.info("Actionlog.createPaymentMethod.start : ");
         var userId = getCurrentUserId();
 
         var user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found with id: " + userId));
+                () -> new NotFoundException("User not found with id: " + userId));
 
         var holderName = request.getCardHolderName().toUpperCase();
         var validation = cardClient.validateCard(request.getCardNumber(), holderName);
@@ -75,12 +74,15 @@ public class PaymentMethodService {
 
         auditLogService.createAuditLog(user, "PaymentMethod created", "PaymentMethod created successfully. PaymentMethod id: " + saved.getId());
         log.info("Actionlog.createPaymentMethod.end : ");
-        return response;
-
+        return ApiResponse.<PaymentMethodResponse>builder()
+                .status(200)
+                .message("PaymentMethod created successfully")
+                .data(response)
+                .build();
     }
 
 
-    public void addbalance(AddBalanceRequest request) {
+    public ApiResponse<String> addbalance(AddBalanceRequest request) {
 
         log.info("Actionlog.addbalance.start : ");
         var paymentMethod = paymentMethodRepository.findByCardNumber(request.getCardNumber()).orElseThrow(
@@ -100,10 +102,16 @@ public class PaymentMethodService {
         );
         paymentMethodRepository.save(paymentMethod);
         log.info("Actionlog.addbalance.end : ");
+
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Balance added successfully")
+                .data("New balance: " + paymentMethod.getBalance())
+                .build();
     }
 
 
-    public PaymentMethodResponse changeDefaultPaymentMethod(ChangeDefaultPaymentMethod request) {
+    public ApiResponse<PaymentMethodResponse> changeDefaultPaymentMethod(ChangeDefaultPaymentMethod request) {
         log.info("Actionlog.changeDefaultPaymentMethod.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(
@@ -128,12 +136,17 @@ public class PaymentMethodService {
 
         auditLogService.createAuditLog(user, "Default PaymentMethod changed", "Default PaymentMethod changed successfully. PaymentMethod id: " + paymentMethod.getId());
         log.info("Actionlog.changeDefaultPaymentMethod.end : ");
-        return response;
+
+        return ApiResponse.<PaymentMethodResponse>builder()
+                .status(200)
+                .message("Default PaymentMethod changed successfully")
+                .data(response)
+                .build();
     }
 
 
     @Transactional
-    public void payToSellers(Map<Seller, BigDecimal> earnings) {
+    public ApiResponse<String> payToSellers(Map<Seller, BigDecimal> earnings) {
         earnings.forEach((seller, amount) -> {
             var paymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(seller.getUser().getId(), true).orElseThrow(
                     () -> new NotFoundException("PaymentMethod not found for seller: " + seller.getUser().getName())
@@ -169,10 +182,16 @@ public class PaymentMethodService {
             notificationService.sendNotification(seller.getUser(), "Payment received from " + admin.getName(), NotificationType.PAYMENT_RECEIVED, seller.getId());
             auditLogService.createAuditLog(admin, "Payment received from " + seller.getUser().getName(), "Payment received from " + seller.getUser().getName());
         });
+
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Payments to sellers completed successfully")
+                .data("Payments processed: " + earnings.size())
+                .build();
     }
 
     @Transactional
-    public PaymentResponse pay(PaymentRequest request) {
+    public ApiResponse<PaymentResponse> pay(PaymentRequest request) {
         log.info("Actionlog.pay.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(
@@ -234,7 +253,12 @@ public class PaymentMethodService {
                 .build();
         cardClient.transfer(paymentMethod.getCardNumber(), request.getCardNumber(), request.getAmount());
         log.info("Actionlog.pay.end : ");
-        return response;
+
+        return ApiResponse.<PaymentResponse>builder()
+                .status(200)
+                .message("Payment successful")
+                .data(response)
+                .build();
     }
 
 
