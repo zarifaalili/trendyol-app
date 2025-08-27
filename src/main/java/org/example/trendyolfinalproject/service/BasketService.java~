@@ -123,10 +123,9 @@ public class BasketService {
 
         for (User user : users) {
             notificationService.sendNotification(
-                    user,
+                    user.getId(),
                     "Your basket has been abandoned",
                     NotificationType.ABANDONED_BASKET,
-                    null
 
             );
         }

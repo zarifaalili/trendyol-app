@@ -16,4 +16,7 @@ public interface BasketRepository extends JpaRepository<Basket, Long> {
     Optional<Basket> findByUserId(Long userId);
 
 
+    @Query("SELECT DISTINCT b.basket.user FROM BasketElement b " +
+            "WHERE b.addedAt < :threshold")
+    List<User> findAllUsersWithAbandonedBaskets(@Param("threshold") LocalDateTime threshold);
 }

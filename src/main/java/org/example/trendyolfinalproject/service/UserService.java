@@ -162,7 +162,7 @@ public class UserService {
     }
 
 
-    public  ApiResponse<UserResponse> patchUpdateUser(UserRequest userRequest) {
+    public ApiResponse<UserResponse> patchUpdateUser(UserRequest userRequest) {
         log.info("Actionlog.patchUpdateUser.start : ");
 
         var userId = getCurrentUserId();
@@ -412,6 +412,20 @@ public class UserService {
                 .status(HttpStatus.OK.value())
                 .message("Followed Sellers").
                 build();
+    }
+
+
+    public ApiResponse<String> referTrendyol(String email) {
+        log.info("Actionlog.referTrendyol.start : ");
+        var user=userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
+        emailService.sendEmail(email, "Refer Trendyol", "https://www.trendyol.com/");
+        log.info("Actionlog.referTrendyol.end : ");
+        return ApiResponse.<String>builder()
+                .data("Refer Trendyol")
+                .status(HttpStatus.OK.value())
+                .message("Trendyol reffered successfully").
+                build();
+
     }
 
 

@@ -7,6 +7,7 @@ import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.BasketElementResponse;
 import org.example.trendyolfinalproject.service.BasketElementService;
 import org.example.trendyolfinalproject.service.BasketService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,5 +63,12 @@ public class BasketController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<List<BasketElementResponse>> getBasketElements() {
         return basketElementService.getBasketElements();
+    }
+
+    @PostMapping("/notifyAbandonedBasket")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> notifyAbandonedBasket() {
+        int notifiedCount = basketService.notifyAbandonedBaskets();
+        return ResponseEntity.ok(notifiedCount + " users notified about abandoned baskets");
     }
 }

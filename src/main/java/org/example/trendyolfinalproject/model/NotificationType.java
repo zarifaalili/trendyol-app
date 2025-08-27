@@ -29,5 +29,6 @@ public enum NotificationType {
     RETURN_REQUEST_APPROVED,
     ALERT,
     NEW_FOLLOWER,
-    UNFOLLOWER
+    UNFOLLOWER,
+    ABANDONED_BASKET
 }

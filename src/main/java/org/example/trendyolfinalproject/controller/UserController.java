@@ -29,8 +29,8 @@ public class UserController {
 
     @PostMapping("/signUp/verify-otp/{email}/{otp}")
     public ApiResponse<AuthResponse> verifyOtp(@PathVariable String email,
-                                  @PathVariable String otp,
-                                  @RequestBody UserRegisterRequest userRegisterRequest) {
+                                               @PathVariable String otp,
+                                               @RequestBody UserRegisterRequest userRegisterRequest) {
         return userService.verifyOtp(email, otp, userRegisterRequest);
     }
 
@@ -104,4 +104,10 @@ public class UserController {
         return sellerFollowService.unfollow(sellerId);
     }
 
+
+    @PostMapping("/refer/{email}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<String> refer(@PathVariable String email) {
+        return userService.referTrendyol(email);
+    }
 }
