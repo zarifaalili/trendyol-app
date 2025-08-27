@@ -21,7 +21,7 @@ public class Handler {
                 .body(new Response(e.getMessage(), "400"));
 
 
-        }
+    }
 
 
     @ExceptionHandler(VerifyEmailException.class)
@@ -50,7 +50,7 @@ public class Handler {
     public ResponseEntity<Response> handle(NotFoundException e) {
         return ResponseEntity
                 .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+                .body(new Response(e.getMessage(), HttpStatus.NOT_FOUND.toString()));
     }
 
     @ExceptionHandler(CouponUsageLimitExceededException.class)

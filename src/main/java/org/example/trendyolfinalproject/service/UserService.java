@@ -2,6 +2,7 @@ package org.example.trendyolfinalproject.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.trendyolfinalproject.client.EmailClient;
 import org.example.trendyolfinalproject.dao.entity.Basket;
 import org.example.trendyolfinalproject.dao.entity.Order;
 import org.example.trendyolfinalproject.dao.repository.*;
@@ -51,6 +52,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final NotificationService notificationService;
     private final AdressRepository adressRepository;
+    private final EmailClient emailClient;
 
 
     private final ConcurrentMap<String, String> otpStore = new ConcurrentHashMap<>();
@@ -417,9 +419,15 @@ public class UserService {
 
     public ApiResponse<String> referTrendyol(String email) {
         log.info("Actionlog.referTrendyol.start : ");
-        var user=userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
+        var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
+
+        var existsEmail = emailClient.checkEmailExists(email);
+        if (!existsEmail) {
+            throw new NotFoundException("Email not found");
+        }
         emailService.sendEmail(email, "Refer Trendyol", "https://www.trendyol.com/");
         log.info("Actionlog.referTrendyol.end : ");
+        auditLogService.createAuditLog(user, "Refer Trendyol", "Refer Trendyol successfully. User id: " + user.getId());
         return ApiResponse.<String>builder()
                 .data("Refer Trendyol")
                 .status(HttpStatus.OK.value())
