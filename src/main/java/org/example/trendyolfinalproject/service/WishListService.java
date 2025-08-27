@@ -152,7 +152,7 @@ public class WishListService {
         }
         var mapper = wishListMapper.toResponseList(favorites);
         auditLogService.createAuditLog(user, "Get Product Variants By Decreased Cost", "Get favorite successfully. User id: " + user.getId());
-        log.info("Actionlog.getProductVariantsByDecreasedCost.end : ");
+        log.info("Actionlog.getProductVariantsByDecreasedCost.end: ");
         return ApiResponse.<List<WishListResponse>>builder()
                 .status(200)
                 .message("get product decriesed cost successfully. User id: " + user.getId())

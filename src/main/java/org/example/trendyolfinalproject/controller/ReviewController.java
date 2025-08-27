@@ -66,7 +66,7 @@ public class ReviewController {
 
     @GetMapping("/getReviewsWithFilter/{productId}")
     public ApiResponse<List<ReviewResponse>> getProductReviewsWithFilter(@PathVariable Long productId,
-                                                                         @RequestParam(required = false) Integer[] rating, @RequestParam(required = false) String subject) {
+                                                                         @RequestParam(required = false) Integer[] rating, git a@RequestParam(required = false) String subject) {
         return reviewService.getProductReviewsWithFilter(productId, rating, subject);
     }
 //    @DeleteMapping("/deleteReview/{id}")
