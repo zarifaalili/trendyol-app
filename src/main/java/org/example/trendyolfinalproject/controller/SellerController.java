@@ -2,6 +2,7 @@ package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.SellerCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.SellerFollowResponse;
 import org.example.trendyolfinalproject.response.SellerResponse;
 import org.example.trendyolfinalproject.service.SellerFollowService;
@@ -20,33 +21,33 @@ public class SellerController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/createSeller")
-    public SellerResponse createSeller(@RequestBody SellerCreateRequest request) {
+    public  ApiResponse<SellerResponse> createSeller(@RequestBody SellerCreateRequest request) {
         return sellerService.createSeller(request);
     }
 
     @GetMapping("/getSellers")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<SellerResponse> getSellers() {
+    public ApiResponse<List<SellerResponse>> getSellers() {
         return sellerService.getSellers();
     }
 
 
     @GetMapping("/getSeller/{companyName}")
     @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
-    public SellerResponse getSeller(@PathVariable String companyName) {
+    public ApiResponse<SellerResponse> getSeller(@PathVariable String companyName) {
         return sellerService.getSeller(companyName);
     }
 
 
     @PostMapping("/follow/{sellerId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public String follow(@PathVariable Long sellerId) {
+    public ApiResponse<String> follow(@PathVariable Long sellerId) {
         return sellerFollowService.follow(sellerId);
     }
 
     @GetMapping("/followers/all")
     @PreAuthorize("hasRole('SELLER')")
-    public List<SellerFollowResponse> getAllFollowers() {
+    public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
         return sellerFollowService.getAllFollowers();
     }
 }

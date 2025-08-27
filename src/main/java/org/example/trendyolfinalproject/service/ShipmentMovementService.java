@@ -13,6 +13,7 @@ import org.example.trendyolfinalproject.mapper.ShipmentMovementMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.ShipmentMovementCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ShipmentMovementResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -31,7 +32,7 @@ public class ShipmentMovementService {
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
 
-    public ShipmentMovementResponse addShipmentMovement(ShipmentMovementCreateRequest request) {
+    public ApiResponse<ShipmentMovementResponse> addShipmentMovement(ShipmentMovementCreateRequest request) {
         log.info("Actionlog.addShipmentMovement.start : ");
         Shipment shipment = shipmentRepository.findById(request.getShipmentId()).orElseThrow(
                 () -> new NotFoundException("Shipment not found")
@@ -93,7 +94,7 @@ public class ShipmentMovementService {
         var response = shipmentMovementMapper.toResponse(entity);
         notificationService.sendNotification(user, "Shipment moved to " + actionNote, NotificationType.SHIPMENT_MOVEMENT, entity.getShipment().getId());
         log.info("Actionlog.addShipmentMovement.end : ");
-        return response;
+        return ApiResponse.success(response);
 
     }
 

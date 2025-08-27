@@ -22,36 +22,36 @@ public class UserController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/signUp")
-    public String registerOrLoginUser(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public ApiResponse<String> registerOrLoginUser(@RequestBody UserRegisterRequest userRegisterRequest) {
         return userService.registerUser(userRegisterRequest);
     }
 
 
     @PostMapping("/signUp/verify-otp/{email}/{otp}")
-    public AuthResponse verifyOtp(@PathVariable String email,
+    public ApiResponse<AuthResponse> verifyOtp(@PathVariable String email,
                                   @PathVariable String otp,
                                   @RequestBody UserRegisterRequest userRegisterRequest) {
         return userService.verifyOtp(email, otp, userRegisterRequest);
     }
 
     @PutMapping("/putUpdateUser")
-    public UserResponse updateUser(@RequestBody @Valid UserRequest userRequest) {
+    public ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
         return userService.updateUser(userRequest);
     }
 
 
     @PatchMapping("/patchUpdateUser")
-    public UserResponse patchUpdateUser(@RequestBody UserRequest userRequest) {
+    public ApiResponse<UserResponse> patchUpdateUser(@RequestBody UserRequest userRequest) {
         return userService.patchUpdateUser(userRequest);
     }
 
     @PostMapping("/updateEmail/{newEmail}")
-    public String updateEmail(@PathVariable String newEmail) {
+    public ApiResponse<String> updateEmail(@PathVariable String newEmail) {
         return userService.updateEmail(newEmail);
     }
 
     @PatchMapping("/verifyEmail/{email}/{otp}")
-    public String verifyEmail(@PathVariable String email, @PathVariable String otp) {
+    public ApiResponse<String> verifyEmail(@PathVariable String email, @PathVariable String otp) {
         return userService.verifyEmail(email, otp);
     }
 
@@ -64,7 +64,7 @@ public class UserController {
     }
 
     @GetMapping("/getUserProfile")
-    public UserProfileResponse getUserProfile() {
+    public ApiResponse<UserProfileResponse> getUserProfile() {
         return userService.getUserProfile();
     }
 

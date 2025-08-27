@@ -9,8 +9,8 @@ import org.example.trendyolfinalproject.dao.repository.ShipmentRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ShipmentHistoryMapper;
-import org.example.trendyolfinalproject.model.Location;
 import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ShipmentHistoryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -50,7 +50,7 @@ public class ShipmentHistoryService {
         shipmentHistoryRepository.save(shipmentHistory);
     }
 
-    public List<ShipmentHistoryResponse> getShipmentHistory(Long shipmentId) {
+    public ApiResponse<List<ShipmentHistoryResponse>> getShipmentHistory(Long shipmentId) {
         log.info("Actionlog.getShipmentHistory.start : shipmentId={}", shipmentId);
         var userId = getCurrentUserId();
         var shipment = shipmentRepository.findById(shipmentId)
@@ -69,10 +69,15 @@ public class ShipmentHistoryService {
 
         auditLogService.createAuditLog(user, "Get Shipment History", "Get Shipment History");
         log.info("Actionlog.getShipmentHistory.end : shipmentId={}", shipmentId);
-        return shipmentHistoryMapper.toResponseList(shipmentHistories);
+        var response = shipmentHistoryMapper.toResponseList(shipmentHistories);
+        return ApiResponse.<List<ShipmentHistoryResponse>>builder()
+                .data(response)
+                .message("Shipment history found")
+                .status(200)
+                .build();
     }
 
-    public LocalDateTime getEstimatedDeliveryDate(Long shipmentId) {
+    public ApiResponse<LocalDateTime> getEstimatedDeliveryDate(Long shipmentId) {
         log.info("Actionlog.getActualDeliveryDate.start : shipmentId={}", shipmentId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -82,9 +87,13 @@ public class ShipmentHistoryService {
         }
         var estimatedDeliveryDate = shipment.getEstimatedDeliveryDate();
         log.info("Actionlog.getActualDeliveryDate.end : shipmentId={}", shipmentId);
-        return estimatedDeliveryDate;
+        var response = estimatedDeliveryDate;
+        return ApiResponse.<LocalDateTime>builder()
+                .data(response)
+                .message("Estimated delivery date found")
+                .status(200)
+                .build();
     }
-
 
 
     private Long getCurrentUserId() {

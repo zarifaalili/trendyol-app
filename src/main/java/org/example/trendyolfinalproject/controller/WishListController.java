@@ -2,6 +2,7 @@ package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.WishListCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.WishListResponse;
 import org.example.trendyolfinalproject.service.WishListProxyService;
 import org.example.trendyolfinalproject.service.WishListService;
@@ -20,7 +21,7 @@ public class WishListController {
 
     @PostMapping("/createWishList")
     @PreAuthorize("hasRole('CUSTOMER')")
-    WishListResponse createWishList(@RequestBody WishListCreateRequest request) {
+    ApiResponse<WishListResponse> createWishList(@RequestBody WishListCreateRequest request) {
         return wishListService.addToFavorite(request);
     }
 
@@ -33,19 +34,19 @@ public class WishListController {
 
     @GetMapping("/getWishList")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<WishListResponse> getWishList() {
+    public ApiResponse<List<WishListResponse>> getWishList() {
         return wishListService.getFavorites();
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<WishListResponse> serchWishList(@RequestParam String productName) {
+    public ApiResponse<List<WishListResponse>> serchWishList(@RequestParam String productName) {
         return wishListService.serchWishList(productName);
     }
 
     @GetMapping("/decreasedCost")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<WishListResponse> getProductVariantsByDecreasedCost() {
+    public ApiResponse<List<WishListResponse>> getProductVariantsByDecreasedCost() {
         return wishListService.getProductVariantsByDecreasedCost();
     }
 
@@ -60,10 +61,10 @@ public class WishListController {
     }
 
     @GetMapping("/view/{wishListId}")
-    public ResponseEntity<WishListResponse> viewWishList(@PathVariable Long wishListId) {
+    public ApiResponse<WishListResponse> viewWishList(@PathVariable Long wishListId) {
         var currentUser = wishListService.getCurrentUser();
         var wishList = wishListProxyService.getWishListForUser(wishListId, currentUser);
-        return ResponseEntity.ok(wishList);
+        return wishList;
     }
 
 

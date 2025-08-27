@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
 import org.example.trendyolfinalproject.mapper.WishListMapper;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.WishListResponse;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ public class WishListProxyService {
 
 
 
-    public WishListResponse getWishListForUser(Long wishListId, User currentUser) {
+    public ApiResponse<WishListResponse> getWishListForUser(Long wishListId, User currentUser) {
 
         var wishList = wishListRepository.findById(wishListId)
                 .orElseThrow(() -> new RuntimeException("WishList not found"));
@@ -31,7 +32,11 @@ public class WishListProxyService {
         mapper.setAddedAt(wishList.getAddedAt());
 
 
-        return mapper;
+        return ApiResponse.<WishListResponse>builder()
+                .data(mapper)
+                .message("Success")
+                .status(200)
+                .build();
     }
 
 }

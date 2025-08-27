@@ -10,6 +10,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.CouponUsageLi
 import org.example.trendyolfinalproject.exception.customExceptions.MinimumOrderAmountNotMetException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.model.DiscountType;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -33,7 +34,7 @@ public class UserCouponService {
 
 
     @Transactional
-    public void useUserCoupon(Long couponId) {
+    public ApiResponse<String> useUserCoupon(Long couponId) {
         var userId = getCurrentUserId();
         log.info("Actionlog.useUserCoupon.start : userId={}, couponId={}", userId, couponId);
 
@@ -150,10 +151,12 @@ public class UserCouponService {
         auditLogService.createAuditLog(user, "Use Coupon", "Used coupon with id " + couponId);
         log.info("Actionlog.useUserCoupon.end : userId={}, couponId={}", userId, couponId);
 
+        return ApiResponse.success("Coupon applied successfully");
+
     }
 
 
-    public void cancelUserCoupon(Long couponId) {
+    public ApiResponse<String> cancelUserCoupon(Long couponId) {
         var userId = getCurrentUserId();
 
         log.info("Actionlog.cancelUserCoupon.start : userId={}, couponId={}", userId, couponId);
@@ -191,6 +194,9 @@ public class UserCouponService {
 
         auditLogService.createAuditLog(user, "CANCEL COUPON", "Coupon cancelled");
         log.info("Actionlog.cancelUserCoupon.end : userId={}, couponId={}", userId, couponId);
+
+        return ApiResponse.success("Coupon cancelled successfully");
+
     }
 
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.dao.entity.WishList;
 import org.example.trendyolfinalproject.dao.repository.ProductVariantRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
@@ -13,6 +12,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.mapper.WishListMapper;
 import org.example.trendyolfinalproject.model.Role;
 import org.example.trendyolfinalproject.request.WishListCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.WishListResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
@@ -40,7 +40,7 @@ public class WishListService {
     private static final String WISHLIST_KEY_PREFIX = "wishlist:";
 
 
-    public WishListResponse addToFavorite(WishListCreateRequest request) {
+    public ApiResponse<WishListResponse> addToFavorite(WishListCreateRequest request) {
         var userId = getCurrentUserId();
 
         if (userId == null) {
@@ -61,11 +61,17 @@ public class WishListService {
         var response = wishListMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Add to Favorite", "Created favorite with id: " + saved.getId());
         log.info("Actionlog.createWishList.end : userId={}", user);
-        return response;
+
+        return ApiResponse
+                .<WishListResponse>builder()
+                .status(200)
+                .message("Created favorite with id: " + saved.getId())
+                .data(response)
+                .build();
 
     }
 
-    public void deleteFromFavorites(Long id) {
+    public ApiResponse<String> deleteFromFavorites(Long id) {
         log.info("Actionlog.deleteFromFavorites.start : id={}", id);
 
         var userId = getCurrentUserId();
@@ -77,9 +83,13 @@ public class WishListService {
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId)), "DELETE Favorite", "Deleted favorite with id: " + id);
         log.info("Actionlog.deleteFromFavorites.end : id={}", id);
 
+        return ApiResponse.<String>builder()
+                .status(200)
+                .message("Deleted favorite with id: " + id)
+                .build();
     }
 
-    public List<WishListResponse> getFavorites() {
+    public ApiResponse<List<WishListResponse>> getFavorites() {
 
         Long userId = getCurrentUserId();
         String cacheKey = WISHLIST_KEY_PREFIX + userId;
@@ -87,8 +97,15 @@ public class WishListService {
         var cached = redisTemplate.opsForValue().get(WISHLIST_KEY_PREFIX + getCurrentUserId());
         if (cached != null) {
             log.info("Actionlog.getFavorites.start : ");
-            return objectMapper.convertValue(cached, new TypeReference<List<WishListResponse>>() {
+            var obj = objectMapper.convertValue(cached, new TypeReference<List<WishListResponse>>() {
             });
+
+            return ApiResponse.<List<WishListResponse>>builder()
+                    .status(200)
+                    .message("Get favorite successfully. User id: " + userId)
+                    .data(obj)
+                    .build();
+
 
         }
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -98,12 +115,15 @@ public class WishListService {
         redisTemplate.opsForValue().set(cacheKey, mapper, Duration.ofMinutes(10));
         log.info("Actionlog.getFavorites.end : ");
         auditLogService.createAuditLog(user, "Get Favorites", "Get favorite successfully. User id: " + user.getId());
-        return mapper;
-
+        return ApiResponse.<List<WishListResponse>>builder()
+                .status(200)
+                .message("Get favorite successfully. User id: " + userId)
+                .data(mapper)
+                .build();
     }
 
 
-    public List<WishListResponse> serchWishList(String productName) {
+    public ApiResponse<List<WishListResponse>> serchWishList(String productName) {
         log.info("Actionlog.serchWishList.start : ");
 
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
@@ -115,11 +135,15 @@ public class WishListService {
         auditLogService.createAuditLog(user, "Serch WishList", "Serch favorite successfully. User id: " + user.getId());
         log.info("Actionlog.serchWishList.end : ");
 
-        return mapper;
+        return ApiResponse.<List<WishListResponse>>builder()
+                .status(200)
+                .message("Serch favorite successfully. User id: " + user.getId())
+                .data(mapper)
+                .build();
     }
 
 
-    public List<WishListResponse> getProductVariantsByDecreasedCost() {
+    public ApiResponse<List<WishListResponse>> getProductVariantsByDecreasedCost() {
         log.info("Actionlog.getProductVariantsByDecreasedCost.start : ");
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
         var favorites = wishlistRepository.getProductVariantsByDecreasedCost();
@@ -129,11 +153,15 @@ public class WishListService {
         var mapper = wishListMapper.toResponseList(favorites);
         auditLogService.createAuditLog(user, "Get Product Variants By Decreased Cost", "Get favorite successfully. User id: " + user.getId());
         log.info("Actionlog.getProductVariantsByDecreasedCost.end : ");
-        return mapper;
+        return ApiResponse.<List<WishListResponse>>builder()
+                .status(200)
+                .message("get product decriesed cost successfully. User id: " + user.getId())
+                .data(mapper)
+                .build();
     }
 
 
-    public void shareWishListWithUser(Long wishListId, Long userId) {
+    public ApiResponse<Void> shareWishListWithUser(Long wishListId, Long userId) {
         log.info("Actionlog.shareWishListWithUser.start : ");
 
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
@@ -145,8 +173,7 @@ public class WishListService {
                 .orElseThrow(() -> new NotFoundException("WishList not found"));
 
 
-
-        if(!wishList.getUser().equals(user)){
+        if (!wishList.getUser().equals(user)) {
             throw new NotFoundException("Access denied: You cannot share this wishlist");
         }
 
@@ -156,11 +183,12 @@ public class WishListService {
             wishlistRepository.save(wishList);
 
         }
+
+        return ApiResponse.<Void>builder()
+                .status(200)
+                .message("WishList shared successfully. User id: " + user.getId())
+                .build();
     }
-
-
-
-
 
 
     public Long getCurrentUserId() {
@@ -181,7 +209,6 @@ public class WishListService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
-
 
 
 }

@@ -13,6 +13,7 @@ import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.model.Role;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.SellerCreateRequest;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.SellerResponse;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class SellerService {
     private final BasketRepository basketRepository;
     private final NotificationService notificationService;
 
-    public SellerResponse createSeller(SellerCreateRequest request) {
+    public ApiResponse<SellerResponse> createSeller(SellerCreateRequest request) {
 
         log.info("Actionlog.createSeller.start : companyName={}", request.getCompanyName());
 
@@ -74,22 +75,39 @@ public class SellerService {
         notificationService.sendToAdmins("New seller request", NotificationType.SELLER_REQUEST, seller.getId());
         notificationService.sendNotification(user, "Your seller account has been created. Please wait for approval", NotificationType.SELLER_CREATED, seller.getId());
         log.info("Actionlog.createSeller.end : sellerName={}", request.getCompanyName());
-        return response;
+        return ApiResponse.<SellerResponse>builder()
+                .data(response)
+                .message("Seller created successfully")
+                .status(200)
+                .build();
     }
 
-    public List<SellerResponse> getSellers() {
+    public ApiResponse<List<SellerResponse>> getSellers() {
         var sellers = sellerRepository.findAll();
         if (!sellers.isEmpty()) {
-            return sellers.stream().map(sellerMapper::toResponse).toList();
+            var response = sellers.stream().map(sellerMapper::toResponse).toList();
+            return ApiResponse.<List<SellerResponse>>builder()
+                    .data(response)
+                    .status(200)
+                    .build();
         }
-        return List.of();
+        return ApiResponse.<List<SellerResponse>>builder()
+                .message("Sellers not found")
+                .status(200)
+                .data(List.of())
+                .build();
     }
 
 
-    public SellerResponse getSeller(String companyName) {
+    public ApiResponse<SellerResponse> getSeller(String companyName) {
         Seller seller = sellerRepository.findFirstByCompanyName(companyName)
                 .orElseThrow(() -> new RuntimeException("Seller not found with company name: " + companyName));
-        return sellerMapper.toResponse(seller);
+        var response = sellerMapper.toResponse(seller);
+        return ApiResponse.<SellerResponse>builder()
+                .data(response)
+                .status(200)
+                .message("Seller found successfully")
+                .build();
     }
 
 

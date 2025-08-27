@@ -1,6 +1,7 @@
 package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.service.UserCouponService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,14 +17,15 @@ public class UserCouponController {
 
     @PostMapping("/useUserCoupon/{couponId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public void useUserCoupon(@PathVariable Long couponId) {
-        userCouponService.useUserCoupon(couponId);
+    public ApiResponse<String> useUserCoupon(@PathVariable Long couponId) {
+
+        return userCouponService.useUserCoupon(couponId);
     }
 
     @PostMapping("/cancelUserCoupon/{couponId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public void cancelUserCoupon( @PathVariable Long couponId) {
-        userCouponService.cancelUserCoupon(couponId);
+    public ApiResponse<String> cancelUserCoupon(@PathVariable Long couponId) {
+        return userCouponService.cancelUserCoupon(couponId);
     }
 
 }

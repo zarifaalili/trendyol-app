@@ -57,7 +57,7 @@ public class UserService {
     private final ConcurrentMap<String, Long> otpExpiry = new ConcurrentHashMap<>();
 
 
-    public String registerUser(UserRegisterRequest userRegisterRequest) {
+    public ApiResponse<String> registerUser(UserRegisterRequest userRegisterRequest) {
         log.info("Actionlog.registerUser.start : ");
         var existingUser = userRepository.findByEmail(userRegisterRequest.getEmail());
         if (existingUser.isPresent()) {
@@ -76,11 +76,14 @@ public class UserService {
 
         emailService.sendOtp(userRegisterRequest.getEmail(), otp);
         log.info("Actionlog.registerUser.end : ");
-        return "otp sent to " + userRegisterRequest.getEmail();
-
+        return ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .message("OTP sent successfully")
+                .data("Otp sent to " + userRegisterRequest.getEmail())
+                .build();
     }
 
-    public AuthResponse verifyOtp(String email, String otp, UserRegisterRequest userRegisterRequest) { //
+    public ApiResponse<AuthResponse> verifyOtp(String email, String otp, UserRegisterRequest userRegisterRequest) { //
         log.info("Actionlog.verifyOtp.start : ");
         String storedOtp = otpStore.get(email);
         Long expiry = otpExpiry.get(email);
@@ -119,12 +122,15 @@ public class UserService {
         notificationService.sendNotification(savedUser, "Welcome to Trendyol", NotificationType.WELCOME, savedUser.getId());
 
         log.info("Actionlog.verifyOtp.end : ");
-        return new AuthResponse(accessToken, refreshToken);
-
+        return ApiResponse.<AuthResponse>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("User registered successfully")
+                .data(new AuthResponse(accessToken, refreshToken))
+                .build();
 
     }
 
-    public UserResponse updateUser(UserRequest userRequest) {
+    public ApiResponse<UserResponse> updateUser(UserRequest userRequest) {
         log.info("Actionlog.updateUser.start : ");
 
         var userId = getCurrentUserId();
@@ -148,11 +154,15 @@ public class UserService {
         notificationService.sendNotification(user, "Your account updated  successfully. Your account name " + user.getName(), NotificationType.USER_UPDATE, user.getId());
 
         log.info("Actionlog.updateUser.end : ");
-        return response;
+        return ApiResponse.<UserResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("User updated successfully")
+                .data(response)
+                .build();
     }
 
 
-    public UserResponse patchUpdateUser(UserRequest userRequest) {
+    public  ApiResponse<UserResponse> patchUpdateUser(UserRequest userRequest) {
         log.info("Actionlog.patchUpdateUser.start : ");
 
         var userId = getCurrentUserId();
@@ -180,11 +190,16 @@ public class UserService {
         notificationService.sendNotification(user, "Your account updated  successfully. Your account name " + user.getName(), NotificationType.USER_UPDATE, user.getId());
 
         log.info("Actionlog.patchUpdateUser.end : ");
-        return response;
+
+        return ApiResponse.<UserResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("User updated successfully")
+                .data(response)
+                .build();
     }
 
 
-    public String updateEmail(String newEmail) {
+    public ApiResponse<String> updateEmail(String newEmail) {
         log.info("Actionlog.updateEmail.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -205,11 +220,15 @@ public class UserService {
 
         log.info("Actionlog.updateEmail.end : ");
 
-        return "Otp sent to " + newEmail + " for verification. Please verify to complete the email update";
+        return ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .message("Otp sent for email verification")
+                .data("Otp sent to " + newEmail)
+                .build();
     }
 
 
-    public String verifyEmail(String newEmail, String otp) {
+    public ApiResponse<String> verifyEmail(String newEmail, String otp) {
 
         log.info("Actionlog.verifyEmail.start : ");
         var userId = getCurrentUserId();
@@ -239,11 +258,16 @@ public class UserService {
         emailService.sendEmail(oldEmail, "Update Account Info", "Your email has been updated to " + newEmail);
         emailService.sendEmail(newEmail, "Your email address has been set as your email address on Trendyol. User name: ", user.getName());
         log.info("Actionlog.verifyEmail.end : ");
-        return "Email updated successfully to " + newEmail;
+
+        return ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .message("Email updated successfully")
+                .data("Email changed from " + oldEmail + " to " + newEmail)
+                .build();
     }
 
 
-    public void deleteUser() {
+    public ApiResponse<String> deleteUser() {
         log.info("Actionlog.deleteUser.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -251,9 +275,14 @@ public class UserService {
         userRepository.save(user);
         log.info("Actionlog.deleteUser.end : ");
 
+        return ApiResponse.<String>builder()
+                .status(HttpStatus.OK.value())
+                .message("User deleted successfully")
+                .data("User with id " + user.getId() + " deactivated")
+                .build();
     }
 
-    public UserProfileResponse getUserProfile() {
+    public ApiResponse<UserProfileResponse> getUserProfile() {
         log.info("Actionlog.getUserProfile.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -276,7 +305,11 @@ public class UserService {
         response.setTotalSpent(totalSpent);
 
         log.info("Actionlog.getUserProfile.end : ");
-        return response;
+        return ApiResponse.<UserProfileResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("User profile retrieved successfully")
+                .data(response)
+                .build();
     }
 
     private Double calculateTotalSpent(Long userId) {
