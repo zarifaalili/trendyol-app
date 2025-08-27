@@ -2,12 +2,12 @@ package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.response.ApiResponse;
+import org.example.trendyolfinalproject.response.UserCouponResponse;
 import org.example.trendyolfinalproject.service.UserCouponService;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/userCoupon")
@@ -28,4 +28,10 @@ public class UserCouponController {
         return userCouponService.cancelUserCoupon(couponId);
     }
 
+    @GetMapping("/history/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<UserCouponResponse>> getUserCouponHistory(@PathVariable Long userId) {
+
+        return userCouponService.getUserCouponHistory(userId);
+    }
 }

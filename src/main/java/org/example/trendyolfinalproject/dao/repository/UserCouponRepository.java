@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
@@ -16,4 +17,6 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 
     @Query("SELECT SUM(uc.usageCount) FROM UserCoupon uc")
     BigDecimal getTotalCouponsUsed();
+
+    List<UserCoupon> findByUser(User user);
 }

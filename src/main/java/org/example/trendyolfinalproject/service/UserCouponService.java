@@ -10,7 +10,10 @@ import org.example.trendyolfinalproject.exception.customExceptions.CouponUsageLi
 import org.example.trendyolfinalproject.exception.customExceptions.MinimumOrderAmountNotMetException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.model.DiscountType;
+import org.example.trendyolfinalproject.model.Role;
 import org.example.trendyolfinalproject.response.ApiResponse;
+import org.example.trendyolfinalproject.response.UserCouponResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -196,6 +199,39 @@ public class UserCouponService {
         log.info("Actionlog.cancelUserCoupon.end : userId={}, couponId={}", userId, couponId);
 
         return ApiResponse.success("Coupon cancelled successfully");
+
+    }
+
+
+    public ApiResponse<List<UserCouponResponse>> getUserCouponHistory(Long userId) {
+        log.info("Actionlog.getUserCouponHistory.start : userId={}", userId);
+        var currentUserId = getCurrentUserId();
+        var currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
+        var user = userRepository.findByIdAndRole(userId, Role.CUSTOMER).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        var userUsedCoupons = userCouponRepository.findByUser(user);
+        if (userUsedCoupons.isEmpty()) {
+            throw new NotFoundException("User has no coupon history");
+        }
+
+        List<UserCouponResponse> response = userUsedCoupons.stream()
+                .map(uc -> UserCouponResponse.builder()
+                        .id(uc.getId())
+                        .userId(uc.getUser().getId())
+                        .couponId(uc.getCoupon().getId())
+                        .couponCode(uc.getCoupon().getCode())
+                        .usageCount(uc.getUsageCount())
+                        .lastUsedDate(uc.getLastUseddate())
+                        .build())
+                .toList();
+
+        log.info("Actionlog.getUserCouponHistory.end : userId={}", userId);
+        auditLogService.createAuditLog(currentUser, "GET COUPON HISTORY", "Got coupon history");
+        return ApiResponse.<List<UserCouponResponse>>builder()
+                .status(HttpStatus.OK.value())
+                .data(response)
+                .message("User Coupon History")
+                .build();
+
 
     }
 
