@@ -2,11 +2,11 @@ package org.example.trendyolfinalproject.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.trendyolfinalproject.dao.entity.Product;
+import org.example.trendyolfinalproject.dao.entity.Review;
 import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.dao.repository.BasketRepository;
-import org.example.trendyolfinalproject.dao.repository.SellerRepository;
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.mapper.SellerMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
@@ -16,6 +16,8 @@ import org.example.trendyolfinalproject.request.SellerCreateRequest;
 import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.SellerResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 
@@ -29,6 +31,9 @@ public class SellerService {
     private final SellerMapper sellerMapper;
     private final BasketRepository basketRepository;
     private final NotificationService notificationService;
+    private final ProductRepository productRepository;
+    private final ReviewRepository reviewRepository;
+    private final AuditLogService auditLogService;
 
     public ApiResponse<SellerResponse> createSeller(SellerCreateRequest request) {
 
@@ -110,5 +115,48 @@ public class SellerService {
                 .build();
     }
 
+
+    public ApiResponse<Double> getSellerAverageRating(Long sellerId) {
+
+        var userId = getCurrentUserId();
+
+        log.info("Actionlog.getSellerAverageRating.start : sellerId={}", sellerId);
+
+        List<Product> sellerProducts = productRepository.findBySellerId(sellerId);
+
+        if (sellerProducts.isEmpty()) {
+            return ApiResponse.success(0.0);
+        }
+
+        double totalRating = 0.0;
+        int reviewCount = 0;
+
+        for (Product product : sellerProducts) {
+            List<Review> approvedReviews = reviewRepository.findByProduct_IdAndIsApproved(product.getId(), true);
+            for (Review review : approvedReviews) {
+                totalRating += review.getRating();
+                reviewCount++;
+            }
+        }
+
+        double averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
+
+        auditLogService.createAuditLog(
+                userRepository.findById(userId).orElseThrow(),
+                "Seller Average Rating",
+                "Average rating for seller with id: " + sellerId + " is: " + averageRating
+        );
+
+
+        log.info("Actionlog.getSellerAverageRating.end : sellerId={}", sellerId);
+
+        return ApiResponse.success(averageRating);
+    }
+
+
+    private Long getCurrentUserId() {
+        return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
+    }
 
 }

@@ -21,7 +21,7 @@ public class SellerController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/createSeller")
-    public  ApiResponse<SellerResponse> createSeller(@RequestBody SellerCreateRequest request) {
+    public ApiResponse<SellerResponse> createSeller(@RequestBody SellerCreateRequest request) {
         return sellerService.createSeller(request);
     }
 
@@ -49,5 +49,10 @@ public class SellerController {
     @PreAuthorize("hasRole('SELLER')")
     public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
         return sellerFollowService.getAllFollowers();
+    }
+
+    @GetMapping("/raiting/{sellerId}")
+    public ApiResponse<Double> getRaiting(@PathVariable Long sellerId) {
+        return sellerService.getSellerAverageRating(sellerId);
     }
 }
