@@ -183,7 +183,7 @@ public class WishListService {
             wishlistRepository.save(wishList);
 
         }
-
+        log.info("Actionlog.shareWishListWithUser.end : ");
         return ApiResponse.<Void>builder()
                 .status(200)
                 .message("WishList shared successfully. User id: " + user.getId())
