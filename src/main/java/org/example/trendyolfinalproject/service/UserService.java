@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.service;
 
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.client.EmailClient;
@@ -417,7 +418,7 @@ public class UserService {
     }
 
 
-    public ApiResponse<String> referTrendyol(String email) {
+    public ApiResponse<String> referTrendyol(String email) throws MessagingException {
         log.info("Actionlog.referTrendyol.start : ");
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
 
@@ -425,7 +426,8 @@ public class UserService {
         if (!existsEmail) {
             throw new NotFoundException("Email not found");
         }
-        emailService.sendEmail(email, "Refer Trendyol", "https://www.trendyol.com/");
+//        emailService.sendEmail(email, "Refer Trendyol", "https://www.trendyol.com/");
+        emailService.sendEmailWithHtml(email, "Refer Trendyol");
         log.info("Actionlog.referTrendyol.end : ");
         auditLogService.createAuditLog(user, "Refer Trendyol", "Refer Trendyol successfully. User id: " + user.getId());
         return ApiResponse.<String>builder()

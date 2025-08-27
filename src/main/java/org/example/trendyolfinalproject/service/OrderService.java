@@ -69,10 +69,10 @@ public class OrderService {
         var user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found with id: " + userId));
 
-        var shippingAdress = adressRepository.findById(request.getShippingAddressId()).orElseThrow(
+        var shippingAdress = adressRepository.findByIdAndUserId(request.getShippingAddressId(), user).orElseThrow(
                 () -> new NotFoundException("Adress not found with id: " + request.getShippingAddressId()));
 
-        var billingAdress = adressRepository.findById(request.getBillingAddressId()).orElseThrow(
+        var billingAdress = adressRepository.findByIdAndUserId(request.getBillingAddressId(), user).orElseThrow(
                 () -> new NotFoundException("Adress not found with id: " + request.getBillingAddressId()));
 
 
@@ -97,6 +97,22 @@ public class OrderService {
                 () -> new NotFoundException("User's default PaymentMethod not found. User id : 9")
         );
 
+        //  TODO orderin total amountunu duzelt
+        //TODO  card validation et
+        var userP = cardClient.validateCard(paymentMethod2.getCardNumber(), paymentMethod2.getCardHolderName());
+        var adminP = cardClient.validateCard(paymentMethodAdmin.getCardNumber(), paymentMethodAdmin.getCardHolderName());
+
+        if (!userP || !adminP) {
+            paymentTransactionService.createFailedPaymentTransaction(paymentMethod2, total, paymentMethod2.getCurrency());
+            transactionClient.createTransaction(TransactionRequest.builder()
+                    .amount(null)
+                    .receiver(paymentMethodAdmin.getCardNumber())
+                    .sender(paymentMethod2.getCardNumber())
+                    .status(Status.FAILED)
+                    .currency(paymentMethod2.getCurrency())
+                    .build());
+            throw new RuntimeException("Card is not active");
+        }
 
         BigDecimal discountAmount = basket.getDiscountAmount() != null ? basket.getDiscountAmount() : BigDecimal.ZERO;
         BigDecimal finalAmoount = basket.getFinalAmount() != null ? basket.getFinalAmount() : BigDecimal.ZERO;
@@ -107,6 +123,13 @@ public class OrderService {
             var paymentTransaction = paymentTransactionService.createFailedPaymentTransaction(paymentMethod2, total, paymentMethod2.getCurrency());
 
             paymentTransactionService.savePaymentTransaction(paymentTransaction);
+            transactionClient.createTransaction(TransactionRequest.builder()
+                    .amount(finalAmoount)
+                    .receiver(paymentMethodAdmin.getCardNumber())
+                    .sender(paymentMethod2.getCardNumber())
+                    .status(Status.FAILED)
+                    .currency(paymentMethod2.getCurrency())
+                    .build());
             throw new RuntimeException("PaymentMethod balance is not enough");
 
         } else {
@@ -115,12 +138,19 @@ public class OrderService {
             paymentMethodAdmin.setBalance(paymentMethodAdmin.getBalance().add(finalAmoount));
             paymentMethodRepository.save(paymentMethod2);
             paymentMethodRepository.save(paymentMethodAdmin);
-
+            cardClient.transfer(paymentMethod2.getCardNumber(), paymentMethodAdmin.getCardNumber(), finalAmoount);
+            transactionClient.createTransaction(TransactionRequest.builder()
+                    .amount(finalAmoount)
+                    .receiver(paymentMethodAdmin.getCardNumber())
+                    .sender(paymentMethod2.getCardNumber())
+                    .status(Status.SUCCESS)
+                    .currency(paymentMethod2.getCurrency())
+                    .build());
 
             emailService.sendEmail(user.getEmail(), "Payment successful", "Amount of Order : " + finalAmoount);
 
             var order = orderMapper.toEntity(request);
-            order.setTotalAmount(total);
+            order.setTotalAmount(finalAmoount);
             order.setUser(user);
             order.setShippingAddressId(shippingAdress);
             order.setBillingAddressId(billingAdress);
@@ -182,10 +212,12 @@ public class OrderService {
     }
 
 
-    public ApiResponse<String>  cancelOrder(Long orderId) {
+    public ApiResponse<String> cancelOrder(Long orderId) {
 
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
         Long userId = getCurrentUserId();
+        var admin = 9L;
+        var adminpaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(admin, true).orElseThrow(() -> new NotFoundException("User's default PaymentMethod not found. User id : 9"));
 
         var order = orderRepository.findById(orderId).orElseThrow(
                 () -> new NotFoundException("Order not found with id: " + orderId));
@@ -229,8 +261,13 @@ public class OrderService {
             paymentMethod.setBalance(paymentMethod.getBalance().add(order.getTotalAmount()));
             paymentMethodRepository.save(paymentMethod);
         }
+        adminpaymentMethod.setBalance(adminpaymentMethod.getBalance().subtract(order.getTotalAmount()));
 
+        order.setStatus(Status.CANCELLED);
+        orderRepository.save(order);
 
+        var userPayment = paymentMethodRepository.findByUserId_IdAndIsDefault(userId, true).orElseThrow(() -> new NotFoundException("Payment method not found"));
+        cardClient.transfer(adminpaymentMethod.getCardNumber(), userPayment.getCardNumber(), order.getTotalAmount());
         auditLogService.createAuditLog(order.getUser(), "Order", "Order cancelled successfully. Order id: " + orderId);
 
         paymentTransactionService.returnedPaymentTransaction(order, orderId);
@@ -370,7 +407,7 @@ public class OrderService {
             throw new NotFoundException("No orders found for seller id: " + sellerId);
         }
         log.info("Actionlog.getOrdersBySeller.end : sellerId={}", sellerId);
-        var list=orderMapper.toResponseList(orders);
+        var list = orderMapper.toResponseList(orders);
         return ApiResponse.<List<OrderResponse>>builder()
                 .status(200)
                 .message("Orders retrieved successfully for seller id: " + sellerId)
@@ -641,7 +678,6 @@ public class OrderService {
     private Integer generateTransactionId() {
         return (int) (Math.random() * 900000) + 100000;
     }
-
 
 
 }

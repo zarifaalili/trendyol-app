@@ -44,6 +44,7 @@ public class ShipmentUpdaterService {
 
         shipment.setStatus(newStatus);
         shipment.setUpdatedAt(now);
+        order.setUpdatedAt(now);
 
         switch (newStatus) {
             case IN_TRANSIT -> order.setStatus(Status.SHIPPED);

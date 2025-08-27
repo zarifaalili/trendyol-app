@@ -5,6 +5,7 @@ import org.example.trendyolfinalproject.request.BasketElementRequest;
 import org.example.trendyolfinalproject.request.DeleteBasketElementRequest;
 import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.BasketElementResponse;
+import org.example.trendyolfinalproject.response.BasketSummaryResponse;
 import org.example.trendyolfinalproject.service.BasketElementService;
 import org.example.trendyolfinalproject.service.BasketService;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class BasketController {
 
     @GetMapping("/getRowTotalAmount")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<BigDecimal>  getRowTotalAmount() {
+    public ApiResponse<BigDecimal> getRowTotalAmount() {
 
         return basketService.calculateRawTotalAmount();
     }
@@ -70,5 +71,11 @@ public class BasketController {
     public ResponseEntity<String> notifyAbandonedBasket() {
         int notifiedCount = basketService.notifyAbandonedBaskets();
         return ResponseEntity.ok(notifiedCount + " users notified about abandoned baskets");
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<BasketSummaryResponse> getBasketSummary() {
+        return basketService.getBasketSummary();
     }
 }

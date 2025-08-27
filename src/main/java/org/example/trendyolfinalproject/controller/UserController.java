@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
@@ -107,7 +108,7 @@ public class UserController {
 
     @PostMapping("/refer/{email}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> refer(@PathVariable String email) {
+    public ApiResponse<String> refer(@PathVariable String email) throws MessagingException {
         return userService.referTrendyol(email);
     }
 }

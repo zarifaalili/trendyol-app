@@ -2,6 +2,7 @@ package org.example.trendyolfinalproject.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.trendyolfinalproject.dao.entity.Basket;
 import org.example.trendyolfinalproject.dao.entity.BasketElement;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.BasketElementRepository;
@@ -11,6 +12,8 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.mapper.BasketMapper;
 import org.example.trendyolfinalproject.model.NotificationType;
 import org.example.trendyolfinalproject.response.ApiResponse;
+import org.example.trendyolfinalproject.response.BasketElementResponse;
+import org.example.trendyolfinalproject.response.BasketSummaryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -132,5 +135,73 @@ public class BasketService {
         }
         return users.size();
     }
+
+
+    public ApiResponse<BasketSummaryResponse> getBasketSummary() {
+        log.info("Actionlog.getBasketSummary.start");
+
+        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
+
+        var basket = basketRepository.findByUserId(currentUserId)
+                .orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
+
+        var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
+
+        List<BasketElementResponse> elementResponses = basketElements.stream()
+                .map(be -> {
+                    BigDecimal price = be.getProductId().getPrice();
+                    BigDecimal subtotal = price.multiply(BigDecimal.valueOf(be.getQuantity()));
+
+                    return new BasketElementResponse(
+                            be.getId(),
+                            basket.getId(),
+                            be.getProductId().getId(),
+                            be.getProductId().getName(),
+                            price,
+                            be.getProductVariantId() != null ? be.getProductVariantId().getId() : null,
+                            be.getProductVariantId() != null ? be.getProductVariantId().getProduct().getName() : null,
+                            be.getQuantity(),
+                            be.getAddedAt(),
+                            subtotal
+                    );
+                })
+                .toList();
+
+        BigDecimal total = elementResponses.stream()
+                .map(BasketElementResponse::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal discountAmount = calculateDiscount(basket, elementResponses);
+        BigDecimal finalAmount = total.subtract(discountAmount);
+
+        var user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
+
+        auditLogService.createAuditLog(user, "Get basket summary",
+                "Get basket summary successfully. Basket id: " + basket.getId());
+
+        log.info("Actionlog.getBasketSummary.end");
+
+        return ApiResponse.<BasketSummaryResponse>builder()
+                .status(200)
+                .message("Basket summary retrieved successfully")
+                .data(BasketSummaryResponse.builder()
+                        .basketElements(elementResponses)
+                        .totalAmount(total)
+                        .discountAmount(discountAmount)
+                        .finalAmount(finalAmount)
+                        .build())
+                .build();
+    }
+
+    private BigDecimal calculateDiscount(Basket basket, List<BasketElementResponse> elements) {
+        if (basket.getDiscountAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return basket.getDiscountAmount();
+    }
+
 
 }
