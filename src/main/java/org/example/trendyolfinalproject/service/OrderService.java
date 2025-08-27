@@ -29,6 +29,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +60,10 @@ public class OrderService {
     private final FileStorageService fileStorageService;
     private final TransactionClient transactionClient;
     private final CardClient cardClient;
+
+//    private final ConcurrentMap<String, String> otpStore = new ConcurrentHashMap<>();
+//    private final ConcurrentMap<String, Long> otpExpiry = new ConcurrentHashMap<>();
+
 
     @Transactional
     public ApiResponse<OrderResponse> createOrder(OrderCreateRequest request) {

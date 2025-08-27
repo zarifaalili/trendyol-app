@@ -21,6 +21,7 @@ public class ReviewUpdateRequest {
     @NotBlank(message = "Comment cannot be blank")
     private String comment;
 
+    @NotNull(message = "Is approved cannot be null")
     private Boolean isApproved;
 
 

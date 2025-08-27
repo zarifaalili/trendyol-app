@@ -29,6 +29,7 @@ public class ReviewCreateRequest {
     @NotBlank(message = "Comment cannot be blank")
     private String comment;
 
+
     private List<String> imageUrls;
 
 }

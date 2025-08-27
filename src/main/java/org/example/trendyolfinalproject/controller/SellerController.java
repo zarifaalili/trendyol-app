@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.SellerCreateRequest;
 import org.example.trendyolfinalproject.response.ApiResponse;
@@ -21,7 +22,7 @@ public class SellerController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/createSeller")
-    public ApiResponse<SellerResponse> createSeller(@RequestBody SellerCreateRequest request) {
+    public ApiResponse<SellerResponse> createSeller(@RequestBody @Valid SellerCreateRequest request) {
         return sellerService.createSeller(request);
     }
 

@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.request.AuthRequest;
@@ -24,12 +25,12 @@ public class AuthController {
     private final PasswordResetService resetService;
 
     @PostMapping("/token")
-    public AuthResponse token(@RequestBody AuthRequest request) {
+    public AuthResponse token(@RequestBody @Valid AuthRequest request) {
         return authService.authenticate(request);
     }
 
     @PostMapping("/token/refresh")
-    public AuthResponse refresh(@RequestBody RefreshTokenRequest request) {
+    public AuthResponse refresh(@RequestBody @Valid RefreshTokenRequest request) {
         return authService.refreshToken(request);
     }
 

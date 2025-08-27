@@ -23,7 +23,7 @@ public class BrandController {
     }
     @PatchMapping("/updateBrand/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<BrandResponse> updateBrand(@PathVariable Long id, @RequestBody @Valid BrandCreateRequest request) {
+    public ApiResponse<BrandResponse> updateBrand(@PathVariable Long id, @RequestBody  BrandCreateRequest request) {
         return brandService.updateBrand(id, request);
     }
     @PreAuthorize("hasRole('ADMIN')")

@@ -38,5 +38,6 @@ public class PaymentTransactionCreateRequest {
     @NotNull(message = "Transaction date cannot be null")
     private LocalDateTime transactionDate;
 
+    @NotNull(message = "Provider response cannot be null")
     private String providerResponse;
 }

@@ -17,7 +17,7 @@ public class CollectionCreateRequest {
 //    @NotNull(message = "User id cannot be null")
 //    private Long userId;
 
-    @NotBlank(message = "Colllection name cannot be blank")
+    @NotBlank(message = "Collection name cannot be blank")
     @Size(max = 100, message = "Collection name cannot exceed 100 characters")
     private String name;
 

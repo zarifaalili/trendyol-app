@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.ProductRequest;
@@ -31,7 +32,7 @@ public class ProductController {
 
     @PostMapping("/createProduct")
 //    @PreAuthorize("hasRole('SELLER')")
-    ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request) {
+    ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
@@ -67,7 +68,7 @@ public class ProductController {
 
     @PostMapping("/productVariant/createProductVariant")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<ProductVariantResponse> createProductVariant(@RequestBody ProductVariantCreateRequest requess) {
+    public ApiResponse<ProductVariantResponse> createProductVariant(@RequestBody @Valid ProductVariantCreateRequest requess) {
         return productVariantService.createProductVariant(requess);
     }
 

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TransactionRequest {
 
+
     private Integer transactionId;
 
     private BigDecimal amount;

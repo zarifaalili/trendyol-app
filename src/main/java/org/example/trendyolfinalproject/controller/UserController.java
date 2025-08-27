@@ -23,7 +23,7 @@ public class UserController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/signUp")
-    public ApiResponse<String> registerOrLoginUser(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public ApiResponse<String> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
         return userService.registerUser(userRegisterRequest);
     }
 
@@ -31,7 +31,7 @@ public class UserController {
     @PostMapping("/signUp/verify-otp/{email}/{otp}")
     public ApiResponse<AuthResponse> verifyOtp(@PathVariable String email,
                                                @PathVariable String otp,
-                                               @RequestBody UserRegisterRequest userRegisterRequest) {
+                                               @RequestBody @Valid UserRegisterRequest userRegisterRequest) {
         return userService.verifyOtp(email, otp, userRegisterRequest);
     }
 

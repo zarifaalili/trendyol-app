@@ -17,14 +17,19 @@ public class ProductVariantCreateRequest {
     @NotBlank(message = "Color cannot be blank")
     private String color;
 
+    @NotNull(message = "Attribute value cannot be null")
     private String attributeValue1;
 
+    @NotNull(message = "Size cannot be null")
     private String size;
 
+    @NotNull(message = "Attribute value cannot be null")
     private String attributeValue2;
 
+    @NotNull(message = "Stock quantity cannot be null")
     private Integer stockQuantity;
 
+    @NotNull(message = "Price cannot be null")
     private String sku;
 
 //    @ElementCollection(targetClass = String.class)

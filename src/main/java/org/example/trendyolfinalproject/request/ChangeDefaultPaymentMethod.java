@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,5 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChangeDefaultPaymentMethod {
 //    private Long userId;
+    @NotNull(message = "Payment method ID cannot be null")
     private Long paymentMethodId;
 }

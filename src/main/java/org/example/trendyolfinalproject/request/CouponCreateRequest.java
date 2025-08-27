@@ -51,6 +51,7 @@ public class CouponCreateRequest {
     @NotNull(message = "First order only cannot be null")
     private Boolean firstOrderOnly;
 
+    @NotNull(message = "Min order count cannot be null")
     private Integer minOrderCount;
 
 

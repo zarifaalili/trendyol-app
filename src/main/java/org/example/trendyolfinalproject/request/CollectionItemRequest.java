@@ -12,9 +12,9 @@ import jakarta.validation.constraints.NotNull;
 @Builder
 public class CollectionItemRequest {
 
-    @NotNull(message = "Collection cannot be null")
+    @NotNull(message = "Collection ID cannot be null")
     private Long collectionId;
-    @NotNull(message = "ProductVariant cannot be null")
+    @NotNull(message = "ProductVariant ID cannot be null")
     private Long productVariantId;
 
 }

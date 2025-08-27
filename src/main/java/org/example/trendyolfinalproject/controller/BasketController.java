@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.BasketElementRequest;
 import org.example.trendyolfinalproject.request.DeleteBasketElementRequest;
@@ -44,19 +45,19 @@ public class BasketController {
 
     @PostMapping("/element/createBasketElement")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<BasketElementResponse> createBasketElement(@RequestBody BasketElementRequest request) {
+    ApiResponse<BasketElementResponse> createBasketElement(@RequestBody @Valid BasketElementRequest request) {
         return basketElementService.createBasketElement(request);
     }
 
     @DeleteMapping("/element/deleteBasketElement")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> deleteBasketElement(@RequestBody DeleteBasketElementRequest request) {
+    public ApiResponse<String> deleteBasketElement(@RequestBody @Valid DeleteBasketElementRequest request) {
         return basketElementService.deleteBasketElement(request);
     }
 
     @PostMapping("/element/decreaseQuantity")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<BasketElementResponse> decrieceQuantity(@RequestBody DeleteBasketElementRequest request) {
+    public ApiResponse<BasketElementResponse> decrieceQuantity(@RequestBody @Valid DeleteBasketElementRequest request) {
         return basketElementService.decrieceQuantity(request);
     }
 

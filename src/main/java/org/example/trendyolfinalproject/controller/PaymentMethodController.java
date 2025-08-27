@@ -30,13 +30,13 @@ public class PaymentMethodController {
 
     @PostMapping("/addbalance")
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
-    public ApiResponse<String> addbalance(@RequestBody AddBalanceRequest request) {
+    public ApiResponse<String> addbalance(@RequestBody @Valid AddBalanceRequest request) {
         return paymentMethodService.addbalance(request);
     }
 
     @PostMapping("/changeDefaultPaymentMethod")
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
-    public ApiResponse<PaymentMethodResponse> changeDefaultPaymentMethod(@RequestBody ChangeDefaultPaymentMethod request) {
+    public ApiResponse<PaymentMethodResponse> changeDefaultPaymentMethod(@RequestBody @Valid ChangeDefaultPaymentMethod request) {
         return paymentMethodService.changeDefaultPaymentMethod(request);
     }
 

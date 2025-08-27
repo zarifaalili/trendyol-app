@@ -1,4 +1,0 @@
-package org.example.trendyolfinalproject.request;
-
-public class ProductVariantFilterRequest {
-}

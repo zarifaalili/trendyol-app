@@ -19,6 +19,7 @@ public class OrderItemCreateRequest {
     @NotNull(message = "Product ID cannot be null")
     private Long productId;
 
+    @NotNull(message = "Product variant ID cannot be null")
     private Long productVariantId;
 
     @NotNull(message = "Quantity cannot be null")

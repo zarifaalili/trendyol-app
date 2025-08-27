@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.request.WishListCreateRequest;
 import org.example.trendyolfinalproject.response.ApiResponse;
@@ -21,7 +22,7 @@ public class WishListController {
 
     @PostMapping("/createWishList")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<WishListResponse> createWishList(@RequestBody WishListCreateRequest request) {
+    ApiResponse<WishListResponse> createWishList(@RequestBody @Valid WishListCreateRequest request) {
         return wishListService.addToFavorite(request);
     }
 
