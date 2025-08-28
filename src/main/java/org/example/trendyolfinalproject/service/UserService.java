@@ -61,6 +61,7 @@ public class UserService {
 
     private final ResetCodeRepository resetCodeRepository;
 
+
     private final ConcurrentMap<String, String> otpStore = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Long> otpExpiry = new ConcurrentHashMap<>();
 
@@ -485,6 +486,7 @@ public class UserService {
         response.setTotalSpent(totalSpent);
 
         log.info("Actionlog.getUserProfile.end : ");
+
         return ApiResponse.<UserProfileResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("User profile retrieved successfully")
@@ -518,42 +520,87 @@ public class UserService {
         return "User deactive successfully";
     }
 
-
     public String activateUser(String email) {
         log.info("Actionlog.activateUser.start : ");
-        var userId = getCurrentUserId();
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+
         if (user.getIsActive()) {
             throw new RuntimeException("User is already active");
         }
+
         String otp = generateOtp();
-        Long expiry = System.currentTimeMillis() + 5 * 60 * 1000;
-        otpStore.put(email, otp);
-        otpExpiry.put(email, expiry);
+        ResetCode resetCode = new ResetCode();
+        resetCode.setEmail(email);
+        resetCode.setCode(otp);
+        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
+        resetCodeRepository.save(resetCode);
+
         emailService.sendOtp(email, otp);
+
         log.info("Actionlog.activateUser.end : ");
         return "We sent otp to your email to activate your account";
     }
 
     public String verifyReactivateOtp(String email, String otp) {
         log.info("Actionlog.verifyReactivateOtp.start : ");
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + email));
-        var otpFromStore = otpStore.get(email);
-        var expiry = otpExpiry.get(email);
-        if (otpFromStore == null || !otpFromStore.equals(otp)) {
-            throw new RuntimeException("Invalid OTP");
-        }
-        if (expiry < System.currentTimeMillis()) {
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+
+        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
+                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+
+        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("OTP expired");
         }
-        otpStore.remove(email);
-        otpExpiry.remove(email);
+
+        resetCodeRepository.delete(resetCode);
+
         user.setIsActive(true);
         userRepository.save(user);
-        log.info("Actionlog.verifyReactivateOtp.end : ");
-        return "User reactivate successfully";
 
+        log.info("Actionlog.verifyReactivateOtp.end : ");
+        return "User reactivated successfully";
     }
+
+
+//    public String activateUser(String email) {
+//        log.info("Actionlog.activateUser.start : ");
+//        var userId = getCurrentUserId();
+//        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+//        if (user.getIsActive()) {
+//            throw new RuntimeException("User is already active");
+//        }
+//        String otp = generateOtp();
+//        Long expiry = System.currentTimeMillis() + 5 * 60 * 1000;
+//        otpStore.put(email, otp);
+//        otpExpiry.put(email, expiry);
+//        emailService.sendOtp(email, otp);
+//        log.info("Actionlog.activateUser.end : ");
+//        return "We sent otp to your email to activate your account";
+//    }
+//
+//    public String verifyReactivateOtp(String email, String otp) {
+//        log.info("Actionlog.verifyReactivateOtp.start : ");
+//        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + email));
+//        var otpFromStore = otpStore.get(email);
+//        var expiry = otpExpiry.get(email);
+//        if (otpFromStore == null || !otpFromStore.equals(otp)) {
+//            throw new RuntimeException("Invalid OTP");
+//        }
+//        if (expiry < System.currentTimeMillis()) {
+//            throw new RuntimeException("OTP expired");
+//        }
+//        otpStore.remove(email);
+//        otpExpiry.remove(email);
+//        user.setIsActive(true);
+//        userRepository.save(user);
+//        log.info("Actionlog.verifyReactivateOtp.end : ");
+//        return "User reactivate successfully";
+//
+//    }
 
 
     public ApiResponse<Page<UserResponse>> searchUser(String keyword, int page, int size) {
