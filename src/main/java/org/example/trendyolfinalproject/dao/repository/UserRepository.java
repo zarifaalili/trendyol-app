@@ -47,4 +47,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    Boolean existsUserByPhoneNumber(String phoneNumber);
 }

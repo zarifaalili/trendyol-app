@@ -301,7 +301,7 @@ public class UserService {
     }
 
 
-    //    public ApiResponse<String> updateEmail(String newEmail) {
+//    public ApiResponse<String> updateEmail(String newEmail) {
 //        log.info("Actionlog.updateEmail.start : ");
 //        var userId = getCurrentUserId();
 //        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -371,42 +371,43 @@ public class UserService {
 //                .data("Email changed from " + oldEmail + " to " + newEmail)
 //                .build();
 //    }
-    public ApiResponse<String> updateEmail(String newEmail) {
-        log.info("Actionlog.updateEmail.start : ");
-        var userId = getCurrentUserId();
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+public ApiResponse<String> updateEmail(String newEmail) {
+    log.info("Actionlog.updateEmail.start : ");
+    var userId = getCurrentUserId();
+    var user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
-        var exist = userRepository.findByEmail(newEmail).orElse(null);
-        if (exist != null) {
-            throw new AlreadyException("Email already exists");
-        }
-
-        if (user.getEmail().equals(newEmail)) {
-            throw new AlreadyException("Email already exists");
-        }
-
-        var existsInEmailPool = emailClient.checkEmailExists(newEmail);
-        if (!existsInEmailPool) {
-            throw new NotFoundException("Email is not available");
-        }
-
-        String otp = generateOtp();
-        ResetCode resetCode = new ResetCode();
-        resetCode.setEmail(newEmail);
-        resetCode.setCode(otp);
-        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
-        resetCodeRepository.save(resetCode);
-
-        emailService.sendOtp(newEmail, otp);
-
-        log.info("Actionlog.updateEmail.end : ");
-        return ApiResponse.<String>builder()
-                .status(HttpStatus.OK.value())
-                .message("Otp sent for email verification")
-                .data("Otp sent to " + newEmail)
-                .build();
+    var exist = userRepository.findByEmail(newEmail).orElse(null);
+    if (exist != null) {
+        throw new AlreadyException("Email already exists");
     }
+
+    if (user.getEmail().equals(newEmail)) {
+        throw new AlreadyException("Email already exists");
+    }
+
+    var existsInEmailPool = emailClient.checkEmailExists(newEmail);
+    if (!existsInEmailPool) {
+        throw new NotFoundException("Email is not available");
+    }
+
+    // --- OTP yaradılıb DB-də saxlanılır ---
+    String otp = generateOtp();
+    ResetCode resetCode = new ResetCode();
+    resetCode.setEmail(newEmail);
+    resetCode.setCode(otp);
+    resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
+    resetCodeRepository.save(resetCode);
+
+    emailService.sendOtp(newEmail, otp);
+
+    log.info("Actionlog.updateEmail.end : ");
+    return ApiResponse.<String>builder()
+            .status(HttpStatus.OK.value())
+            .message("Otp sent for email verification")
+            .data("Otp sent to " + newEmail)
+            .build();
+}
 
     public ApiResponse<String> verifyEmail(String newEmail, String otp) {
         log.info("Actionlog.verifyEmail.start : ");
@@ -445,6 +446,8 @@ public class UserService {
                 .data("Email changed from " + oldEmail + " to " + newEmail)
                 .build();
     }
+
+
 
 
     public ApiResponse<String> deleteUser() {
