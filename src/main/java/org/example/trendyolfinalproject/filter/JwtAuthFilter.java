@@ -1,4 +1,4 @@
-package org.example.trendyolfinalproject.controller.filter;
+package org.example.trendyolfinalproject.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
