@@ -12,8 +12,8 @@ import org.example.trendyolfinalproject.response.ProductVariantDetailResponse;
 import org.example.trendyolfinalproject.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.ProductService;
 import org.example.trendyolfinalproject.service.ProductVariantService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,14 +31,16 @@ public class ProductController {
     private final ProductVariantService productVariantService;
 
     @PostMapping("/createProduct")
-//    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize("hasRole('SELLER')")
     ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
     @GetMapping("/getProducts")
-    public ApiResponse<List<ProductResponse>> getProducts() {
-        return productService.getProducts();
+    public ApiResponse<Page<ProductResponse>> getProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size) {
+        return productService.getProducts(page, size);
     }
 
     @GetMapping("/getProductByName/{name}")
@@ -48,21 +50,27 @@ public class ProductController {
 
     @PatchMapping("/updateProductPrice/{productId}/{newPrice}")
     @PreAuthorize("hasRole('SELLER')")
-    public  ApiResponse<ProductResponse> updateProductPrice(@PathVariable Long productId, @PathVariable BigDecimal newPrice) {
+    public ApiResponse<ProductResponse> updateProductPrice(@PathVariable Long productId, @PathVariable BigDecimal newPrice) {
         return productService.updateProductPrice(productId, newPrice);
     }
 
 
     @GetMapping("/getSellerProducts")
     @PreAuthorize("hasRole('SELLER')")
-    public  ApiResponse<List<ProductResponse>> getSellerProducts() {
+    public ApiResponse<List<ProductResponse>> getSellerProducts() {
         return productService.getSellerProducts();
     }
 
 
     @GetMapping("/getProductsBetweenDates")
-    public ApiResponse<List<ProductResponse>> getTotalProductsBetweenDates(@PathParam("startDate") LocalDateTime startDate, @PathParam("endDate") LocalDateTime endDate) {
-        return productService.getTotalProductsBetweenDates(startDate, endDate);
+    @PreAuthorize("hasRole('SELLER')")
+    public ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size
+            ) {
+        return productService.getTotalProductsBetweenDates(startDate, endDate, page, size);
     }
 
 

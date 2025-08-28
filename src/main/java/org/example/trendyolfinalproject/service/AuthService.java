@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.example.trendyolfinalproject.request.AuthRequest;
@@ -49,7 +50,7 @@ public class AuthService {
         }
         var username = jwtUtil.extractUsername(refreshTokenRequest.getRefreshToken());
         User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getIsActive()) {
             throw new RuntimeException("User is deactivated");

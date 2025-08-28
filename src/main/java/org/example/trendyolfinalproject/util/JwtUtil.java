@@ -24,6 +24,12 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expirationTime;
 
+    @Value("${jwt.access-expiration}")
+    private Long accessExpirationTime;
+
+    @Value("${jwt.refresh-expiration}")
+    private Long refreshExpirationTime;
+
     private Key key;
 
 
@@ -39,7 +45,7 @@ public class JwtUtil {
                 .signWith(key)
                 .setSubject(username)
                 .claim("userId", userId)
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + accessExpirationTime))
                 .compact();
     }
 
@@ -75,7 +81,7 @@ public class JwtUtil {
                 .signWith(key)
                 .setSubject(username)
                 .claim("userId", userId)
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime * 2))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
                 .compact();
     }
 

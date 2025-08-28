@@ -9,7 +9,6 @@ import org.example.trendyolfinalproject.request.UserRequest;
 import org.example.trendyolfinalproject.response.*;
 import org.example.trendyolfinalproject.service.SellerFollowService;
 import org.example.trendyolfinalproject.service.UserService;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -89,10 +88,8 @@ public class UserController {
 
     @GetMapping("/searchUser")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Page<UserResponse>> searchUser(@PathParam("keyword") String keyword,
-                                                      @PathParam("page") int page,
-                                                      @PathParam("size") int size) {
-        return userService.searchUser(keyword,page,size);
+    public ApiResponse<List<UserResponse>> searchUser(@PathParam("keyword") String keyword) {
+        return userService.searchUser(keyword);
     }
 
     @GetMapping("/followed/sellers")

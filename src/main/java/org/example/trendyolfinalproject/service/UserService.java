@@ -19,6 +19,9 @@ import org.example.trendyolfinalproject.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.request.UserRequest;
 import org.example.trendyolfinalproject.response.*;
 import org.example.trendyolfinalproject.util.JwtUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -379,15 +382,18 @@ public class UserService {
     }
 
 
-    public ApiResponse<List<UserResponse>> searchUser(String keyword) {
+    public ApiResponse<Page<UserResponse>> searchUser(String keyword, int page, int size) {
         log.info("Actionlog.searchUser.start : ");
-        var users = userRepository.searchByKeyword(keyword);
+
+        Pageable pageable = PageRequest.of(page, size);
+        var users = userRepository.searchByKeyword(keyword, pageable);
         if (users.isEmpty()) {
             throw new NotFoundException("User not found");
         }
         log.info("Actionlog.searchUser.end : ");
-        var response = userMapper.toResponseList(users);
-        return ApiResponse.<List<UserResponse>>builder()
+
+        Page<UserResponse> response = users.map(userMapper::toUserResponse);
+        return ApiResponse.<Page<UserResponse>>builder()
                 .data(response)
                 .status(HttpStatus.OK.value())
                 .message("Search User").

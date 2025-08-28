@@ -12,12 +12,17 @@ import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.request.ProductRequest;
 import org.example.trendyolfinalproject.response.ApiResponse;
 import org.example.trendyolfinalproject.response.ProductResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -85,10 +90,12 @@ public class ProductService {
     }
 
 
-    public ApiResponse<List<ProductResponse>> getProducts() {
+    public ApiResponse<Page<ProductResponse>> getProducts(int page, int size) {
         log.info("Actionlog.getProducts.start : ");
 
-        List<Product> products = productRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Product> products = productRepository.findAllByStatus(Status.ACTIVE, pageable);
         log.info("Actionlog.getProducts.end : ");
 //        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
 //                .getRequest().getAttribute("userId");
@@ -96,8 +103,9 @@ public class ProductService {
 //        if (user.getId() != null) {
 //            auditLogService.createAuditLog(user, "Get all products", "Get all products successfully. Product id: " + products.get(0).getId());
 //        }
-        var response = productMapper.toResponseList(products);
-        return ApiResponse.<List<ProductResponse>>builder()
+        Page<ProductResponse> response = products.map(productMapper::toResponse);
+
+        return ApiResponse.<Page<ProductResponse>>builder()
                 .status(200)
                 .message("Products fetched successfully")
                 .data(response)
@@ -160,7 +168,9 @@ public class ProductService {
     public ApiResponse<List<ProductResponse>> getSellerProducts() {
         log.info("Actionlog.getSellerProducts.start : ");
         var userId = getCurrentUserId();
+
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
+
         var products = productRepository.findBySellerId(seller.getId());
         var mapper = productMapper.toResponseList(products);
         log.info("Actionlog.getSellerProducts.end : ");
@@ -172,15 +182,26 @@ public class ProductService {
     }
 
 
-    public ApiResponse<List<ProductResponse>> getTotalProductsBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
-        log.info("Actionlog.getTotalProductsBetweenDates.start : productId={}", startDate);
+    public ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(  String startDateStr, String endDateStr, int page, int size) {
+        log.info("Actionlog.getTotalProductsBetweenDates.start : productId={}", startDateStr);
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
 
         if (startDate.isAfter(endDate)) {
             throw new RuntimeException("Start date must be before end date");
         }
-        var orderItems = orderItemRepository.findByCreatedAtBetweenAndProductId_Seller_Id(startDate, endDate, seller.getId());
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        var orderItems = orderItemRepository.findByCreatedAtBetweenAndProductId_Seller_Id(startDateTime, endDateTime, seller.getId(), pageable);
 
         if (orderItems.isEmpty()) {
             throw new NotFoundException("No products found between these dates");
@@ -190,13 +211,15 @@ public class ProductService {
                 .map(orderItem -> orderItem.getProductId().getId())
                 .distinct()
                 .toList();
-        var products = productRepository.findAllById(productIds);
-        var mapper = productMapper.toResponseList(products);
-        log.info("Actionlog.getTotalProductsBetweenDates.end : productId={}", startDate);
-        return ApiResponse.<List<ProductResponse>>builder()
+        Page<Product> products = productRepository.findSellerProductsBetweenDates(
+                seller.getId(), startDateTime, endDateTime, pageable);
+        Page<ProductResponse> response = products.map(productMapper::toResponse);
+
+        log.info("Actionlog.getTotalProductsBetweenDates.end : productId={}", startDateStr);
+        return ApiResponse.<Page<ProductResponse>>builder()
                 .status(200)
                 .message("Products fetched successfully between dates")
-                .data(mapper)
+                .data(response)
                 .build();
     }
 

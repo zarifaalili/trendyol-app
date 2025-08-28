@@ -3,6 +3,7 @@ package org.example.trendyolfinalproject.dao.repository;
 import org.example.trendyolfinalproject.dao.entity.Order;
 import org.example.trendyolfinalproject.dao.entity.OrderItem;
 import org.example.trendyolfinalproject.dao.entity.ProductVariant;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +27,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<Order> findOrdersByUserIdAndProductName(Long userId, String productName);
 
 
-    List<OrderItem> findByCreatedAtBetweenAndProductId_Seller_Id(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore, Long sellerId);
+    Page<OrderItem> findByCreatedAtBetweenAndProductId_Seller_Id(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore, Long sellerId, Pageable pageable);
 
     @Query("SELECT SUM(oi.unitPrice * oi.quantity) FROM OrderItem oi")
     BigDecimal getTotalRevenue();
