@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.trendyolfinalproject.model.CardType;
-import org.example.trendyolfinalproject.model.Currency;
+import org.example.trendyolfinalproject.model.enums.Currency;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

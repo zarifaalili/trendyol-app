@@ -62,7 +62,8 @@ public class SecurityConfig {
                                 "/v1/user/verifyReactivateOtp/**",
                                 "/v1/productVariant/getProductVariantDetails/**",
                                 "/v1/productVariant/createProductVariant/**",
-                                "/v1/review/getReviewsByProductId/**"
+                                "/v1/review/getReviewsByProductId/**",
+                                "/v1/user/salam/**"
                                 ).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

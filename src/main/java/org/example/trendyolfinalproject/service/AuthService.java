@@ -1,18 +1,15 @@
 package org.example.trendyolfinalproject.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.model.request.AuthRequest;
+import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
+import org.example.trendyolfinalproject.model.response.AuthResponse;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.example.trendyolfinalproject.request.AuthRequest;
-import org.example.trendyolfinalproject.request.RefreshTokenRequest;
-import org.example.trendyolfinalproject.response.AuthResponse;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,14 +21,16 @@ public class AuthService {
     private final BlacklistService blacklistService;
 
     public AuthResponse authenticate(AuthRequest req) {
+
+        User user = userRepository.findByEmail(req.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
 
 
         String username = authentication.getName();
 
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!user.getIsActive()) {
             throw new RuntimeException("User is deactivated");

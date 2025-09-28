@@ -10,12 +10,12 @@ import org.example.trendyolfinalproject.dao.repository.PaymentTransactionReposit
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.PaymentMethodMapper;
-import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
-import org.example.trendyolfinalproject.request.*;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.PaymentMethodResponse;
-import org.example.trendyolfinalproject.response.PaymentResponse;
+import org.example.trendyolfinalproject.model.request.*;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.PaymentMethodResponse;
+import org.example.trendyolfinalproject.model.response.PaymentResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;

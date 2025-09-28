@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-product_variants-and-images
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: product_variants
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: color
+                  type: VARCHAR(255)
+              - column:
+                  name: attribute_value1
+                  type: VARCHAR(255)
+              - column:
+                  name: size
+                  type: VARCHAR(255)
+              - column:
+                  name: attribute_value2
+                  type: VARCHAR(255)
+              - column:
+                  name: stock_quantity
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sku
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+        - createTable:
+            tableName: product_images
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: image_url
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_variant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: product_id
+            baseTableName: product_variants
+            constraintName: fk_product_variants_on_product
+            referencedColumnNames: id
+            referencedTableName: products
+        - addForeignKeyConstraint:
+            baseColumnNames: product_variant_id
+            baseTableName: product_images
+            constraintName: fk_product_images_on_product_variant
+            referencedColumnNames: id
+            referencedTableName: product_variants

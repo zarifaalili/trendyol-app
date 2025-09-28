@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user_coupons-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: user_coupons
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: coupon_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: usage_count
+                  type: DECIMAL(10, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_used_date
+                  type: DATETIME
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: user_coupons
+            constraintName: fk_user_coupons_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+        - addForeignKeyConstraint:
+            baseColumnNames: coupon_id
+            baseTableName: user_coupons
+            constraintName: fk_user_coupons_on_coupon
+            referencedColumnNames: id
+            referencedTableName: coupons
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_coupons

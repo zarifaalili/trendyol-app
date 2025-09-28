@@ -1,18 +1,12 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Product;
-import org.example.trendyolfinalproject.dao.entity.ProductImage;
-import org.example.trendyolfinalproject.request.ProductRequest;
-import org.example.trendyolfinalproject.response.ProductResponse;
+import org.example.trendyolfinalproject.model.request.ProductRequest;
+import org.example.trendyolfinalproject.model.response.ProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {

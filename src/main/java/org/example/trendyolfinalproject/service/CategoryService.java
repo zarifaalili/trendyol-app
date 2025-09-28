@@ -8,9 +8,9 @@ import org.example.trendyolfinalproject.dao.repository.AuditLogRepository;
 import org.example.trendyolfinalproject.dao.repository.CategoryRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.CategoryMapper;
-import org.example.trendyolfinalproject.request.CategoryCreateRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.CategoryResponse;
+import org.example.trendyolfinalproject.model.request.CategoryCreateRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.CategoryResponse;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

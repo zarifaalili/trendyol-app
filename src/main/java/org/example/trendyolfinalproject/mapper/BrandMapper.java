@@ -1,11 +1,10 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Brand;
-import org.example.trendyolfinalproject.request.BrandCreateRequest;
-import org.example.trendyolfinalproject.response.BrandResponse;
+import org.example.trendyolfinalproject.model.request.BrandCreateRequest;
+import org.example.trendyolfinalproject.model.response.BrandResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface BrandMapper {

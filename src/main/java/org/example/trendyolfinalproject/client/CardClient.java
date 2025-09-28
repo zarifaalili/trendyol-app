@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
 
-@FeignClient(name = "ms-card-trendyol", contextId = "cardClient", url = "http://localhost:9998/v1/card")
+@FeignClient(name = "ms-card-trendyol", contextId = "cardClient", url = "http://localhost:9998/v1/cards")
 public interface CardClient {
 
     @GetMapping("/validate/{cardNumber}/{holderName}")

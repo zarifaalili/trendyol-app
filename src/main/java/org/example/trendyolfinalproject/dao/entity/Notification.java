@@ -5,10 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.trendyolfinalproject.model.DeliveryChannelType;
-import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.ReadStatus;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -18,7 +17,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "notification")
+@Table(name = "notifications")
 public class Notification {
 
     @Id

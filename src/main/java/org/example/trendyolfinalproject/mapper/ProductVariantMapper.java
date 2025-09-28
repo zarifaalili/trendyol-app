@@ -2,9 +2,9 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.ProductImage;
 import org.example.trendyolfinalproject.dao.entity.ProductVariant;
-import org.example.trendyolfinalproject.request.ProductVariantCreateRequest;
-import org.example.trendyolfinalproject.response.ProductVariantResponse;
-import org.example.trendyolfinalproject.response.ProductVariantSimpleResponse;
+import org.example.trendyolfinalproject.model.request.ProductVariantCreateRequest;
+import org.example.trendyolfinalproject.model.response.ProductVariantResponse;
+import org.example.trendyolfinalproject.model.response.ProductVariantSimpleResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 30
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: coupons
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: discount_type
+                  type: VARCHAR(50)
+              - column:
+                  name: discount_value
+                  type: NUMERIC(19,2)
+              - column:
+                  name: minimum_order_amount
+                  type: NUMERIC(19,2)
+              - column:
+                  name: maximum_discount_amount
+                  type: NUMERIC(19,2)
+              - column:
+                  name: start_date
+                  type: DATE
+              - column:
+                  name: end_date
+                  type: TIMESTAMP
+              - column:
+                  name: usage_limit
+                  type: INT
+              - column:
+                  name: per_user_limit
+                  type: INT
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+              - column:
+                  name: first_order_only
+                  type: BOOLEAN
+              - column:
+                  name: min_order_count
+                  type: INT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: coupons

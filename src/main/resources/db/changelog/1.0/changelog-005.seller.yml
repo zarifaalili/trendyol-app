@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-sellers-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: sellers
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: company_name
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: tax_id
+                  type: INT
+              - column:
+                  name: contact_email
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: sellers
+            constraintName: fk_sellers_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: sellers

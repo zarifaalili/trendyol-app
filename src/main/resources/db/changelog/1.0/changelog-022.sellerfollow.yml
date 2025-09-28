@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-seller_follows-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: seller_follows
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seller_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: followed_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: seller_follows
+            constraintName: fk_seller_follows_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+        - addForeignKeyConstraint:
+            baseColumnNames: seller_id
+            baseTableName: seller_follows
+            constraintName: fk_seller_follows_on_seller
+            referencedColumnNames: id
+            referencedTableName: sellers
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: seller_follows

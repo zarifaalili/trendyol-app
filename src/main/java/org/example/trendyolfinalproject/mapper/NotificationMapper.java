@@ -1,11 +1,10 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Notification;
-import org.example.trendyolfinalproject.request.NotificationCreateRequest;
-import org.example.trendyolfinalproject.response.NotificationResponse;
+import org.example.trendyolfinalproject.model.request.NotificationCreateRequest;
+import org.example.trendyolfinalproject.model.response.NotificationResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 

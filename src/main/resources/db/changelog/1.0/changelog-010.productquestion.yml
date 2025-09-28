@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-product_questions-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: product_questions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: question
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: answer
+                  type: TEXT
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: 'PENDING'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_variant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seller_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: answered_at
+                  type: DATETIME
+        - addForeignKeyConstraint:
+            baseColumnNames: customer_id
+            baseTableName: product_questions
+            constraintName: fk_product_questions_on_customer
+            referencedColumnNames: id
+            referencedTableName: users
+        - addForeignKeyConstraint:
+            baseColumnNames: product_variant_id
+            baseTableName: product_questions
+            constraintName: fk_product_questions_on_product_variant
+            referencedColumnNames: id
+            referencedTableName: product_variants
+        - addForeignKeyConstraint:
+            baseColumnNames: seller_id
+            baseTableName: product_questions
+            constraintName: fk_product_questions_on_seller
+            referencedColumnNames: id
+            referencedTableName: sellers
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: product_questions

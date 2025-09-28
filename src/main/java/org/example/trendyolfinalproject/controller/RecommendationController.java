@@ -1,8 +1,8 @@
 package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.ProductVariantResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.ProductVariantService;
 import org.example.trendyolfinalproject.service.RecommendationService;
 import org.springframework.web.bind.annotation.*;

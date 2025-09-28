@@ -4,6 +4,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.*;
 import org.example.trendyolfinalproject.exception.response.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,29 +15,21 @@ import java.util.Map;
 @RestControllerAdvice
 public class Handler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Response> handle(RuntimeException e) {
-        return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), "400"));
-
-
-    }
 
 
     @ExceptionHandler(VerifyEmailException.class)
     public ResponseEntity<Response> handle(VerifyEmailException e) {
+        Response response = new Response(e.getMessage(), "409");
         return ResponseEntity
-                .accepted()
-                .body(new Response(e.getMessage(), "409"));
+                .status(HttpStatus.CONFLICT)
+                .body(response);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Response> handle(Exception e) {
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Response> handle(BadCredentialsException e) {
         return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
-
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new Response("Password is incorrect", "401"));
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
@@ -49,7 +42,7 @@ public class Handler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Response> handle(NotFoundException e) {
         return ResponseEntity
-                .badRequest()
+                .status(HttpStatus.NOT_FOUND)
                 .body(new Response(e.getMessage(), HttpStatus.NOT_FOUND.toString()));
     }
 
@@ -82,5 +75,27 @@ public class Handler {
         });
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
+
+
+
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Response> handle(RuntimeException e) {
+        return ResponseEntity
+                .badRequest()
+                .body(new Response(e.getMessage(), "400"));
+
+
+    }
+
+
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Response> handle(Exception e) {
+//        return ResponseEntity
+//                .badRequest()
+//                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+//
+//    }
+
 }
 

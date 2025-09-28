@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-collection_items-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: collection_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: collection_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_variant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: added_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: collection_id
+            baseTableName: collection_items
+            constraintName: fk_collection_items_on_collection
+            referencedColumnNames: id
+            referencedTableName: collections
+        - addForeignKeyConstraint:
+            baseColumnNames: product_variant_id
+            baseTableName: collection_items
+            constraintName: fk_collection_items_on_product_variant
+            referencedColumnNames: id
+            referencedTableName: product_variants
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: collection_items

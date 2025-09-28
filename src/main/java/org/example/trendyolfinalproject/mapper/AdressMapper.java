@@ -1,11 +1,10 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Adress;
-import org.example.trendyolfinalproject.request.AdressCreateRequest;
-import org.example.trendyolfinalproject.response.AdressResponse;
+import org.example.trendyolfinalproject.model.request.AdressCreateRequest;
+import org.example.trendyolfinalproject.model.response.AdressResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails;
 
 import java.util.List;
 

@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-audit-logs-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+              - column:
+                  name: action
+                  type: VARCHAR(255)
+              - column:
+                  name: details
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: audit_logs
+            constraintName: fk_audit_logs_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: audit_logs

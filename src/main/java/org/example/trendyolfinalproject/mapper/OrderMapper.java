@@ -2,8 +2,8 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Adress;
 import org.example.trendyolfinalproject.dao.entity.Order;
-import org.example.trendyolfinalproject.request.OrderCreateRequest;
-import org.example.trendyolfinalproject.response.OrderResponse;
+import org.example.trendyolfinalproject.model.request.OrderCreateRequest;
+import org.example.trendyolfinalproject.model.response.OrderResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

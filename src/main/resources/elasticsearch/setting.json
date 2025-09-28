@@ -1,0 +1,23 @@
+{
+  "analysis": {
+    "filter": {
+      "edge_ngram_filter": {
+        "type": "edge_ngram",
+        "min_gram": 1,
+        "max_gram": 50
+      }
+    },
+    "analyzer": {
+      "chat_edge_ngram_analyzer": {
+        "type": "custom",
+        "tokenizer": "whitespace",
+        "filter": ["lowercase", "asciifolding", "edge_ngram_filter"]
+      },
+      "chat_lowercase_analyzer": {
+        "type": "custom",
+        "tokenizer": "whitespace",
+        "filter": ["lowercase", "asciifolding"]
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+package org.example.trendyolfinalproject.dao.repository;
+
+import org.example.trendyolfinalproject.dao.entity.StarredGroupMessage;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface StarredGroupMessageRepository extends JpaRepository<StarredGroupMessage, Long> {
+    StarredGroupMessage findByUser(User user);
+
+    StarredGroupMessage findByUserAndMessage_Id(User user, Long messageId);
+
+    List<StarredGroupMessage> findByMessage_Id(Long messageId);
+}

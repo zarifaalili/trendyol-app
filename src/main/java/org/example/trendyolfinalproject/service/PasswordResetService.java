@@ -7,6 +7,7 @@ import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.ResetCodeRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,8 @@ public class PasswordResetService {
     private final UserRepository userRepo;
     private final PasswordEncoder encoder;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     public void sendCode(String email) {
         codeRepo.deleteByEmail(email);
@@ -60,6 +63,10 @@ public class PasswordResetService {
         userRepo.save(user);
 
         codeRepo.deleteByEmail(email);
+
+        notificationService.sendNotification(user, "Parolunuz yenilendi", NotificationType.PASSWORD_RESET, user.getId());
+        auditLogService.createAuditLog(user, "Password Reset", "Password reset successfully. User id: " + user.getId());
+
     }
 
 

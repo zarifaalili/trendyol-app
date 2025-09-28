@@ -1,14 +1,11 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Category;
-import org.example.trendyolfinalproject.dao.entity.Product;
-import org.example.trendyolfinalproject.request.CategoryCreateRequest;
-import org.example.trendyolfinalproject.response.CategoryResponse;
-import org.example.trendyolfinalproject.response.ProductResponse;
+import org.example.trendyolfinalproject.model.request.CategoryCreateRequest;
+import org.example.trendyolfinalproject.model.response.CategoryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 import java.util.Set;

@@ -2,14 +2,13 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.request.SellerCreateRequest;
-import org.example.trendyolfinalproject.request.SellerUpdateRequest;
-import org.example.trendyolfinalproject.response.SellerResponse;
+import org.example.trendyolfinalproject.model.request.SellerCreateRequest;
+import org.example.trendyolfinalproject.model.request.SellerUpdateRequest;
+import org.example.trendyolfinalproject.model.response.SellerResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Optional;
 

@@ -2,21 +2,17 @@ package org.example.trendyolfinalproject.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.trendyolfinalproject.dao.entity.AuditLog;
-import org.example.trendyolfinalproject.dao.repository.AuditLogRepository;
 import org.example.trendyolfinalproject.dao.repository.BrandRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.BrandMapper;
-import org.example.trendyolfinalproject.request.BrandCreateRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.BrandResponse;
+import org.example.trendyolfinalproject.model.request.BrandCreateRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.BrandResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor

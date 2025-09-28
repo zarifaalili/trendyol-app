@@ -1,10 +1,8 @@
 package org.example.trendyolfinalproject.dao.entity;
 
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.trendyolfinalproject.model.DiscountType;
-import org.springframework.cglib.core.Local;
+import org.example.trendyolfinalproject.model.enums.DiscountType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

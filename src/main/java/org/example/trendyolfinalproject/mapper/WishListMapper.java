@@ -3,12 +3,11 @@ package org.example.trendyolfinalproject.mapper;
 import org.example.trendyolfinalproject.dao.entity.Product;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.entity.WishList;
-import org.example.trendyolfinalproject.request.WishListCreateRequest;
-import org.example.trendyolfinalproject.response.WishListResponse;
+import org.example.trendyolfinalproject.model.request.WishListCreateRequest;
+import org.example.trendyolfinalproject.model.response.WishListResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 import java.util.Optional;

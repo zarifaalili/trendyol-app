@@ -12,20 +12,21 @@ import org.example.trendyolfinalproject.exception.customExceptions.AlreadyExcept
 import org.example.trendyolfinalproject.exception.customExceptions.EmailAlreadyExistsException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.exception.customExceptions.VerifyEmailException;
-import org.example.trendyolfinalproject.mapper.BasketMapper;
 import org.example.trendyolfinalproject.mapper.UserMapper;
-import org.example.trendyolfinalproject.model.NotificationType;
-import org.example.trendyolfinalproject.model.Role;
-import org.example.trendyolfinalproject.request.UserRegisterRequest;
-import org.example.trendyolfinalproject.request.UserRequest;
-import org.example.trendyolfinalproject.response.*;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
+import org.example.trendyolfinalproject.model.enums.Role;
+import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
+import org.example.trendyolfinalproject.model.request.UserRequest;
+import org.example.trendyolfinalproject.model.response.*;
 import org.example.trendyolfinalproject.util.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -46,7 +47,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final BasketRepository basketRepository;
-    private final BasketMapper basketMapper;
     private final PaymentMethodRepository paymentMethodRepository;
     private final WishlistRepository wishlistRepository;
     private final OrderRepository orderRepository;
@@ -58,6 +58,8 @@ public class UserService {
     private final NotificationService notificationService;
     private final AdressRepository adressRepository;
     private final EmailClient emailClient;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final ResetCodeRepository resetCodeRepository;
 
@@ -81,7 +83,7 @@ public class UserService {
             throw new VerifyEmailException("Password and confirmed password do not match");
         }
 
-        var existingPhone = userRepository.existsUserByPhoneNumber("(+994)" + userRegisterRequest.getPhoneNumber());
+        var existingPhone = userRepository.existsUserByPhoneNumber(userRegisterRequest.getPhoneNumber());
 
         if (existingPhone) {
             throw new AlreadyException("User already exists with this phone number : " + userRegisterRequest.getPhoneNumber());
@@ -103,8 +105,14 @@ public class UserService {
                 .build();
     }
 
+
+    @Transactional
     public ApiResponse<AuthResponse> verifyOtp(String email, String otp, UserRegisterRequest userRegisterRequest) {
         log.info("Actionlog.verifyOtp.start : ");
+
+
+        List<ResetCode> expiredCodes = resetCodeRepository.findAllByEmailAndExpireTimeBefore(email, LocalDateTime.now());
+        resetCodeRepository.deleteAll(expiredCodes);
 
         ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
                 .orElseThrow(() -> new VerifyEmailException("Invalid OTP"));
@@ -119,7 +127,8 @@ public class UserService {
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(userRegisterRequest.getPassword()));
         user.setRole(Role.CUSTOMER);
-        user.setPhoneNumber("(+994)" + userRegisterRequest.getPhoneNumber());
+        user.setPhoneNumber(userRegisterRequest.getPhoneNumber());
+        user.setDateOfBirth(userRegisterRequest.getDateOfBirth());
 
         var savedUser = userRepository.save(user);
 
@@ -234,13 +243,13 @@ public class UserService {
             throw new RuntimeException("You can update your info once a week");
         }
 
-        var existingPhoneNumber = userRepository.existsUserByPhoneNumber("(+994)" + userRequest.getPhoneNumber());
+        var existingPhoneNumber = userRepository.existsUserByPhoneNumber(userRequest.getPhoneNumber());
 
 
         user.setName(userRequest.getName());
         user.setSurname(userRequest.getSurname());
         if (!existingPhoneNumber) {
-            user.setPhoneNumber("(+994)" + userRequest.getPhoneNumber());
+            user.setPhoneNumber(userRequest.getPhoneNumber());
         } else {
             throw new RuntimeException("Phone number already exists");
 
@@ -274,13 +283,13 @@ public class UserService {
             user.setSurname(userRequest.getSurname());
         }
 
-        var existingPhoneNumber = userRepository.existsUserByPhoneNumber("(+994)" + userRequest.getPhoneNumber());
+        var existingPhoneNumber = userRepository.existsUserByPhoneNumber(userRequest.getPhoneNumber());
 
         if (userRequest.getPhoneNumber() != null) {
             if (existingPhoneNumber) {
                 throw new AlreadyException("User already exists with this phone number : " + userRequest.getPhoneNumber());
             }
-            user.setPhoneNumber("(+994) " + userRequest.getPhoneNumber());
+            user.setPhoneNumber(userRequest.getPhoneNumber());
         }
         if (userRequest.getDateOfBirth() != null) {
             user.setDateOfBirth(LocalDate.parse(userRequest.getDateOfBirth()));
@@ -755,5 +764,15 @@ public class UserService {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
+    }
+
+
+    public String salam(String salam) {
+        String message = salam + " sozu cap olundu!";
+        messagingTemplate.convertAndSend(
+                "/queue/messages/" + salam,
+                message
+        );
+        return salam;
     }
 }

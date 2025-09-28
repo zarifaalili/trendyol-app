@@ -1,0 +1,10 @@
+package org.example.trendyolfinalproject.model.request;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class MessageRequest {
+    private String message;
+}

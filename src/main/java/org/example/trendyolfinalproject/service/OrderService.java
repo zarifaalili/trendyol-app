@@ -9,14 +9,14 @@ import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.OrderItemMapper;
 import org.example.trendyolfinalproject.mapper.OrderMapper;
-import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
-import org.example.trendyolfinalproject.request.OrderCreateRequest;
-import org.example.trendyolfinalproject.request.TransactionRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.OrderResponse;
-import org.example.trendyolfinalproject.response.ReturnRequestResponse;
-import org.example.trendyolfinalproject.response.SellerRevenueResponse;
+import org.example.trendyolfinalproject.model.request.OrderCreateRequest;
+import org.example.trendyolfinalproject.model.request.TransactionRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.OrderResponse;
+import org.example.trendyolfinalproject.model.response.ReturnRequestResponse;
+import org.example.trendyolfinalproject.model.response.SellerRevenueResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -29,8 +29,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 @Service
 @RequiredArgsConstructor

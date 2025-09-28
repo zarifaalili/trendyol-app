@@ -1,12 +1,11 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.PaymentMethod;
-import org.example.trendyolfinalproject.request.PaymentMethodCreateRequest;
-import org.example.trendyolfinalproject.response.PaymentMethodResponse;
+import org.example.trendyolfinalproject.model.request.PaymentMethodCreateRequest;
+import org.example.trendyolfinalproject.model.response.PaymentMethodResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface PaymentMethodMapper {

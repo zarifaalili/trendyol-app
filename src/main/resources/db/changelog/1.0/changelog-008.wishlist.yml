@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-wish_lists-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: wish_lists
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_variant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_shared
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: added_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: wish_lists
+            constraintName: fk_wishlists_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+        - addForeignKeyConstraint:
+            baseColumnNames: product_variant_id
+            baseTableName: wish_lists
+            constraintName: fk_wishlists_on_product_variant
+            referencedColumnNames: id
+            referencedTableName: product_variants
+        - createTable:
+            tableName: wish_list_shared_with
+            columns:
+              - column:
+                  name: wish_list_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: shared_with_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: wish_list_id
+            baseTableName: wish_list_shared_with
+            constraintName: fk_wishlist_shared_on_wish_list
+            referencedColumnNames: id
+            referencedTableName: wish_lists
+        - addForeignKeyConstraint:
+            baseColumnNames: shared_with_id
+            baseTableName: wish_list_shared_with
+            constraintName: fk_wishlist_shared_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: wish_lists

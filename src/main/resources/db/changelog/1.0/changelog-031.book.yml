@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-books-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: books
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_path
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author
+                  type: VARCHAR(255)
+              - column:
+                  name: price
+                  type: DOUBLE
+              - column:
+                  name: seller_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: buy_count
+                  type: INT
+                  defaultValue: 0
+        - addForeignKeyConstraint:
+            baseColumnNames: seller_id
+            baseTableName: books
+            constraintName: fk_books_on_seller
+            referencedColumnNames: id
+            referencedTableName: sellers
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: books

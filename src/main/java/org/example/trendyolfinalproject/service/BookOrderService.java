@@ -7,7 +7,7 @@ import org.example.trendyolfinalproject.dao.repository.BookOrderRepository;
 import org.example.trendyolfinalproject.dao.repository.BookRepository;
 import org.example.trendyolfinalproject.dao.repository.PaymentMethodRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
-import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;

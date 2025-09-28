@@ -2,38 +2,38 @@ package org.example.trendyolfinalproject.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.request.BrandCreateRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.BrandResponse;
+import org.example.trendyolfinalproject.model.request.BrandCreateRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.BrandResponse;
 import org.example.trendyolfinalproject.service.BrandService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/brand")
+@RequestMapping("/v1/brands")
 @RequiredArgsConstructor
 public class BrandController {
     private final BrandService brandService;
 
 
-    @PostMapping("/createBrand")
+    @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request) {
         return brandService.createBrand(request);
     }
-    @PatchMapping("/updateBrand/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<BrandResponse> updateBrand(@PathVariable Long id, @RequestBody  BrandCreateRequest request) {
         return brandService.updateBrand(id, request);
     }
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/deleteBrand/{id}")
+    @DeleteMapping("/{id}")
     public ApiResponse<String> deleteBrand(@PathVariable Long id) {
         return brandService.deleteBrand(id);
     }
 
-    @GetMapping("/getBrandbyName/{name}")
-    public ApiResponse<BrandResponse> getBrandbyName(@PathVariable String name) {
+    @GetMapping("/search")
+    public ApiResponse<BrandResponse> getBrandbyName(@RequestParam("name") String name) {
         return brandService.getBrandbyName(name);
     }
 

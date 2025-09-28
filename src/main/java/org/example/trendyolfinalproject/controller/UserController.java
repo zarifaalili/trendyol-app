@@ -4,9 +4,9 @@ import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.request.UserRegisterRequest;
-import org.example.trendyolfinalproject.request.UserRequest;
-import org.example.trendyolfinalproject.response.*;
+import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
+import org.example.trendyolfinalproject.model.request.UserRequest;
+import org.example.trendyolfinalproject.model.response.*;
 import org.example.trendyolfinalproject.service.SellerFollowService;
 import org.example.trendyolfinalproject.service.UserService;
 import org.springframework.data.domain.Page;
@@ -24,30 +24,33 @@ public class UserController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping("/signUp")
-    public ApiResponse<String> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
-        return userService.registerUser(userRegisterRequest);
+    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
+        ApiResponse<String> response = userService.registerUser(userRegisterRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
 
     @PostMapping("/signUp/verify-otp/{email}/{otp}")
-    public ApiResponse<AuthResponse> verifyOtp(@PathVariable String email,
-                                               @PathVariable String otp,
-                                               @RequestBody @Valid UserRegisterRequest userRegisterRequest) {
-        return userService.verifyOtp(email, otp, userRegisterRequest);
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @PathVariable String email,
+            @PathVariable String otp,
+            @RequestBody @Valid UserRegisterRequest userRegisterRequest) {
+        ApiResponse<AuthResponse> response = userService.verifyOtp(email, otp, userRegisterRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    @PutMapping("/putUpdateUser")
+    @PutMapping
     public ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
         return userService.updateUser(userRequest);
     }
 
 
-    @PatchMapping("/patchUpdateUser")
+    @PatchMapping
     public ApiResponse<UserResponse> patchUpdateUser(@RequestBody UserRequest userRequest) {
         return userService.patchUpdateUser(userRequest);
     }
 
-    @PostMapping("/updateEmail/{newEmail}")
+    @PostMapping("/update/{newEmail}")
     public ApiResponse<String> updateEmail(@PathVariable String newEmail) {
         return userService.updateEmail(newEmail);
     }
@@ -58,7 +61,7 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/deleteUser")
+    @DeleteMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Void> deleteUser() {
         userService.deleteUser();
@@ -71,47 +74,53 @@ public class UserController {
     }
 
 
-    @PatchMapping("/deactiveUser")
+    @PatchMapping("/deactivate")
     @PreAuthorize("hasRole('CUSTOMER')")
     public String deactiveUser() {
         return userService.deactiveUser();
     }
 
-    @PostMapping("/activateUser")
+    @PostMapping("/activate")
     public String activeUser(@PathParam("email") String email) {
         return userService.activateUser(email);
     }
 
     @PatchMapping("/verifyReactivateOtp")
-    public String verifyReactivateOtp(@PathParam("email") String email, @PathParam("otp") String otp) {
+    public String verifyReactivateOtp(@PathParam("email") String email, @RequestParam("otp") String otp) {
         return userService.verifyReactivateOtp(email, otp);
     }
 
-    @GetMapping("/searchUser")
+    @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Page<UserResponse>> searchUser(@PathParam("keyword") String keyword,
-                                                      @PathParam("page") int page,
-                                                      @PathParam("size") int size) {
-        return userService.searchUser(keyword,page,size);
+    public ApiResponse<Page<UserResponse>> searchUser(@RequestParam("keyword") String keyword,
+                                                      @RequestParam("page") int page,
+                                                      @RequestParam("size") int size) {
+        return userService.searchUser(keyword, page, size);
     }
 
-    @GetMapping("/followed/sellers")
+    @GetMapping("/followed-sellers")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<List<SellerResponse>> getFollowedSellers() {
         return userService.getFollowedSellers();
     }
 
 
-    @DeleteMapping("/unfollow/seller/{sellerId}")
+    @DeleteMapping("/unfollow-seller/{sellerId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<String> unfollowSeller(@PathVariable Long sellerId) {
         return sellerFollowService.unfollow(sellerId);
     }
 
 
-    @PostMapping("/refer/{email}")
+    @PostMapping("/{email}/refer")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<String> refer(@PathVariable String email) throws MessagingException {
         return userService.referTrendyol(email);
+    }
+
+
+    @PostMapping("/salam/{salam}")
+    public String salam(@PathVariable String salam) {
+        return userService.salam(salam);
     }
 }

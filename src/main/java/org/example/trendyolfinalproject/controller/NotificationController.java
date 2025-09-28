@@ -1,8 +1,8 @@
 package org.example.trendyolfinalproject.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.NotificationResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.NotificationResponse;
 import org.example.trendyolfinalproject.service.NotificationService;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,27 +14,27 @@ import java.util.List;
 public class NotificationController {
     private final NotificationService notificationService;
 
-    @GetMapping("/getNotificationsByUserId")
+    @GetMapping
     public ApiResponse<List<NotificationResponse>> getNotification() {
         return notificationService.getAllNotificationsByUserId();
     }
 
-    @GetMapping("/readSingleNotification/{id}")
+    @GetMapping("/{id}")
     public ApiResponse<NotificationResponse> readSingleNotification(@PathVariable Long id) {
         return notificationService.readSingleNotification(id);
     }
 
-    @PostMapping("/readUnreadNotification")
+    @PostMapping("/unread")
     public ApiResponse<List<NotificationResponse>> readUnreadNotification() {
         return notificationService.getUnreadNotifications();
     }
 
-    @GetMapping("/searchNotification")
+    @GetMapping("/search")
     public ApiResponse<List<NotificationResponse>> searchNotification(@RequestParam String keyword) {
         return notificationService.searchNotification(keyword);
     }
 
-    @PatchMapping("/markAllAsRead")
+    @PatchMapping("/mark-all-read")
     public ApiResponse<String> markAllAsRead() {
         return notificationService.markAllAsRead();
     }

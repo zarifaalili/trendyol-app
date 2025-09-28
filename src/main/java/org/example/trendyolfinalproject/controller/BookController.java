@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/v1/book")
+@RequestMapping("/v1/books")
 @RequiredArgsConstructor
 public class BookController {
 
@@ -29,22 +29,20 @@ public class BookController {
         return ResponseEntity.ok("Book uploaded successfully");
     }
 
-    // User kitab sifariş edir
-    @PostMapping("/order/{bookId}")
+    @PostMapping("/{bookId}/orders")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Long> orderBook(@PathVariable Long bookId) {
         Long orderId = bookOrderService.createOrder(bookId);
         return ResponseEntity.ok(orderId);
     }
 
-    // Ödənilmiş kitab oxuma / download
-    @GetMapping("/read/{orderId}")
+    @GetMapping("/orders/{orderId}/file")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Resource> readBook(@PathVariable Long orderId) {
         return bookOrderService.readBook(orderId);
     }
 
-    @GetMapping("/readd/{orderId}")
+    @GetMapping("/orders/{orderId}/file-unpaid")
     public ResponseEntity<Resource> readBookUnpaid(@PathVariable Long orderId) {
         return bookOrderService.readBookUnpaid(orderId);
     }

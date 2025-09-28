@@ -1,11 +1,10 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Basket;
-import org.example.trendyolfinalproject.request.BasketCreateRequest;
-import org.example.trendyolfinalproject.response.BasketResponse;
+import org.example.trendyolfinalproject.model.request.BasketCreateRequest;
+import org.example.trendyolfinalproject.model.response.BasketResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 

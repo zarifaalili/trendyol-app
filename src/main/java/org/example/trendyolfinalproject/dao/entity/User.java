@@ -2,7 +2,7 @@ package org.example.trendyolfinalproject.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.trendyolfinalproject.model.Role;
+import org.example.trendyolfinalproject.model.enums.Role;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-products-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: products
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: price
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: brand_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seller_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stock_quantity
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: previous_price
+                  type: DECIMAL(10, 2)
+              - column:
+                  name: weight
+                  type: DECIMAL(10, 2)
+              - column:
+                  name: dimensions
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: category_id
+            baseTableName: products
+            constraintName: fk_products_on_category
+            referencedColumnNames: id
+            referencedTableName: categories
+        - addForeignKeyConstraint:
+            baseColumnNames: brand_id
+            baseTableName: products
+            constraintName: fk_products_on_brand
+            referencedColumnNames: id
+            referencedTableName: brands
+        - addForeignKeyConstraint:
+            baseColumnNames: seller_id
+            baseTableName: products
+            constraintName: fk_products_on_seller
+            referencedColumnNames: id
+            referencedTableName: sellers
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: products

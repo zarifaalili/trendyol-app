@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-product_images-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: product_images
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: product_variant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: image_url
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_main_image
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: display_order
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: alt_text
+                  type: TEXT
+        - addForeignKeyConstraint:
+            baseColumnNames: product_id
+            baseTableName: product_images
+            constraintName: fk_product_images_on_product
+            referencedColumnNames: id
+            referencedTableName: products
+        - addForeignKeyConstraint:
+            baseColumnNames: product_variant_id
+            baseTableName: product_images
+            constraintName: fk_product_images_on_product_variant
+            referencedColumnNames: id
+            referencedTableName: product_variants
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: product_images

@@ -2,8 +2,8 @@ package org.example.trendyolfinalproject.mapper;
 
 
 import org.example.trendyolfinalproject.dao.entity.ShipmentMovement;
-import org.example.trendyolfinalproject.request.ShipmentMovementCreateRequest;
-import org.example.trendyolfinalproject.response.ShipmentMovementResponse;
+import org.example.trendyolfinalproject.model.request.ShipmentMovementCreateRequest;
+import org.example.trendyolfinalproject.model.response.ShipmentMovementResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

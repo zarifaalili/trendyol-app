@@ -1,11 +1,10 @@
 package org.example.trendyolfinalproject.controller;
 
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.AuditLogResponse;
-import org.example.trendyolfinalproject.response.SalesReportResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.AuditLogResponse;
+import org.example.trendyolfinalproject.model.response.SalesReportResponse;
 import org.example.trendyolfinalproject.service.AdminService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admins")
 @RequiredArgsConstructor
 public class AdminController {
     private final AdminService adminService;
@@ -26,35 +25,35 @@ public class AdminController {
         return adminService.approveSeller(sellerId);
     }
 
-    @PostMapping("/rejectSeller/{sellerId}")
+    @PostMapping("/sellers/{sellerId}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> rejectSeller(@PathVariable Long sellerId) {
 
         return adminService.rejectSeller(sellerId);
     }
 
-    @GetMapping("/getAdmins")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<User>> getAdmins() {
 
         return adminService.getAllAdmins();
     }
 
-    @PostMapping("/paySellersForToday")
+    @PostMapping("/sellers/payments/today")
     @PreAuthorize("hasRole('ADMIN')")
     public void paySellersForToday() {
         adminService.paySellersForToday();
     }
 
 
-    @GetMapping("/getSalesReport")
+    @GetMapping("/sales/report")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<SalesReportResponse> getSalesReport(@PathParam("startDate") LocalDateTime startDate) {
+    public ApiResponse<SalesReportResponse> getSalesReport(@RequestParam("startDate") LocalDateTime startDate) {
         return adminService.getSalesReport(startDate);
     }
 
 
-    @GetMapping("/getUserActivity/{userId}")
+    @GetMapping("/users/{userId}/activity")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<AuditLogResponse>> getUserActivity(@PathVariable Long userId) {
         return adminService.getUserAuditLogs(userId);

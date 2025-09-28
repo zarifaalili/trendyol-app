@@ -2,11 +2,11 @@ package org.example.trendyolfinalproject.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.request.BasketElementRequest;
-import org.example.trendyolfinalproject.request.DeleteBasketElementRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.BasketElementResponse;
-import org.example.trendyolfinalproject.response.BasketSummaryResponse;
+import org.example.trendyolfinalproject.model.request.BasketElementRequest;
+import org.example.trendyolfinalproject.model.request.DeleteBasketElementRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.BasketElementResponse;
+import org.example.trendyolfinalproject.model.response.BasketSummaryResponse;
 import org.example.trendyolfinalproject.service.BasketElementService;
 import org.example.trendyolfinalproject.service.BasketService;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +17,14 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/basket")
+@RequestMapping("/v1/baskets")
 @RequiredArgsConstructor
 public class BasketController {
     private final BasketService basketService;
     private final BasketElementService basketElementService;
 
 
-    @GetMapping("/getBasketPrice")
+    @GetMapping("/price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<BigDecimal> getBasketPrice() {
 
@@ -35,7 +35,7 @@ public class BasketController {
 //        return basketService.getOrcreateBasket(request);
 //    }
 
-    @GetMapping("/getRowTotalAmount")
+    @GetMapping("/raw-price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<BigDecimal> getRowTotalAmount() {
 
@@ -43,31 +43,31 @@ public class BasketController {
     }
 
 
-    @PostMapping("/element/createBasketElement")
+    @PostMapping("/elements")
     @PreAuthorize("hasRole('CUSTOMER')")
     ApiResponse<BasketElementResponse> createBasketElement(@RequestBody @Valid BasketElementRequest request) {
         return basketElementService.createBasketElement(request);
     }
 
-    @DeleteMapping("/element/deleteBasketElement")
+    @DeleteMapping("/elements")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<String> deleteBasketElement(@RequestBody @Valid DeleteBasketElementRequest request) {
         return basketElementService.deleteBasketElement(request);
     }
 
-    @PostMapping("/element/decreaseQuantity")
+    @PostMapping("/elements/decrease")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<BasketElementResponse> decrieceQuantity(@RequestBody @Valid DeleteBasketElementRequest request) {
         return basketElementService.decrieceQuantity(request);
     }
 
-    @GetMapping("/element/getBasketElements")
+    @GetMapping("/elements")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<List<BasketElementResponse>> getBasketElements() {
         return basketElementService.getBasketElements();
     }
 
-    @PostMapping("/notifyAbandonedBasket")
+    @PostMapping("/actions/notify-abandoned")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> notifyAbandonedBasket() {
         int notifiedCount = basketService.notifyAbandonedBaskets();

@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
 import org.example.trendyolfinalproject.mapper.WishListMapper;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.WishListResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.WishListResponse;
 import org.springframework.stereotype.Service;
 
 @Service

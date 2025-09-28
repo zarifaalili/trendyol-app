@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-seller_payment_logs-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: seller_payment_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: payment_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admin_id
+                  type: BIGINT
+              - column:
+                  name: order_item_id
+                  type: BIGINT
+              - column:
+                  name: seller_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: order_item_id
+            baseTableName: seller_payment_logs
+            constraintName: fk_seller_payment_logs_on_order_item
+            referencedColumnNames: id
+            referencedTableName: order_items
+        - addForeignKeyConstraint:
+            baseColumnNames: seller_id
+            baseTableName: seller_payment_logs
+            constraintName: fk_seller_payment_logs_on_seller
+            referencedColumnNames: id
+            referencedTableName: sellers
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: seller_payment_log

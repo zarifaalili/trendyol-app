@@ -1,10 +1,10 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.CollectionItem;
-import org.example.trendyolfinalproject.request.CollectionItemFromWishListRequest;
-import org.example.trendyolfinalproject.request.CollectionItemRequest;
-import org.example.trendyolfinalproject.response.CollectionItemFromWishListResponse;
-import org.example.trendyolfinalproject.response.CollectionItemResponse;
+import org.example.trendyolfinalproject.model.request.CollectionItemFromWishListRequest;
+import org.example.trendyolfinalproject.model.request.CollectionItemRequest;
+import org.example.trendyolfinalproject.model.response.CollectionItemFromWishListResponse;
+import org.example.trendyolfinalproject.model.response.CollectionItemResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

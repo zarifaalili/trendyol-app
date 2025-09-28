@@ -1,9 +1,9 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.request.UserRegisterRequest;
-import org.example.trendyolfinalproject.response.UserProfileResponse;
-import org.example.trendyolfinalproject.response.UserResponse;
+import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
+import org.example.trendyolfinalproject.model.response.UserProfileResponse;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

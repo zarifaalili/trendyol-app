@@ -1,8 +1,8 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.ProductQuestion;
-import org.example.trendyolfinalproject.request.ProductQuestionRequest;
-import org.example.trendyolfinalproject.response.ProductQuestionResponse;
+import org.example.trendyolfinalproject.model.request.ProductQuestionRequest;
+import org.example.trendyolfinalproject.model.response.ProductQuestionResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -1,8 +1,8 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Coupon;
-import org.example.trendyolfinalproject.request.CouponCreateRequest;
-import org.example.trendyolfinalproject.response.CouponResponse;
+import org.example.trendyolfinalproject.model.request.CouponCreateRequest;
+import org.example.trendyolfinalproject.model.response.CouponResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

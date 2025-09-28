@@ -10,7 +10,7 @@ import org.example.trendyolfinalproject.dao.entity.ShipmentMovement;
 import org.example.trendyolfinalproject.dao.repository.OrderRepository;
 import org.example.trendyolfinalproject.dao.repository.ShipmentMovementRepository;
 import org.example.trendyolfinalproject.dao.repository.ShipmentRepository;
-import org.example.trendyolfinalproject.model.NotificationType;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.service.NotificationService;
 import org.example.trendyolfinalproject.service.ShipmentHistoryService;

@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-orders-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_date
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: shipping_address_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: billing_address_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_method_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tracking_number
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: orders
+            constraintName: fk_orders_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+        - addForeignKeyConstraint:
+            baseColumnNames: shipping_address_id
+            baseTableName: orders
+            constraintName: fk_orders_on_shipping_address
+            referencedColumnNames: id
+            referencedTableName: addresses
+        - addForeignKeyConstraint:
+            baseColumnNames: billing_address_id
+            baseTableName: orders
+            constraintName: fk_orders_on_billing_address
+            referencedColumnNames: id
+            referencedTableName: addresses
+        - addForeignKeyConstraint:
+            baseColumnNames: payment_method_id
+            baseTableName: orders
+            constraintName: fk_orders_on_payment_method
+            referencedColumnNames: id
+            referencedTableName: payment_methods
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: orders

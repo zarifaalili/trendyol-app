@@ -1,7 +1,7 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.PaymentTransaction;
-import org.example.trendyolfinalproject.response.PaymentTransactionResponse;
+import org.example.trendyolfinalproject.model.response.PaymentTransactionResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

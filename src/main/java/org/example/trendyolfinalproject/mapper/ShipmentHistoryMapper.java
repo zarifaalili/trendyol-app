@@ -1,9 +1,8 @@
 package org.example.trendyolfinalproject.mapper;
 
-import jdk.dynalink.linker.LinkerServices;
 import org.example.trendyolfinalproject.dao.entity.ShipmentHistory;
-import org.example.trendyolfinalproject.request.ShipmentHistoryCreateRequest;
-import org.example.trendyolfinalproject.response.ShipmentHistoryResponse;
+import org.example.trendyolfinalproject.model.request.ShipmentHistoryCreateRequest;
+import org.example.trendyolfinalproject.model.response.ShipmentHistoryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-baskets-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: baskets
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discount_amount
+                  type: DECIMAL(10, 2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: final_amount
+                  type: DECIMAL(10, 2)
+                  defaultValueNumeric: 0.00
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: baskets
+            constraintName: fk_baskets_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: baskets

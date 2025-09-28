@@ -1,0 +1,4 @@
+package org.example.trendyolfinalproject.model;
+
+public enum GroupRole {
+}

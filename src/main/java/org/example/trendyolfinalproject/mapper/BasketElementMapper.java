@@ -2,8 +2,8 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.BasketElement;
 import org.example.trendyolfinalproject.dao.entity.ProductVariant;
-import org.example.trendyolfinalproject.request.BasketElementRequest;
-import org.example.trendyolfinalproject.response.BasketElementResponse;
+import org.example.trendyolfinalproject.model.request.BasketElementRequest;
+import org.example.trendyolfinalproject.model.response.BasketElementResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

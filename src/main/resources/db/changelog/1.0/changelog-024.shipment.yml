@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-shipments-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: shipments
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: tracking_number
+                  type: BIGINT
+              - column:
+                  name: carrier_name
+                  type: VARCHAR(255)
+              - column:
+                  name: shipping_cost
+                  type: DECIMAL(10, 2)
+              - column:
+                  name: estimated_delivery_date
+                  type: DATETIME
+              - column:
+                  name: actual_delivery_date
+                  type: DATETIME
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: 'PENDING'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: order_id
+            baseTableName: shipments
+            constraintName: fk_shipments_on_order
+            referencedColumnNames: id
+            referencedTableName: orders
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: shipments

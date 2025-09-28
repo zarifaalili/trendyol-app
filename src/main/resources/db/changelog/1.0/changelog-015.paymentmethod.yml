@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-payment_methods-table
+      author: Zarifa
+      changes:
+        - createTable:
+            tableName: payment_methods
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_number
+                  type: VARCHAR(19)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiration_date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_holder_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_default
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: DECIMAL(19, 2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: payment_methods
+            constraintName: fk_payment_methods_on_user
+            referencedColumnNames: id
+            referencedTableName: users
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: payment_methods

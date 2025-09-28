@@ -7,9 +7,8 @@ import org.example.trendyolfinalproject.dao.repository.ProductImageRepository;
 import org.example.trendyolfinalproject.dao.repository.ProductRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ProductImageMapper;
-import org.example.trendyolfinalproject.request.ProductImageCreateRequest;
-import org.example.trendyolfinalproject.response.ProductImageResponse;
-import org.example.trendyolfinalproject.response.ProductResponse;
+import org.example.trendyolfinalproject.model.request.ProductImageCreateRequest;
+import org.example.trendyolfinalproject.model.response.ProductImageResponse;
 import org.springframework.stereotype.Service;
 
 @Service
