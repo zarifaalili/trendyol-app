@@ -3,10 +3,9 @@ package org.example.trendyolfinalproject.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.trendyolfinalproject.dao.entity.BasketElement;
 import org.example.trendyolfinalproject.dao.entity.UserWheel;
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
-import org.example.trendyolfinalproject.dao.repository.UserWheelRepository;
-import org.example.trendyolfinalproject.dao.repository.WheelRepository;
+import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.WheelMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
@@ -17,10 +16,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -34,6 +33,8 @@ public class WheelService {
     private final WheelMapper wheelMapper;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final BasketRepository basketRepository;
+    private final BasketElementRepository basketElementRepository;
 
 
     @Transactional
@@ -119,7 +120,7 @@ public class WheelService {
         var expiresAtInstant = userWheel.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant();
 
         long millisLeft = expiresAtInstant.toEpochMilli() - System.currentTimeMillis();
-        if (millisLeft < 0) millisLeft = 0; // keçibsə 0 göstər
+        if (millisLeft < 0) millisLeft = 0;
 
         Duration duration = Duration.ofMillis(millisLeft);
 
@@ -138,6 +139,136 @@ public class WheelService {
                 "seconds", seconds
         );
     }
+
+
+    @Transactional
+    public void useWheelPrice(Long userWheelId) {
+        log.info("ActionLog.useWheelPrice.start : userWheelId={}", userWheelId);
+        var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found"));
+
+        var userWheel = userWheelRepository.findById(userWheelId).orElseThrow(() -> new NotFoundException("User wheel not found"));
+
+        if (!userWheel.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You can only use your own wheel");
+        }
+
+        if (userWheel.getUsedAt() != null) {
+            throw new RuntimeException("You have already used this wheel");
+        }
+
+        if (userWheel.getExpiresAt() != null && userWheel.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("This wheel has expired");
+        }
+
+        var basket = basketRepository.findByUserId(getCurrentUserId()).orElseThrow(() -> new NotFoundException("Basket not found"));
+
+        List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
+
+        if (basketElements.isEmpty()) {
+            throw new RuntimeException("Basket not empty");
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (BasketElement basketElement : basketElements) {
+
+            total = total.add(
+                    basketElement.getProductId().getPrice().multiply(BigDecimal.valueOf(basketElement.getQuantity()))
+            );
+        }
+
+
+        var prize = userWheel.getPrize();
+        if (prize == null) {
+            throw new RuntimeException("No prize associated with this user wheel");
+        }
+
+        BigDecimal baseAmount;
+
+        if (basket.getDiscountAmount() != null &&
+                basket.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
+            baseAmount = basket.getFinalAmount();
+        } else {
+            baseAmount = total;
+        }
+
+        if (prize.getMinOrder() != null &&
+                baseAmount.compareTo(prize.getMinOrder()) < 0) {
+            BigDecimal minAdd = prize.getMinOrder().subtract(baseAmount);
+            throw new RuntimeException("You need to add " + minAdd + " to your order to use this wheel");
+        }
+
+        BigDecimal discountAmount = prize.getAmount();
+        if (discountAmount.compareTo(baseAmount) > 0) {
+            discountAmount = baseAmount;
+        }
+
+        BigDecimal totalDiscount = basket.getDiscountAmount() != null
+                ? basket.getDiscountAmount().add(discountAmount)
+                : discountAmount;
+
+
+        basket.setDiscountAmount(totalDiscount);
+        basket.setFinalAmount(total.subtract(totalDiscount));
+        basketRepository.save(basket);
+
+        userWheel.setUsedAt(LocalDateTime.now());
+        userWheelRepository.save(userWheel);
+
+        auditLogService.createAuditLog(user, "useWheelPrice", "Wheel price used");
+        log.info("ActionLog.useWheelPrice.end : userWheelId={}", userWheelId);
+
+    }
+
+
+    @Transactional
+    public void cancelWheelPrize(Long userWheelId) {
+        log.info("ActionLog.cancelWheelPrize.start : userWheelId={}", userWheelId);
+
+        var user = userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        var userWheel = userWheelRepository.findById(userWheelId)
+                .orElseThrow(() -> new NotFoundException("User wheel not found"));
+
+        if (!userWheel.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You can only cancel your own wheel prize");
+        }
+
+        if (userWheel.getUsedAt() == null) {
+            throw new RuntimeException("This wheel prize has not been used yet");
+        }
+
+        var basket = basketRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new NotFoundException("Basket not found"));
+
+        var prize = userWheel.getPrize();
+        if (prize == null) {
+            throw new RuntimeException("No prize associated with this user wheel");
+        }
+
+        List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
+        BigDecimal total = basketElements.stream()
+                .map(be -> be.getProductId().getPrice().multiply(BigDecimal.valueOf(be.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal currentDiscount = basket.getDiscountAmount() != null ? basket.getDiscountAmount() : BigDecimal.ZERO;
+        BigDecimal updatedDiscount = currentDiscount.subtract(prize.getAmount());
+
+        if (updatedDiscount.compareTo(BigDecimal.ZERO) < 0) {
+            updatedDiscount = BigDecimal.ZERO;
+        }
+
+        basket.setDiscountAmount(updatedDiscount);
+        basket.setFinalAmount(total.subtract(updatedDiscount));
+        basketRepository.save(basket);
+
+        userWheel.setUsedAt(null);
+        userWheelRepository.save(userWheel);
+
+        auditLogService.createAuditLog(user, "cancelWheelPrize", "Wheel prize cancelled");
+        log.info("ActionLog.cancelWheelPrize.end : userWheelId={}", userWheelId);
+    }
+
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

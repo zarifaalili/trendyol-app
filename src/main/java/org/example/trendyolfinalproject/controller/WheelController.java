@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -44,8 +43,24 @@ public class WheelController {
 
     @GetMapping("/time-left")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<Map<String,Long>>> getTimeLeft() {
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getTimeLeft() {
         return ResponseEntity.ok(ApiResponse.success(wheelService.getTimeLeft()));
     }
 
+    @PostMapping("/{userWheelId}/use-wheel-price")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<Void>> useWheelPrice(@PathVariable Long userWheelId) {
+
+        wheelService.useWheelPrice(userWheelId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+
+    @PostMapping("/{userWheelId}/cancel-use-wheel-price")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<Void>> cancelUseWheelPrice(@PathVariable Long userWheelId) {
+
+        wheelService.cancelWheelPrize(userWheelId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }
