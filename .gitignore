@@ -32,7 +32,6 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
-book/*.pdf
 
 
 ### VS Code ###

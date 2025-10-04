@@ -5,12 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.model.request.WheelRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.SpinWheelResponse;
+import org.example.trendyolfinalproject.model.response.UserWheelResponse;
+import org.example.trendyolfinalproject.model.response.WheelResponse;
 import org.example.trendyolfinalproject.service.WheelService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -62,5 +65,11 @@ public class WheelController {
 
         wheelService.cancelWheelPrize(userWheelId);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<UserWheelResponse>>> getAllWheels() {
+        return ResponseEntity.ok(ApiResponse.success(wheelService.getAllWheels()));
     }
 }

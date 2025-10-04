@@ -11,6 +11,7 @@ import org.example.trendyolfinalproject.mapper.WheelMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.request.WheelRequest;
 import org.example.trendyolfinalproject.model.response.SpinWheelResponse;
+import org.example.trendyolfinalproject.model.response.UserWheelResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -267,6 +268,28 @@ public class WheelService {
 
         auditLogService.createAuditLog(user, "cancelWheelPrize", "Wheel prize cancelled");
         log.info("ActionLog.cancelWheelPrize.end : userWheelId={}", userWheelId);
+    }
+
+
+    public List<UserWheelResponse> getAllWheels() {
+        log.info("ActionLog.getAllWheels.start : userId={}", getCurrentUserId());
+
+        var user = userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        var userWheels = userWheelRepository.findByUser_IdAndUsedAtIsNull(getCurrentUserId());
+
+        if (userWheels.isEmpty()) {
+            throw new NotFoundException("No wheels found");
+        }
+
+        var responses = userWheels.stream()
+                .map(wheelMapper::toUserWheelResponse)
+                .toList();
+
+
+        log.info("ActionLog.getAllWheels.end : userId={}", getCurrentUserId());
+        return responses;
     }
 
 

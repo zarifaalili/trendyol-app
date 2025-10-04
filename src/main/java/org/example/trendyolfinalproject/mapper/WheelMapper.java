@@ -6,12 +6,14 @@ import org.example.trendyolfinalproject.dao.entity.WheelPrize;
 import org.example.trendyolfinalproject.model.request.WheelPrizeRequest;
 import org.example.trendyolfinalproject.model.request.WheelRequest;
 import org.example.trendyolfinalproject.model.response.SpinWheelResponse;
+import org.example.trendyolfinalproject.model.response.UserWheelResponse;
 import org.example.trendyolfinalproject.model.response.WheelPrizeResponse;
 import org.example.trendyolfinalproject.model.response.WheelResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper(componentModel = "spring")
 public interface WheelMapper {
@@ -34,6 +36,12 @@ public interface WheelMapper {
     @Mapping(target = "prizes", source = "prizes")
     WheelResponse toResponse(Wheel wheel);
 
+
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "wheelId", source = "wheel.id")
+    @Mapping(target = "prizeId", source = "prize.id")
+    UserWheelResponse toUserWheelResponse(UserWheel userWheel);
+
     List<WheelResponse> toResponseList(List<Wheel> wheels);
 
     @Mapping(target = "id", ignore = true)
@@ -49,4 +57,8 @@ public interface WheelMapper {
     @Mapping(target = "minOrder", source = "prize.minOrder")
     @Mapping(target = "expiresAt", source = "expiresAt")
     SpinWheelResponse toResponse(UserWheel userWheel);
+
+
+
+
 }

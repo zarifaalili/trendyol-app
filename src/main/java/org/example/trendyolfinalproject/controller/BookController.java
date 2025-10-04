@@ -17,7 +17,7 @@ public class BookController {
     private final BookService bookService;
     private final BookOrderService bookOrderService;
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // <-- Add this line
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<String> uploadBook(
             @RequestParam("bookFile") MultipartFile bookFile,
