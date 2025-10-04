@@ -16,16 +16,16 @@ import java.util.Map;
 public class ChatGptController {
     private final ChatGptService chatGptService;
 
-    @PostMapping
-    public ResponseEntity<String> askChatGpt(@RequestBody Map<String, String> request) {
-        String question = request.get("question");
-        if (question == null || question.isBlank()) {
-            return ResponseEntity.badRequest().body("Question field is missing or empty");
-        }
-
-        String answer = chatGptService.askQuestion(question);
-        return ResponseEntity.ok(answer);
-    }
+//    @PostMapping
+//    public ResponseEntity<String> askChatGpt(@RequestBody Map<String, String> request) {
+//        String question = request.get("question");
+//        if (question == null || question.isBlank()) {
+//            return ResponseEntity.badRequest().body("Question field is missing or empty");
+//        }
+//
+//        String answer = chatGptService.askQuestion(question);
+//        return ResponseEntity.ok(answer);
+//    }
 
 
 }
