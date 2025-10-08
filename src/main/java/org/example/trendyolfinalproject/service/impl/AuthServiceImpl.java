@@ -1,0 +1,76 @@
+package org.example.trendyolfinalproject.service.impl;
+
+import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.model.request.AuthRequest;
+import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
+import org.example.trendyolfinalproject.model.response.AuthResponse;
+import org.example.trendyolfinalproject.service.AuthService;
+import org.example.trendyolfinalproject.service.BlacklistService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+    private final AuthenticationManager authManager;
+    private final org.example.trendyolfinalproject.util.JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final BlacklistService blacklistService;
+
+    @Override
+    public AuthResponse authenticate(AuthRequest req) {
+
+        User user = userRepository.findByEmail(req.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+
+
+        String username = authentication.getName();
+
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("User is deactivated");
+        }
+
+
+        String token = jwtUtil.generateAccessToken(username, user.getId());
+        String refresh = jwtUtil.generateRefreshToken(username, user.getId());
+        return new AuthResponse(token, refresh);
+    }
+
+
+    @Override
+    public AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        if (jwtUtil.isTokenExpired(refreshTokenRequest.getRefreshToken())) {
+            throw new RuntimeException("Refresh token is expired");
+        }
+        var username = jwtUtil.extractUsername(refreshTokenRequest.getRefreshToken());
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("User is deactivated");
+        }
+
+        var token = jwtUtil.generateAccessToken(username, user.getId());
+        var refreshToken = jwtUtil.generateRefreshToken(username, user.getId());
+        return new AuthResponse(token, refreshToken);
+    }
+
+//    public String logout(String token) {
+//        long expirationMillis = jwtUtil.getExpirationMillis(token);
+//        blacklistService.add(token, expirationMillis);
+//        return "Logged out successfully!";
+//    }
+//
+//    public boolean isTokenValid(String token) {
+//        return !blacklistService.isBlacklisted(token) && !jwtUtil.isTokenExpired(token);
+//    }
+}

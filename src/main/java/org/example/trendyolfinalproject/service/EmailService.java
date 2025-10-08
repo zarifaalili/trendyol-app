@@ -1,76 +1,17 @@
 package org.example.trendyolfinalproject.service;
 
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.AllArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 
-@Service
-@AllArgsConstructor
-public class EmailService {
-    private final JavaMailSender sender;
+public interface EmailService {
 
-    public void sendOtp(String to, String code) {
-        SimpleMailMessage m = new SimpleMailMessage();
-        m.setFrom("alilizarifa@gmail.com");
-        m.setTo(to);
-        m.setSubject("Trendyol Təsdiqləmə Kodu");
-        m.setText("Kodunuz: " + code + " (5 dəqiqə etibarlıdır)");
-        sender.send(m);
-    }
+    void sendOtp(String to, String code);
 
-    public void sendEmail(String to, String subject, String text) {
-        SimpleMailMessage m = new SimpleMailMessage();
-        m.setFrom("alilizarifa@gmail.com");
-        m.setTo(to);
-        m.setSubject(subject);
-        m.setText(text);
-        sender.send(m);
-    }
+    void sendEmail(String to, String subject, String text);
 
-    public void sendEmailWithImage(String to, String subject, String text, File image) throws MessagingException {
-        MimeMessage message = sender.createMimeMessage();
+    void sendEmailWithImage(String to, String subject, String text, File image) throws MessagingException;
 
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-        helper.setFrom("alilizarifa@gmail.com");
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(text, true);
-
-        helper.addAttachment("sekil.jpg", image);
-
-        sender.send(message);
-    }
-
-    public void sendEmailWithHtml(String to, String subject) throws MessagingException {
-        MimeMessage message = sender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        helper.setFrom("alilizarifa@gmail.com");
-        helper.setTo(to);
-        helper.setSubject(subject);
-
-        String html = """
-        <html>
-          <body style="font-family: Arial, sans-serif;">
-            <h2 style="color: #f27a1a;">Trendyol</h2>
-            <p>Endirimləri qaçırma!</p>
-            <a href="https://www.trendyol.com" 
-               style="padding: 10px 20px; background: #f27a1a; color: white; text-decoration: none; border-radius: 5px;">
-               Trendyola keç
-            </a>
-          </body>
-        </html>
-        """;
-
-        helper.setText(html, true);
-        sender.send(message);
-    }
+    void sendEmailWithHtml(String to, String subject) throws MessagingException;
 
 }

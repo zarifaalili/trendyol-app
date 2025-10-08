@@ -118,9 +118,9 @@ public class UserController {
         return userService.referTrendyol(email);
     }
 
-
-    @PostMapping("/salam/{salam}")
-    public String salam(@PathVariable String salam) {
-        return userService.salam(salam);
-    }
+//
+//    @PostMapping("/salam/{salam}")
+//    public String salam(@PathVariable String salam) {
+//        return userService.salam(salam);
+//    }
 }

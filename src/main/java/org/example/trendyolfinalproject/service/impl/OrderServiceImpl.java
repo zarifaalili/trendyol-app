@@ -1,4 +1,4 @@
-package org.example.trendyolfinalproject.service;
+package org.example.trendyolfinalproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +13,11 @@ import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.model.request.OrderCreateRequest;
 import org.example.trendyolfinalproject.model.request.TransactionRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.OrderResponse;
-import org.example.trendyolfinalproject.response.ReturnRequestResponse;
-import org.example.trendyolfinalproject.response.SellerRevenueResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.OrderResponse;
+import org.example.trendyolfinalproject.model.response.ReturnRequestResponse;
+import org.example.trendyolfinalproject.model.response.SellerRevenueResponse;
+import org.example.trendyolfinalproject.service.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -34,7 +35,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderMapper orderMapper;
@@ -64,6 +65,7 @@ public class OrderService {
 
 
     @Transactional
+    @Override
     public ApiResponse<OrderResponse> createOrder(OrderCreateRequest request) {
 
         Long userId = getCurrentUserId();
@@ -216,6 +218,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<String> cancelOrder(Long orderId) {
 
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
@@ -282,6 +285,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<List<OrderResponse>> getOrders() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getOrdersByUserId.start : userId={}", userId);
@@ -302,6 +306,7 @@ public class OrderService {
 
     }
 
+    @Override
     public ApiResponse<List<OrderResponse>> getContinuedOrders() {
 
         Long userId = getCurrentUserId();
@@ -317,6 +322,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<List<OrderResponse>> getCancelledOrders() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getCancelledOrdersByUserId.start : userId={}", userId);
@@ -333,6 +339,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<List<OrderResponse>> searchProductInOrders(String productName) {
 
         Long userId = getCurrentUserId();
@@ -359,6 +366,7 @@ public class OrderService {
                 .getRequest().getAttribute("userId");
     }
 
+    @Override
     public Map<Seller, BigDecimal> calculateSellerEarningsToday() {
         List<Order> deliveredOrders = orderRepository.findByStatus(Status.DELIVERED);
 
@@ -403,6 +411,7 @@ public class OrderService {
         return sellerEarnings;
     }
 
+    @Override
     public ApiResponse<List<OrderResponse>> getOrdersBySeller(Long sellerId) {
         log.info("Actionlog.getOrdersBySeller.start : sellerId={}", sellerId);
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found with id: " + sellerId));
@@ -420,6 +429,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<SellerRevenueResponse> getSellerRevenueStats(Long sellerId) {
         log.info("Actionlog.getSellerRevenueStats.start : sellerId={}", sellerId);
         BigDecimal revenue = orderRepository.getTotalRevenueBySeller(sellerId);
@@ -434,6 +444,7 @@ public class OrderService {
                 .build();
     }
 
+    @Override
     public ApiResponse<String> sendReturnRequest(Long orderItemId, String reason, MultipartFile imageFile) {
         log.info("Actionlog.sendReturnRequest.start : orderItem={}", orderItemId);
 
@@ -481,6 +492,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<String> getReturnRequestStatus(Long returnRequestId) {
         log.info("Actionlog.getReturnRequestStatus.start : returnRequestId={}", returnRequestId);
         var userId = getCurrentUserId();
@@ -502,6 +514,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<List<ReturnRequestResponse>> getReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getReturnRequestsByUserId.start : userId={}", userId);
@@ -525,6 +538,7 @@ public class OrderService {
                 .build();
     }
 
+    @Override
     public ApiResponse<List<ReturnRequestResponse>> getReturnRequestsByUser() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getReturnRequestsByUser.start : userId={}", userId);
@@ -552,6 +566,7 @@ public class OrderService {
     }
 
 
+    @Override
     public ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getNotApprovedReturnRequests.start : userId={}", userId);
@@ -567,6 +582,7 @@ public class OrderService {
                 .build();
     }
 
+    @Override
     public ApiResponse<List<ReturnRequestResponse>> getApprovedReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getApprovedReturnRequests.start : userId={}", userId);
@@ -583,6 +599,7 @@ public class OrderService {
     }
 
     @Transactional
+    @Override
     public ApiResponse<String> approveReturnRequest(Long returnRequestId) {
         log.info("Actionlog.approveReturnRequest.start : returnRequestId={}", returnRequestId);
         var userId = getCurrentUserId();

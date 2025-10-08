@@ -1,4 +1,4 @@
-package org.example.trendyolfinalproject.service;
+package org.example.trendyolfinalproject.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +11,12 @@ import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.BasketMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.BasketElementResponse;
-import org.example.trendyolfinalproject.response.BasketSummaryResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.BasketElementResponse;
+import org.example.trendyolfinalproject.model.response.BasketSummaryResponse;
+import org.example.trendyolfinalproject.service.AuditLogService;
+import org.example.trendyolfinalproject.service.BasketService;
+import org.example.trendyolfinalproject.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -25,7 +28,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class BasketService {
+public class BasketServiceImpl implements BasketService {
     private final BasketRepository basketRepository;
     private final UserRepository userRepository;
     private final BasketMapper basketMapper;
@@ -59,6 +62,7 @@ public class BasketService {
 //    }
 
 
+    @Override
     public ApiResponse<BigDecimal> getTotalAmount() {
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -94,6 +98,7 @@ public class BasketService {
                 .build();
     }
 
+    @Override
     public ApiResponse<BigDecimal> calculateRawTotalAmount() {
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
@@ -120,6 +125,7 @@ public class BasketService {
     }
 
 
+    @Override
     public int notifyAbandonedBaskets() {
         LocalDateTime threshold = LocalDateTime.now().minusHours(24);
         List<User> users = basketElementRepository.findAllUsersWithAbandonedBaskets(threshold);
@@ -137,6 +143,7 @@ public class BasketService {
     }
 
 
+    @Override
     public ApiResponse<BasketSummaryResponse> getBasketSummary() {
         log.info("Actionlog.getBasketSummary.start");
 

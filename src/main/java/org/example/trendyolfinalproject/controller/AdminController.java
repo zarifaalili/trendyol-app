@@ -16,6 +16,7 @@ import java.util.List;
 @RequestMapping("/admins")
 @RequiredArgsConstructor
 public class AdminController {
+
     private final AdminService adminService;
 
     @PostMapping("/approveSeller/{sellerId}")

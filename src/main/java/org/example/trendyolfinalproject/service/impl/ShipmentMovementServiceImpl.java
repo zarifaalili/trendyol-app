@@ -1,4 +1,4 @@
-package org.example.trendyolfinalproject.service;
+package org.example.trendyolfinalproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +12,11 @@ import org.example.trendyolfinalproject.mapper.ShipmentMovementMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
 import org.example.trendyolfinalproject.model.request.ShipmentMovementCreateRequest;
-import org.example.trendyolfinalproject.response.ApiResponse;
-import org.example.trendyolfinalproject.response.ShipmentMovementResponse;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.ShipmentMovementResponse;
+import org.example.trendyolfinalproject.service.NotificationService;
+import org.example.trendyolfinalproject.service.ShipmentHistoryService;
+import org.example.trendyolfinalproject.service.ShipmentMovementService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -23,7 +26,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ShipmentMovementService {
+public class ShipmentMovementServiceImpl implements ShipmentMovementService {
     private final ShipmentMovementRepository shipmentMovementRepository;
     private final ShipmentRepository shipmentRepository;
     private final ShipmentMovementMapper shipmentMovementMapper;
@@ -31,6 +34,7 @@ public class ShipmentMovementService {
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
 
+    @Override
     public ApiResponse<ShipmentMovementResponse> addShipmentMovement(ShipmentMovementCreateRequest request) {
         log.info("Actionlog.addShipmentMovement.start : ");
         Shipment shipment = shipmentRepository.findById(request.getShipmentId()).orElseThrow(

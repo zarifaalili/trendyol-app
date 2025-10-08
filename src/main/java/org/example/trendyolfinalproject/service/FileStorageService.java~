@@ -1,0 +1,6 @@
+package org.example.trendyolfinalproject.service;
+
+public interface FileStorageService {
+
+    
+}
