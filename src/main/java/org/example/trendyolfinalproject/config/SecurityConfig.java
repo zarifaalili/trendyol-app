@@ -63,7 +63,7 @@ public class SecurityConfig {
                                 "/v1/productVariant/getProductVariantDetails/**",
                                 "/v1/productVariant/createProductVariant/**",
                                 "/v1/review/getReviewsByProductId/**",
-                                "/v1/user/salam/**"
+                                "/v1/wiki/**"
                                 ).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

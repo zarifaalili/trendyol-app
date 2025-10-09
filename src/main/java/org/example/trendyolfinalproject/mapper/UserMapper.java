@@ -19,14 +19,13 @@ public interface UserMapper {
     @Mapping(target = "isActive", constant = "true")
     User toEntity(UserRegisterRequest request);
 
-//    @Mapping(target = "phoneNumber", expression = "java(formatPhoneNumber(request.getPhoneNumber()))")
-//    User toEntityFromRequest(UserRequest request);
+
 
 
     @Mapping(target = "fullName", expression = "java(user.getName() + \" \" + user.getSurname())")
     @Mapping(target = "username", source = "email")
-    @Mapping(target = "addresses", ignore = true)           // Service-də ayrıca set olunacaq
-    @Mapping(target = "defaultPaymentMethod", ignore = true) // Service-də ayrıca set olunacaq
+    @Mapping(target = "addresses", ignore = true)
+    @Mapping(target = "defaultPaymentMethod", ignore = true)
     @Mapping(target = "wishlistCount", ignore = true)
     @Mapping(target = "orderCount", ignore = true)
     @Mapping(target = "totalSpent", ignore = true)
@@ -34,13 +33,8 @@ public interface UserMapper {
 
     UserResponse toUserResponse(User user);
 
-//    List<UserResponse> ToUserResponseList(List<User> users);
 
     List<UserResponse> toResponseList(List<User> users);
-//    default String formatPhoneNumber(String phoneNumber) {
-//        if (Objects.isNull(phoneNumber)) return null;
-//        if (phoneNumber.startsWith("+994")) return phoneNumber;
-//        return "+994" + phoneNumber;
-//    }
+
 
 }

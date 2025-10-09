@@ -43,7 +43,7 @@ public class InactiveUserScheduler {
                 Notification notification = new Notification();
                 notification.setUser(user);
                 notification.setType(NotificationType.ALERT);
-                notification.setMessage("Siz bu gün Trendyolaa daxil olmamısız 🚨");
+                notification.setMessage("Siz bu gün Trendyola daxil olmamısız 🚨");
                 notification.setReadStatus(ReadStatus.UNREAD);
                 notification.setDeliveryChannelType(DeliveryChannelType.IN_APP);
                 notification.setCreatedAt(LocalDateTime.now());

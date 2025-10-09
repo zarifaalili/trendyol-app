@@ -54,18 +54,6 @@ public class ShipmentScheduler {
 
 
 
-
-//            if (current == Status.SHIPPED && updatedAt.isBefore(LocalDateTime.now().minusDays(1))) {
-//                shipmentUpdaterService.updateShipmentStatusAndNotify(shipment, Status.IN_TRANSIT, "courier center");
-//            } else if (current == Status.IN_TRANSIT && updatedAt.isBefore(LocalDateTime.now().minusDays(1))) {
-//                shipmentUpdaterService.updateShipmentStatusAndNotify(shipment, Status.IN_CUSTOMS, "customs");
-//            } else if (current == Status.IN_CUSTOMS && updatedAt.isBefore(LocalDateTime.now().minusDays(1))) {
-//                shipmentUpdaterService.updateShipmentStatusAndNotify(shipment, Status.AT_DELIVERY_HUB, "at delivery hub");
-//            } else if (current == Status.AT_DELIVERY_HUB && updatedAt.isBefore(LocalDateTime.now().minusDays(1))) {
-//                shipmentUpdaterService.updateShipmentStatusAndNotify(shipment, Status.OUT_FOR_DELIVERY, "out for delivery");
-//            } else if (current == Status.OUT_FOR_DELIVERY && updatedAt.isBefore(LocalDateTime.now().minusDays(1))) {
-//                shipmentUpdaterService.updateShipmentStatusAndNotify(shipment, Status.DELIVERED, "delivered");
-//            }
         }
         log.info("ShipmentScheduler: autoUpdateShipmentStatus finished.");
     }

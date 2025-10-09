@@ -1,6 +1,5 @@
 package org.example.trendyolfinalproject.scheduler;
 
-// org.example.trendyolfinalproject.service.ShipmentUpdaterService.java
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
