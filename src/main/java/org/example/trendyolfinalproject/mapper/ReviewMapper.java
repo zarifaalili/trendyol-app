@@ -3,13 +3,17 @@ package org.example.trendyolfinalproject.mapper;
 import org.example.trendyolfinalproject.dao.entity.Review;
 import org.example.trendyolfinalproject.dao.entity.ReviewImage;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.projection.NegativeReviewProjection;
-import org.example.trendyolfinalproject.projection.TopProductProjection;
 import org.example.trendyolfinalproject.model.request.ReviewCreateRequest;
 import org.example.trendyolfinalproject.model.request.ReviewUpdateRequest;
 import org.example.trendyolfinalproject.model.response.ReviewResponse;
 import org.example.trendyolfinalproject.model.response.TopRatedProductResponse;
-import org.mapstruct.*;
+import org.example.trendyolfinalproject.projection.NegativeReviewProjection;
+import org.example.trendyolfinalproject.projection.TopProductProjection;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -36,18 +40,18 @@ public interface ReviewMapper {
     @Mapping(source = "product.id", target = "productId")
     @Mapping(source = "product.name", target = "productName")
     @Mapping(source = "reviewDate", target = "reviewDate", qualifiedByName = "convertStringToLocalDateTime")
-    @Mapping(target = "imageUrls", ignore = true) // bunu sonradan manual set edəcəyik
+    @Mapping(target = "imageUrls", ignore = true)
+        // bunu sonradan manual set edəcəyik
     ReviewResponse toResponse(Review review);
 
     List<ReviewResponse> toResponseList(List<Review> reviews);
-
 
 
     List<TopRatedProductResponse> toResponseListProjection(List<TopProductProjection> list);
 
     List<NegativeReviewProjection> toNegativeReviewProjectionList(List<NegativeReviewProjection> list);
 
-            @Named("mapImageUrls")
+    @Named("mapImageUrls")
     default List<String> mapImageUrls(List<ReviewImage> images) {
         if (images == null) {
             return null;

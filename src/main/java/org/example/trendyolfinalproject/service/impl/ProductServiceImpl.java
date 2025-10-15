@@ -116,7 +116,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Actionlog.updateProductPrice.start : productId={}", productId);
         var currentUserId = getCurrentUserId();
         var seller1 = sellerRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + currentUserId));
-        var product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        var product = productRepository.findById(productId).orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
         var seller = product.getSeller();
 
         if (!seller.getId().equals(seller1.getId())) {

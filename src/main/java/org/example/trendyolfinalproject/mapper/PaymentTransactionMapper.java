@@ -7,6 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface PaymentTransactionMapper {
 
@@ -16,6 +18,8 @@ public interface PaymentTransactionMapper {
     @Mapping(source = "payment.id", target = "paymentMethodId")
     @Mapping(source = "payment.cardNumber", target = "maskedCardNumber", qualifiedByName = "maskLast4Digits")
     PaymentTransactionResponse toResponse(PaymentTransaction paymentTransaction);
+
+    List<PaymentTransactionResponse> toResponse(List<PaymentTransaction> paymentTransactions);
 
     @Named("maskLast4Digits")
     default String maskLast4Digits(String cardNumber) {

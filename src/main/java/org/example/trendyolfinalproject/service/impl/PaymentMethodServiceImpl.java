@@ -43,6 +43,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     private final CardClient cardClient;
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final TransactionClient transactionClient;
+    private final PaymentTransactionService paymentTransactionService1;
 
     @Override
     public ApiResponse<PaymentMethodResponse> createPaymentMethod(PaymentMethodCreateRequest request) {
@@ -85,7 +86,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
         log.info("Actionlog.addbalance.start : ");
         var paymentMethod = paymentMethodRepository.findByCardNumber(request.getCardNumber()).orElseThrow(
-                () -> new RuntimeException("PaymentMethod not found with cardNumber: " + request.getCardNumber()));
+                () -> new NotFoundException("PaymentMethod not found with cardNumber: " + request.getCardNumber()));
         paymentMethod.setBalance(paymentMethod.getBalance().add(request.getAmount()));
         cardClient.addBalance(paymentMethod.getCardNumber(), request.getAmount());
         auditLogService.createAuditLog(paymentMethod.getUserId(), "Balance added", "Balance added successfully. PaymentMethod id: " + paymentMethod.getId());
@@ -98,6 +99,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .build()
         );
         paymentMethodRepository.save(paymentMethod);
+
+        paymentTransactionService.createSuccessPaymentTransactionFromAdminToSellers(paymentMethod.getUserId(), null, request.getAmount(), paymentMethod);
         log.info("Actionlog.addbalance.end : ");
 
         return ApiResponse.<String>builder()
@@ -211,7 +214,11 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                     .transactionId(generateTransactionId())
                     .transactionDate(LocalDateTime.now())
                     .build()
+
             );
+
+            paymentTransactionService.createFailedPaymentTransaction(paymentMethod, request.getAmount(), paymentMethod.getCurrency());
+
             throw new RuntimeException("Not enough balance");
         }
         paymentMethod.setBalance(paymentMethod.getBalance().subtract(request.getAmount()));
@@ -230,6 +237,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .transactionDate(LocalDateTime.now())
                 .build()
         );
+
+        paymentTransactionService.createSuccessPaymentTransactionFromAdminToSellers(user, receiver.getUserId(), request.getAmount(), paymentMethod);
 
         var holderName = cardClient.getHolderName(request.getCardNumber());
         var response = PaymentResponse.builder()

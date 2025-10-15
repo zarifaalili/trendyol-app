@@ -158,7 +158,7 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("Actionlog.getUnreadNotification.start : userId={}", userId);
         var notification = notificationRepository.findByUserIdAndReadStatus(userId, ReadStatus.UNREAD);
         if (notification.isEmpty()) {
-            throw new RuntimeException("Notification not found");
+            throw new NotFoundException("Notification not found");
         }
         var response = notificationMapper.toResponseList(notification);
         log.info("Actionlog.getUnreadNotification.end : userId={}", userId);

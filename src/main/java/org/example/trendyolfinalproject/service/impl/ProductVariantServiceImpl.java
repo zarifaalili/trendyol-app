@@ -242,7 +242,12 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public ApiResponse<ProductVariantResponse> addImages(Long variantId, List<MultipartFile> images) {
         var variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
+        var userId = getCurrentUserId();
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
+        if(!variant.getProduct().getSeller().getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You cannot add images to your other product");
+        }
         int displayOrder = variant.getVariantImages() != null ? variant.getVariantImages().size() + 1 : 1;
         boolean isFirstImage = variant.getVariantImages() == null || variant.getVariantImages().isEmpty();
 

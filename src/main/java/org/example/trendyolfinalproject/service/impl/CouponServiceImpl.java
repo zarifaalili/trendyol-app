@@ -1,8 +1,10 @@
 package org.example.trendyolfinalproject.service.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.repository.CouponRepository;
+import org.example.trendyolfinalproject.dao.repository.UserCouponRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
@@ -31,12 +33,13 @@ public class CouponServiceImpl implements CouponService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final UserCouponRepository userCouponRepository;
 
     @Override
     public ApiResponse<CouponResponse> createCoupon(CouponCreateRequest request) {
         log.info("Actionlog.createCoupon.start : ");
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var exist = couponRepository.findByCode(request.getCode()).orElse(null);
         if (exist != null) {
             throw new AlreadyException("Coupon code already exists");
@@ -81,11 +84,13 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<Void> deleteCoupon(Long id) {
         log.info("Actionlog.deleteCoupon.start : id={}", id);
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        var coupon = couponRepository.findById(id).orElseThrow(() -> new RuntimeException("Coupon not found : " + id));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        var coupon = couponRepository.findById(id).orElseThrow(() -> new NotFoundException("Coupon not found : " + id));
+        userCouponRepository.deleteByCoupon(coupon);
         couponRepository.deleteById(id);
         auditLogService.createAuditLog(user, "Delete Coupon", "Coupon deleted successfully. Coupon id: " + coupon.getCode());
         log.info("Actionlog.deleteCoupon.end : id={}", id);
@@ -97,8 +102,8 @@ public class CouponServiceImpl implements CouponService {
     public  ApiResponse<String> deactiveCoupon(Long id) {
         log.info("Actionlog.deactiveCoupon.start : id={}", id);
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        var coupon = couponRepository.findByIdAndIsActive(id, true).orElseThrow(() -> new RuntimeException("Active Coupon not found : " + id));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        var coupon = couponRepository.findByIdAndIsActive(id, true).orElseThrow(() -> new NotFoundException("Active Coupon not found : " + id));
         coupon.setIsActive(false);
         couponRepository.save(coupon);
         auditLogService.createAuditLog(user, "Deactive Coupon", "Coupon deactive successfully. Coupon id: " + coupon.getCode());

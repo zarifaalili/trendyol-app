@@ -19,4 +19,6 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
     BigDecimal getTotalCouponsUsed();
 
     List<UserCoupon> findByUser(User user);
+
+    void deleteByCoupon(Coupon coupon);
 }

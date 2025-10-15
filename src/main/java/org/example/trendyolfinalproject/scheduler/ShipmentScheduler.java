@@ -26,7 +26,8 @@ public class ShipmentScheduler {
     public void autoUpdateShipmentStatus() {
         log.info("ShipmentScheduler: autoUpdateShipmentStatus started at {}", LocalDateTime.now());
 
-        List<Shipment> shipments = shipmentRepository.findAll();
+//        List<Shipment> shipments = shipmentRepository.findAll();
+        List<Shipment> shipments = shipmentRepository.findAllByOrder_StatusNot(Status.CANCELLED);
 
         for (Shipment shipment : shipments) {
             Status current = shipment.getStatus();

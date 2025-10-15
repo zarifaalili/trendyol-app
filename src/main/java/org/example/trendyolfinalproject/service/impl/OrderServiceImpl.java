@@ -75,6 +75,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new NotFoundException("İstifadəçinin səbəti tapılmadı. İstifadəçi ID: " + userId));
         var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
 
+        if(basketElements.isEmpty()){
+            throw new NotFoundException("Basket is empty");
+        }
+
         BigDecimal total = BigDecimal.ZERO;
         for (BasketElement basketElement : basketElements) {
             BigDecimal price = basketElement.getProductId().getPrice();
@@ -87,9 +91,9 @@ public class OrderServiceImpl implements OrderService {
                 () -> new NotFoundException("User's default PaymentMethod not found. User id : " + userId)
         );
 
-        Long admin=3L;
+        Long admin=9L;
         var paymentMethodAdmin = paymentMethodRepository.findByUserId_IdAndIsDefault(admin, true).orElseThrow(
-                () -> new NotFoundException("User's default PaymentMethod not found. User id : 3")
+                () -> new NotFoundException("Admin's default PaymentMethod not found. User id : 9")
         );
 
         var userP = cardClient.validateCard(paymentMethod2.getCardNumber(), paymentMethod2.getCardHolderName());
@@ -104,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
                     .status(Status.FAILED)
                     .currency(paymentMethod2.getCurrency())
                     .build());
-            throw new NotFoundException("Card is not active");
+            throw new RuntimeException("Card is not active");
         }
 
         BigDecimal discountAmount = basket.getDiscountAmount() != null ? basket.getDiscountAmount() : BigDecimal.ZERO;
@@ -121,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
                     .status(Status.FAILED)
                     .currency(paymentMethod2.getCurrency())
                     .build());
-            throw new NotFoundException("PaymentMethod balance is not enough");
+            throw new RuntimeException("PaymentMethod balance is not enough");
 
         } else {
             var amount = paymentMethod2.getBalance().subtract(finalAmoount);
@@ -196,7 +200,7 @@ public class OrderServiceImpl implements OrderService {
     public ApiResponse<String> cancelOrder(Long orderId) {
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
         Long userId = getCurrentUserId();
-        var admin = 3L;
+        var admin = 9L;
         var adminpaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(admin, true).orElseThrow(() -> new NotFoundException("User's default PaymentMethod not found. User id : 9"));
         var order = orderRepository.findById(orderId).orElseThrow(
                 () -> new NotFoundException("Order not found with id: " + orderId));
