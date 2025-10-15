@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.model.enums.ReadStatus;
 
 import java.time.LocalDateTime;
 

@@ -18,5 +18,4 @@ public class UserRequest {
     @JsonFormat(pattern = "dd-MM-yyyy")
     private String dateOfBirth;
 
-
 }

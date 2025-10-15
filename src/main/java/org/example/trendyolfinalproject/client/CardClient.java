@@ -26,7 +26,7 @@ public interface CardClient {
     BigDecimal getBalance(@PathVariable String cardNumber);
 
     @PostMapping("/balance/{cardNumber}/{amount}")
-    public void addBalance(@PathVariable String cardNumber, @PathVariable BigDecimal amount);
+    void addBalance(@PathVariable String cardNumber, @PathVariable BigDecimal amount);
 
 }
 

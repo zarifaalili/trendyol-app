@@ -40,7 +40,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             """)
     List<String> findMostSoldProduct(Pageable pageable);
 
-    // `OrderItemRepository` interfeysində
     @Query("""
        SELECT pv, SUM(oi.quantity) AS totalSales
        FROM OrderItem oi

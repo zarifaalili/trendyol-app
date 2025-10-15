@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChangeDefaultPaymentMethod {
-//    private Long userId;
     @NotNull(message = "Payment method ID cannot be null")
     private Long paymentMethodId;
 }

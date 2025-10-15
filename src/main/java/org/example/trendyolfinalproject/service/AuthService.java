@@ -17,4 +17,9 @@ public interface AuthService {
 
     ApiResponse<AuthResponse> verifyOtp(VerifyAndRegisterRequest verifyRequest);
 
+    String activateUser(String email);
+
+    String verifyReactivateOtp(String email, String otp);
+
+
 }

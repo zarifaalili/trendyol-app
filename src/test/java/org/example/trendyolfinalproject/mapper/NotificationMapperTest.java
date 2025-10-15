@@ -1,7 +1,7 @@
 package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Notification;
-import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.model.enums.ReadStatus;
 import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.request.NotificationCreateRequest;

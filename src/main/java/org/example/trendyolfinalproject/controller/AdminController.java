@@ -19,7 +19,7 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("/approveSeller/{sellerId}")
+    @PostMapping("/approve-seller/{sellerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> approveSeller(@PathVariable Long sellerId) {
 
@@ -36,18 +36,17 @@ public class AdminController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<User>> getAdmins() {
-
         return adminService.getAllAdmins();
     }
 
-    @PostMapping("/sellers/payments/today")
-    @PreAuthorize("hasRole('ADMIN')")
-    public void paySellersForToday() {
-        adminService.paySellersForToday();
-    }
+//    @PostMapping("/sellers/payments/today")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public void paySellersForToday() {
+//        adminService.paySellersForToday();
+//    }
 
 
-    @GetMapping("/sales/report")
+    @GetMapping("/sales-report")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<SalesReportResponse> getSalesReport(@RequestParam("startDate") LocalDateTime startDate) {
         return adminService.getSalesReport(startDate);

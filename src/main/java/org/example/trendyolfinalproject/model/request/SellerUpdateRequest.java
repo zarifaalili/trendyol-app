@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 
 @Data
 @NoArgsConstructor
@@ -18,7 +18,6 @@ public class SellerUpdateRequest {
     @Email(message = "Invalid email format")
     @Size(max = 100, message = "Contact email cannot exceed 100 characters")
     private String contactEmail;
-
 
     @NotNull(message = "Status cannot be null")
     private Status status;

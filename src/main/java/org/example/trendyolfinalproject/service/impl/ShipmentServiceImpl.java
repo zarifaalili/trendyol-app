@@ -7,7 +7,7 @@ import org.example.trendyolfinalproject.dao.entity.Order;
 import org.example.trendyolfinalproject.dao.entity.Shipment;
 import org.example.trendyolfinalproject.dao.repository.ShipmentRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.service.ShipmentHistoryService;
 import org.example.trendyolfinalproject.service.ShipmentService;
 import org.springframework.stereotype.Service;

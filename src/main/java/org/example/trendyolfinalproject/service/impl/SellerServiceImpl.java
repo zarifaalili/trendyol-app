@@ -11,7 +11,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.AlreadyExcept
 import org.example.trendyolfinalproject.mapper.SellerMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Role;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.SellerCreateRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.SellerResponse;

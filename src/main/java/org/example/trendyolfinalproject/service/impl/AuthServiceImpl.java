@@ -40,19 +40,12 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authManager;
     private final org.example.trendyolfinalproject.util.JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    private final BlacklistService blacklistService;
-    private final UserService userService;
     private final EmailService emailService;
     private final BasketRepository basketRepository;
-    private final PaymentMethodRepository paymentMethodRepository;
-    private final WishlistRepository wishlistRepository;
-    private final OrderRepository orderRepository;
-    private final SellerFollowRepository sellerFollowRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final UserMapper userMapper;
     private final NotificationService notificationService;
-    private final AdressRepository adressRepository;
     private final EmailClient emailClient;
     private final ResetCodeRepository resetCodeRepository;
 
@@ -174,11 +167,57 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+
+    public String activateUser(String email) {
+        log.info("Actionlog.activateUser.start : ");
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+
+        if (user.getIsActive()) {
+            log.warn("User is already active");
+            throw new RuntimeException("User is already active");
+        }
+        String otp = generateOtp();
+        ResetCode resetCode = new ResetCode();
+        resetCode.setEmail(email);
+        resetCode.setCode(otp);
+        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
+        resetCodeRepository.save(resetCode);
+        emailService.sendOtp(email, otp);
+        log.debug("OTP sent to {}", email);
+
+        log.info("Actionlog.activateUser.end : ");
+        return "We sent otp to your email to activate your account";
+    }
+
+    public String verifyReactivateOtp(String email, String otp) {
+        log.info("Actionlog.verifyReactivateOtp.start : ");
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+
+        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
+                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+
+        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
+            log.error("OTP expired");
+            throw new RuntimeException("OTP expired");
+        }
+        resetCodeRepository.delete(resetCode);
+        user.setIsActive(true);
+        userRepository.save(user);
+        log.debug("User reactivated successfully");
+
+        log.info("Actionlog.verifyReactivateOtp.end : ");
+        return "User reactivated successfully";
+    }
+
     private String generateOtp() {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }
+
 
 
 }

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

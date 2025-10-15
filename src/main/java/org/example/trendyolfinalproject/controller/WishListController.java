@@ -40,7 +40,7 @@ public class WishListController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<WishListResponse>> serchWishList(@RequestParam String productName) {
         return wishListService.serchWishList(productName);
     }

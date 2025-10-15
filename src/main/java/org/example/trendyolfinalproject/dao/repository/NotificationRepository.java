@@ -2,7 +2,7 @@ package org.example.trendyolfinalproject.dao.repository;
 
 import org.example.trendyolfinalproject.dao.entity.Notification;
 import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
-import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.model.enums.ReadStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

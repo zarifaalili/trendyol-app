@@ -39,6 +39,7 @@ public class AdressServiceImpl implements AdressService {
                 userId, request.getCity(), request.getState(), request.getStreet(), request.getZipCode(), request.getCountry()
         );
         if (excistingAdress.isPresent()) {
+            log.error("Adress already exists");
             throw new AlreadyException("Adress already exists");
         }
         var entity = adressMapper.toEntity(request);
@@ -71,6 +72,7 @@ public class AdressServiceImpl implements AdressService {
                 () -> new NotFoundException("Adress not found with id: " + id)
         );
         if (!adress.getUserId().getId().equals(currentUserId)) {
+            log.error("You don't have permission to delete this Adress");
             throw new RuntimeException("You don't have permission to delete this Adress");
         }
         adressRepository.deleteById(id);
@@ -97,6 +99,7 @@ public class AdressServiceImpl implements AdressService {
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
         List<Adress> adresses = adressRepository.findAllByUserId_Id(currentUserId);
         if (adresses.isEmpty()) {
+            log.error("User has no adresses");
             throw new NotFoundException("User has no adresses");
         }
         List<AdressResponse> response = adressMapper.toResponseList(adresses);
@@ -117,6 +120,7 @@ public class AdressServiceImpl implements AdressService {
                 () -> new RuntimeException("Adress not found with id: " + id)
         );
         if (!adress.getUserId().getId().equals(currentUserId)) {
+            log.error("You don't have permission to update this Adress");
             throw new RuntimeException("You don't have permission to update this Adress");
         }
         if (request.getCity() != null) adress.setCity(request.getCity());

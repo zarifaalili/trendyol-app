@@ -18,7 +18,7 @@ public interface ProductMapper {
     @Mapping(target = "previousPrice", ignore = true)
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "status", expression = "java(org.example.trendyolfinalproject.model.Status.ACTIVE)")
+    @Mapping(target = "status", expression = "java(org.example.trendyolfinalproject.model.enums.Status.ACTIVE)")
     @Mapping(target = "stockQuantity", expression = "java(0)")
     Product toEntity(ProductRequest request);
 

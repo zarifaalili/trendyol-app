@@ -10,9 +10,6 @@ import java.math.BigDecimal;
 @Data
 public class PaymentRequest {
 
-//    @NotNull(message = "Payment method ID cannot be null")
-//    private Long paymentMethodId;
-
     @NotNull(message = "Card number cannot be null")
     @Size(min = 16, max = 16, message = "Card number must be 16 digits")
     private String cardNumber;

@@ -9,7 +9,7 @@ import org.example.trendyolfinalproject.dao.repository.ShipmentRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ShipmentHistoryMapper;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ShipmentHistoryResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;

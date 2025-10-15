@@ -1,14 +1,14 @@
 package org.example.trendyolfinalproject.model.enums;
 
 public enum Location {
-    WAREHOUSE,        // anbarda
-    COURIER_CENTER,   // kuryer mərkəzində
-    IN_TRANSIT,       // yolda
-    CUSTOMS,          // gömrükdə
-    DELIVERY_HUB,     // çatdırılma məntəqəsində
-    DESTINATION_CITY, // çatdırılacaq şəhərdə
-    CUSTOMER_ADDRESS, // müştərinin ünvanında (çatdırılmaq üzrə)
+    WAREHOUSE,
+    COURIER_CENTER,
+    IN_TRANSIT,
+    CUSTOMS,
+    DELIVERY_HUB,
+    DESTINATION_CITY,
+    CUSTOMER_ADDRESS,
     UNKNOWN  ,
     Turkiye,
-    Azerbaycan// bilinməyən vəziyyət
+    Azerbaycan
 }

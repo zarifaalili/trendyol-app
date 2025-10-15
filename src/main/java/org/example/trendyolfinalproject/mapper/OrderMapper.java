@@ -20,7 +20,7 @@ public interface OrderMapper {
     @Mapping(target = "billingAddressId", ignore = true)
     @Mapping(target = "paymentMethodId", ignore = true)
     @Mapping(target = "orderDate", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "status", expression = "java(org.example.trendyolfinalproject.model.Status.PENDING)")
+    @Mapping(target = "status", expression = "java(org.example.trendyolfinalproject.model.enums.Status.PENDING)")
     @Mapping(target = "trackingNumber", ignore = true)
     @Mapping(target = "totalAmount", ignore = true)
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")

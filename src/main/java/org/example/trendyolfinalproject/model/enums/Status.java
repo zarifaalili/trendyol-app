@@ -1,4 +1,4 @@
-package org.example.trendyolfinalproject.model;
+package org.example.trendyolfinalproject.model.enums;
 
 public enum Status {
     ACTIVE,
@@ -27,14 +27,11 @@ public enum Status {
     PACKAGE_PREPARED,
     DISPATCHED,
     ARRIVED_AT_CENTER,
-//    OUT_FOR_DELIVERY,
     FAILED_DELIVERY,
 
 
-
+//question ucun
     ANSWERED,
-
     REJECTED,
-
     COMPLETED
 }

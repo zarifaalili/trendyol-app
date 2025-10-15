@@ -59,7 +59,7 @@ public class WheelController {
     }
 
 
-    @PostMapping("/{userWheelId}/cancel-use-wheel-price")
+    @PostMapping("/{userWheelId}/cancel-wheel-price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Void>> cancelUseWheelPrice(@PathVariable Long userWheelId) {
 

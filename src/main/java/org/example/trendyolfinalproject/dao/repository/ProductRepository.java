@@ -1,7 +1,7 @@
 package org.example.trendyolfinalproject.dao.repository;
 
 import org.example.trendyolfinalproject.dao.entity.Product;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,8 +1,7 @@
 package org.example.trendyolfinalproject.dao.repository;
 
-import jdk.dynalink.linker.LinkerServices;
 import org.example.trendyolfinalproject.dao.entity.ProductQuestion;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

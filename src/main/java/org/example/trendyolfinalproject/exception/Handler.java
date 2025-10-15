@@ -4,6 +4,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.*;
 import org.example.trendyolfinalproject.exception.response.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,7 +16,6 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class Handler {
-
 
 
     @ExceptionHandler(VerifyEmailException.class)
@@ -33,11 +33,19 @@ public class Handler {
                 .body(new Response("Password is incorrect", "401"));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Response> handle(AccessDeniedException e) {
+        Response response = new Response("Access Denied", "403");
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Response> handle(EmailAlreadyExistsException e) {
         return ResponseEntity
                 .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+                .body(new Response(e.getMessage(), HttpStatus.CONFLICT.toString()));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -58,22 +66,22 @@ public class Handler {
     @ExceptionHandler(CouponUsageLimitExceededException.class)
     public ResponseEntity<Response> handle(CouponUsageLimitExceededException e) {
         return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+                .status(HttpStatus.CONFLICT)
+                .body(new Response(e.getMessage(), HttpStatus.CONFLICT.toString()));
     }
 
     @ExceptionHandler(MinimumOrderAmountNotMetException.class)
     public ResponseEntity<Response> handle(MinimumOrderAmountNotMetException e) {
         return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+                .status(HttpStatus.CONFLICT)
+                .body(new Response(e.getMessage(), HttpStatus.CONFLICT.toString()));
     }
 
     @ExceptionHandler(AlreadyException.class)
     public ResponseEntity<Response> handle(AlreadyException e) {
         return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), HttpStatus.BAD_REQUEST.toString()));
+                .status(HttpStatus.CONFLICT)
+                .body(new Response(e.getMessage(), HttpStatus.CONFLICT.toString()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -86,13 +94,11 @@ public class Handler {
     }
 
 
-
-
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Response> handle(RuntimeException e) {
         return ResponseEntity
-                .badRequest()
-                .body(new Response(e.getMessage(), "400"));
+                .status(HttpStatus.CONFLICT)
+                .body(new Response(e.getMessage(), "409"));
 
 
     }

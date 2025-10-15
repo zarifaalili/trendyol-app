@@ -4,21 +4,18 @@ import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.client.EmailClient;
-import org.example.trendyolfinalproject.dao.entity.Basket;
 import org.example.trendyolfinalproject.dao.entity.Order;
 import org.example.trendyolfinalproject.dao.entity.ResetCode;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
-import org.example.trendyolfinalproject.exception.customExceptions.EmailAlreadyExistsException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
-import org.example.trendyolfinalproject.exception.customExceptions.VerifyEmailException;
 import org.example.trendyolfinalproject.mapper.UserMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.enums.Role;
-import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.model.request.UserRequest;
-import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
-import org.example.trendyolfinalproject.model.response.*;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.SellerResponse;
+import org.example.trendyolfinalproject.model.response.UserProfileResponse;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.EmailService;
 import org.example.trendyolfinalproject.service.NotificationService;
@@ -30,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -156,15 +152,12 @@ public class UserServiceImpl implements UserService {
 
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-
         var now = LocalDateTime.now();
         long daysBetween = ChronoUnit.DAYS.between(user.getUpdatedAt(), now);
-
         if (daysBetween < 7) {
             throw new RuntimeException("You can update your info once a week");
         }
         var existingPhoneNumber = userRepository.existsUserByPhoneNumber(userRequest.getPhoneNumber());
-
         user.setName(userRequest.getName());
         user.setSurname(userRequest.getSurname());
         if (!existingPhoneNumber) {
@@ -174,10 +167,8 @@ public class UserServiceImpl implements UserService {
         }
         var saved = userRepository.save(user);
         var response = userMapper.toUserResponse(saved);
-
         auditLogService.createAuditLog(user, "Update User", "User updated own info successfully. User id: " + user.getId());
         notificationService.sendNotification(user, "Your account updated  successfully. Your account name " + user.getName(), NotificationType.USER_UPDATE, user.getId());
-
         log.info("Actionlog.updateUser.end : ");
         return ApiResponse.<UserResponse>builder()
                 .status(HttpStatus.OK.value())
@@ -192,7 +183,6 @@ public class UserServiceImpl implements UserService {
 
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-
         if (userRequest.getName() != null) {
             user.setName(userRequest.getName());
         }
@@ -215,9 +205,7 @@ public class UserServiceImpl implements UserService {
 
         auditLogService.createAuditLog(user, "Update User", "User updated own info successfully. User id: " + user.getId());
         notificationService.sendNotification(user, "Your account updated  successfully. Your account name " + user.getName(), NotificationType.USER_UPDATE, user.getId());
-
         log.info("Actionlog.patchUpdateUser.end : ");
-
         return ApiResponse.<UserResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("User updated successfully")
@@ -237,25 +225,20 @@ public class UserServiceImpl implements UserService {
         if (exist != null) {
             throw new AlreadyException("Email already exists");
         }
-
         if (user.getEmail().equals(newEmail)) {
             throw new AlreadyException("Email already exists");
         }
-
         var existsInEmailPool = emailClient.checkEmailExists(newEmail);
         if (!existsInEmailPool) {
             throw new NotFoundException("Email is not available");
         }
-
         String otp = generateOtp();
         ResetCode resetCode = new ResetCode();
         resetCode.setEmail(newEmail);
         resetCode.setCode(otp);
         resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
         resetCodeRepository.save(resetCode);
-
         emailService.sendOtp(newEmail, otp);
-
         log.info("Actionlog.updateEmail.end : ");
         return ApiResponse.<String>builder()
                 .status(HttpStatus.OK.value())
@@ -277,14 +260,11 @@ public class UserServiceImpl implements UserService {
         if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("OTP expired");
         }
-
         resetCodeRepository.delete(resetCode);
-
         String oldEmail = user.getEmail();
         user.setEmail(newEmail);
         user.setUpdatedAt(LocalDateTime.now());
         var saved = userRepository.save(user);
-
         auditLogService.createAuditLog(user, "Update User Email",
                 "User updated own info successfully. User id: " + user.getId());
 
@@ -308,6 +288,7 @@ public class UserServiceImpl implements UserService {
         log.info("Actionlog.deleteUser.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
         user.setIsActive(false);
         userRepository.save(user);
         log.info("Actionlog.deleteUser.end : ");
@@ -325,20 +306,15 @@ public class UserServiceImpl implements UserService {
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var response = userMapper.toUserProfileResponse(user);
-
         var adress = adressRepository.findByUserId(user);
         if (adress == null) adress = List.of();
         response.setAddresses(adress);
-
         var defaultPaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(user.getId(), true);
         response.setDefaultPaymentMethod(defaultPaymentMethod.orElse(null));
-
         var wishlistCount = wishlistRepository.findByUser(user).size();
         response.setWishlistCount(wishlistCount);
-
         var orderCount = orderRepository.findByUserId_Id(userId).size();
         response.setOrderCount(orderCount);
-
         var totalSpent = calculateTotalSpent(userId);
         if (totalSpent == null) {
             totalSpent = 0.0;
@@ -364,9 +340,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String deactiveUser() {
+    public ApiResponse<String> deactiveUser(Long userId) {
         log.info("Actionlog.deactiveUser.start : ");
-        var userId = getCurrentUserId();
+        var adminId = getCurrentUserId();
+        var admin = userRepository.findById(adminId).orElseThrow(() -> new NotFoundException("Admin not found with id: " + adminId));
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         if (!user.getIsActive()) {
             throw new RuntimeException("User is already deactive");
@@ -375,92 +352,54 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         auditLogService.createAuditLog(user, "Deactive User", "User deactive successfully. User id: " + user.getId());
         emailService.sendEmail(user.getEmail(), "Deactive Account Info", "Your account deactive successfully. Your account name " + user.getName());
-        notificationService.sendNotification(user, "Your account deactive successfully. Your account name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
+        notificationService.sendNotification(user, "Your account deactive. Your account name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
+        notificationService.sendNotification(admin, "User deactive. User name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
         log.info("Actionlog.deactiveUser.end : ");
-        return "User deactive successfully";
+        return ApiResponse.<String>builder().status(HttpStatus.OK.value()).message("User deactive successfully").data("User with id " + user.getId() + " deactivated").build();
     }
 
-    @Override
-    public String activateUser(String email) {
-        log.info("Actionlog.activateUser.start : ");
-
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
-
-        if (user.getIsActive()) {
-            throw new RuntimeException("User is already active");
-        }
-
-        String otp = generateOtp();
-        ResetCode resetCode = new ResetCode();
-        resetCode.setEmail(email);
-        resetCode.setCode(otp);
-        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
-        resetCodeRepository.save(resetCode);
-
-        emailService.sendOtp(email, otp);
-
-        log.info("Actionlog.activateUser.end : ");
-        return "We sent otp to your email to activate your account";
-    }
-
-    @Override
-    public String verifyReactivateOtp(String email, String otp) {
-        log.info("Actionlog.verifyReactivateOtp.start : ");
-
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
-
-        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
-                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
-
-        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
-        }
-        resetCodeRepository.delete(resetCode);
-        user.setIsActive(true);
-        userRepository.save(user);
-
-        log.info("Actionlog.verifyReactivateOtp.end : ");
-        return "User reactivated successfully";
-    }
-
-
+//    @Override
 //    public String activateUser(String email) {
 //        log.info("Actionlog.activateUser.start : ");
-//        var userId = getCurrentUserId();
-//        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+//        var user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+//
 //        if (user.getIsActive()) {
 //            throw new RuntimeException("User is already active");
 //        }
 //        String otp = generateOtp();
-//        Long expiry = System.currentTimeMillis() + 5 * 60 * 1000;
-//        otpStore.put(email, otp);
-//        otpExpiry.put(email, expiry);
+//        ResetCode resetCode = new ResetCode();
+//        resetCode.setEmail(email);
+//        resetCode.setCode(otp);
+//        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
+//        resetCodeRepository.save(resetCode);
 //        emailService.sendOtp(email, otp);
+//
 //        log.info("Actionlog.activateUser.end : ");
 //        return "We sent otp to your email to activate your account";
 //    }
 //
+//    @Override
 //    public String verifyReactivateOtp(String email, String otp) {
 //        log.info("Actionlog.verifyReactivateOtp.start : ");
-//        var user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with id: " + email));
-//        var otpFromStore = otpStore.get(email);
-//        var expiry = otpExpiry.get(email);
-//        if (otpFromStore == null || !otpFromStore.equals(otp)) {
-//            throw new RuntimeException("Invalid OTP");
-//        }
-//        if (expiry < System.currentTimeMillis()) {
+//
+//        var user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+//
+//        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
+//                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+//
+//        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
 //            throw new RuntimeException("OTP expired");
 //        }
-//        otpStore.remove(email);
-//        otpExpiry.remove(email);
+//        resetCodeRepository.delete(resetCode);
 //        user.setIsActive(true);
 //        userRepository.save(user);
-//        log.info("Actionlog.verifyReactivateOtp.end : ");
-//        return "User reactivate successfully";
 //
+//        log.info("Actionlog.verifyReactivateOtp.end : ");
+//        return "User reactivated successfully";
 //    }
+
 
     @Override
     public ApiResponse<Page<UserResponse>> searchUser(String keyword, int page, int size) {
@@ -472,7 +411,6 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found");
         }
         log.info("Actionlog.searchUser.end : ");
-
         Page<UserResponse> response = users.map(userMapper::toUserResponse);
         return ApiResponse.<Page<UserResponse>>builder()
                 .data(response)
@@ -519,7 +457,6 @@ public class UserServiceImpl implements UserService {
         if (!existsEmail) {
             throw new NotFoundException("Email not found");
         }
-//        emailService.sendEmail(email, "Refer Trendyol", "https://www.trendyol.com/");
         emailService.sendEmailWithHtml(email, "Refer Trendyol");
         log.info("Actionlog.referTrendyol.end : ");
         auditLogService.createAuditLog(user, "Refer Trendyol", "Refer Trendyol successfully. User id: " + user.getId());

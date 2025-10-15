@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
 
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
 
@@ -35,16 +36,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
 
-//        List<GrantedAuthority> authorities = u.getRoles().stream()
-//                .map(SimpleGrantedAuthority::new)
-//                .collect(Collectors.toList());
-//
-//
-//        return new SecurityProperties.User(
-//                u.getUsername(),
-//                u.getPassword(),
-//                authorities
-//        );
 
     }
 

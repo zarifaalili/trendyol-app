@@ -21,7 +21,7 @@ public class ProductVariantDetailResponse {
     private Double price;
     private Double previousPrice;
 
-    private List<String> imageUrls;     // şəkil linkləri
-    private List<String> imageBase64s;  // şəkillərin base64 formatı
+    private List<String> imageUrls;
+    private List<String> imageBase64s;
 }
 

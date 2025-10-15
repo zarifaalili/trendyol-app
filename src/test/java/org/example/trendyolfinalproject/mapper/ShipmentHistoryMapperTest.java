@@ -2,7 +2,7 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.Shipment;
 import org.example.trendyolfinalproject.dao.entity.ShipmentHistory;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.ShipmentHistoryCreateRequest;
 import org.example.trendyolfinalproject.model.response.ShipmentHistoryResponse;
 import org.junit.jupiter.api.BeforeEach;

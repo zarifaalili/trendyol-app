@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.mapper.WishListMapper;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.WishListResponse;
 import org.example.trendyolfinalproject.service.WishListProxyService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,7 +26,7 @@ public class WishListProxyServiceImpl implements WishListProxyService {
                 .orElseThrow(() -> new RuntimeException("WishList not found"));
         if (!wishList.getUser().equals(currentUser) &&
                 !wishList.getSharedWith().contains(currentUser)) {
-            throw new RuntimeException("Access denied: You cannot view this wishlist");
+            throw new AccessDeniedException("Access denied: You cannot view this wishlist");
         }
 
         var mapper = wishListMapper.toResponse(wishList);

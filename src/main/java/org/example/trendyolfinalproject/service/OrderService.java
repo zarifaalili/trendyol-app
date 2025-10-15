@@ -32,19 +32,19 @@ public interface OrderService {
 
     ApiResponse<SellerRevenueResponse> getSellerRevenueStats(Long sellerId);
 ;
-    ApiResponse<String> sendReturnRequest(Long orderItemId, String reason, MultipartFile imageFile);
+//    ApiResponse<String> sendReturnRequest(Long orderItemId, String reason, MultipartFile imageFile);
+//
+//    ApiResponse<String> getReturnRequestStatus(Long returnRequestId);
+//
+//    ApiResponse<List<ReturnRequestResponse>> getReturnRequests();
 
-    ApiResponse<String> getReturnRequestStatus(Long returnRequestId);
+//    ApiResponse<List<ReturnRequestResponse>> getReturnRequestsByUser();
 
-    ApiResponse<List<ReturnRequestResponse>> getReturnRequests();
+//    ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests();
+//
+//    ApiResponse<List<ReturnRequestResponse>> getApprovedReturnRequests();
 
-    ApiResponse<List<ReturnRequestResponse>> getReturnRequestsByUser();
-
-    ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests();
-
-    ApiResponse<List<ReturnRequestResponse>> getApprovedReturnRequests();
-
-    ApiResponse<String> approveReturnRequest(Long returnRequestId);
+//    ApiResponse<String> approveReturnRequest(Long returnRequestId);
 
 
 }

@@ -8,7 +8,7 @@ import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Role;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuditLogResponse;
 import org.example.trendyolfinalproject.model.response.SalesReportResponse;
@@ -47,10 +47,12 @@ public class AdminServiceImpl implements AdminService {
                 .getRequest().getAttribute("userId");
         var admin = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
         if (!admin.getRole().equals(Role.ADMIN)) {
+            log.warn("you cant approve seller. You are not admin");
             throw new RuntimeException("you cant approve seller. You are not admin");
         }
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found"));
         if (seller.getStatus().equals(Status.ACTIVE)) {
+            log.warn("Seller is already active");
             throw new RuntimeException("Seller is already active");
         }
         var user = seller.getUser();
@@ -59,6 +61,7 @@ public class AdminServiceImpl implements AdminService {
             user.setIsActive(true);
             sellerRepository.save(seller);
             userRepository.save(user);
+            log.debug("seller and user saved successfully");
         }
         notificationService.sendNotification(user, "Your seller account has been approved", NotificationType.SELLER_APPROVED, sellerId);
         log.info("Actionlog.approveSeller.end : sellerId={}", sellerId);
@@ -72,10 +75,12 @@ public class AdminServiceImpl implements AdminService {
                 .getRequest().getAttribute("userId");
         var admin = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
         if (!admin.getRole().equals(Role.ADMIN)) {
+            log.warn("you cant reject seller. You are not admin");
             throw new RuntimeException("you cant reject seller. You are not admin");
         }
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found"));
         if (seller.getStatus().equals(Status.ACTIVE)) {
+            log.warn("Seller is already active");
             throw new RuntimeException("Seller is already active");
         }
         var user = seller.getUser();
@@ -84,6 +89,7 @@ public class AdminServiceImpl implements AdminService {
             user.setIsActive(false);
             userRepository.save(user);
             sellerRepository.save(seller);
+            log.debug("seller and user saved successfully");
         }
         notificationService.sendNotification(user, "Your seller account has been rejected", NotificationType.SELLER_REJECTED, sellerId);
         log.info("Actionlog.rejectSeller.end : sellerId={}", sellerId);
@@ -96,6 +102,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("Actionlog.getAllAdmins.start : ");
         List<User> admins = userRepository.findAllByRole(Role.ADMIN);
         if (admins.isEmpty()) {
+            log.error("No admins found");
             throw new NotFoundException("No admins found");
         }
         log.info("Actionlog.getAllAdmins.end : ");
@@ -134,6 +141,7 @@ public class AdminServiceImpl implements AdminService {
         var auditLogs = auditLogRepository.findByUserId(user);
 
         if (auditLogs.isEmpty()) {
+            log.error("Audit logs not found");
             throw new NotFoundException("Audit logs not found");
         }
         var response = auditLogs.stream()

@@ -5,7 +5,7 @@ import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.model.request.SellerCreateRequest;
 import org.example.trendyolfinalproject.model.request.SellerUpdateRequest;
 import org.example.trendyolfinalproject.model.response.SellerResponse;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -24,7 +24,6 @@ class SellerMapperTest {
     @Test
     void testToEntity() {
         SellerCreateRequest request = new SellerCreateRequest();
-        request.setUserId(1L);
         request.setCompanyName("TechStore");
         request.setTaxId(123456);
 

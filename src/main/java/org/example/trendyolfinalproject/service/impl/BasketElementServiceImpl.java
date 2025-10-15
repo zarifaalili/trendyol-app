@@ -56,6 +56,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         var existingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), productId, request.getProductVariantId()).orElse(null);
 
         if (productVariant.getStockQuantity() == 0) {
+            log.error("ProductVariant is out of stock");
             throw new RuntimeException("ProductVariant is out of stock");
         }
 
@@ -87,6 +88,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         entity.setProductVariantId(productVariant);
         entity.setQuantity(1);
         var saved = basketElementRepository.save(entity);
+        log.debug("Saved basket element: {}", saved);
         var response = basketElementMapper.toResponse(saved);
 
         product.setStockQuantity(product.getStockQuantity() - 1);
@@ -109,7 +111,6 @@ public class BasketElementServiceImpl implements BasketElementService {
     @Transactional
     @Override
     public ApiResponse<String> deleteBasketElement(DeleteBasketElementRequest request) {
-
         Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
         log.info("Actionlog.deleteBasketElement.start : basketId={}", basket.getId());

@@ -1,20 +1,16 @@
 package org.example.trendyolfinalproject.service;
 
 import jakarta.mail.MessagingException;
-import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.model.request.UserRequest;
-import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
-import org.example.trendyolfinalproject.model.request.VerifyRequest;
-import org.example.trendyolfinalproject.model.response.*;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.SellerResponse;
+import org.example.trendyolfinalproject.model.response.UserProfileResponse;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface UserService {
-//
-//    ApiResponse<String> registerUser(UserRegisterRequest userRegisterRequest);
-//
-//    ApiResponse<AuthResponse> verifyOtp(VerifyAndRegisterRequest verifyRequest);
 
     ApiResponse<UserResponse> updateUser(UserRequest userRequest);
 
@@ -28,11 +24,7 @@ public interface UserService {
 
     ApiResponse<UserProfileResponse> getUserProfile();
 
-    String deactiveUser();
-
-    String activateUser(String email);
-
-    String verifyReactivateOtp(String email, String otp);
+    ApiResponse<String> deactiveUser(Long userId);
 
     ApiResponse<Page<UserResponse>> searchUser(String keyword, int page, int size);
 

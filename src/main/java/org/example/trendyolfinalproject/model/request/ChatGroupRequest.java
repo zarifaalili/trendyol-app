@@ -21,7 +21,6 @@ public class ChatGroupRequest {
     private String description;
     @NotNull(message = "Visibility cannot be null")
     private GroupVisibility visibility;
-
     private List<Long> memberIds;
 
 }

@@ -2,7 +2,7 @@ package org.example.trendyolfinalproject.model.response;
 
 import lombok.Builder;
 import lombok.Data;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

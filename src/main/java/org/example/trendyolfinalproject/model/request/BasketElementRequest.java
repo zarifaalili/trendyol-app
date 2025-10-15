@@ -12,17 +12,6 @@ import lombok.NoArgsConstructor;
 
 public class BasketElementRequest {
 
-//    @NotNull(message = "Basket ID cannot be null")
-//    private Long basketId;
-
-//    @NotNull(message = "Product ID cannot be null")
-//    private Long productId;
     @NotNull(message = "Product Variant ID cannot be null")
     private Long productVariantId;
-
-//    @NotNull(message = "Quantity cannot be null")
-//    @Min(value = 1, message = "Quantity must be at least 1")
-//    private Integer quantity;
-
-
 }

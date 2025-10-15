@@ -37,7 +37,6 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new RuntimeException("Could not store file " + fileName, ex);
         }
 
-
     }
 
     @Override

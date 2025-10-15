@@ -32,8 +32,5 @@ public class ProductVariantCreateRequest {
     @NotNull(message = "Price cannot be null")
     private String sku;
 
-//    @ElementCollection(targetClass = String.class)
-//    private List<String> imageUrls;
-
 
 }

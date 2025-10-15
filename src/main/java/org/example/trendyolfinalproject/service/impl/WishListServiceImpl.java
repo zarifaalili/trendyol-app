@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.ProductVariantRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.WishListMapper;
 import org.example.trendyolfinalproject.model.enums.Role;
@@ -51,7 +52,7 @@ public class WishListServiceImpl implements WishListService {
         var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + request.getProductVariantId()));
         var wishlist = wishlistRepository.findByUserAndProductVariant_Id((user), productVariant.getId()).orElse(null);
         if (wishlist != null) {
-            throw new RuntimeException("ProductVariant already exists in wishlist with id: " + request.getProductVariantId());
+            throw new AlreadyException("ProductVariant already exists in wishlist with id: " + request.getProductVariantId());
         }
         var entity = wishListMapper.toEntity(request);
         entity.setUser(user);

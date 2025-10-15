@@ -223,7 +223,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         List<ProductVariant> variants = entityManager.createQuery(query).getResultList();
 
         if (variants.isEmpty()) {
-            throw new RuntimeException("ProductVariants not found");
+            throw new NotFoundException("ProductVariants not found");
         }
         var responseList = variants.stream()
                 .map(productVariantMapper::toResponse)

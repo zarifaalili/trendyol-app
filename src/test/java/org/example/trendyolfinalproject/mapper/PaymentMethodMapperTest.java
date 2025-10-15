@@ -2,7 +2,7 @@ package org.example.trendyolfinalproject.mapper;
 
 import org.example.trendyolfinalproject.dao.entity.PaymentMethod;
 import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.model.CardType;
+import org.example.trendyolfinalproject.model.enums.CardType;
 import org.example.trendyolfinalproject.model.enums.Currency;
 import org.example.trendyolfinalproject.model.request.PaymentMethodCreateRequest;
 import org.example.trendyolfinalproject.model.response.PaymentMethodResponse;

@@ -69,10 +69,5 @@ public class ReviewController {
                                                                          @RequestParam(required = false) Integer[] rating, @RequestParam(required = false) String subject) {
         return reviewService.getProductReviewsWithFilter(productId, rating, subject);
     }
-//    @DeleteMapping("/deleteReview/{id}")
-//    public void deleteReview(@PathVariable Long id) {
-//        reviewService.deleteReview(id);
-//    }
-
 
 }

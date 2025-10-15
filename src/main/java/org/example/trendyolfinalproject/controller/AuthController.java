@@ -1,8 +1,8 @@
 package org.example.trendyolfinalproject.controller;
 
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.model.request.AuthRequest;
 import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
 import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
@@ -10,12 +10,8 @@ import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuthResponse;
 import org.example.trendyolfinalproject.service.AuthService;
-import org.example.trendyolfinalproject.service.AuthenticationManager;
 import org.example.trendyolfinalproject.service.PasswordResetService;
-import org.example.trendyolfinalproject.service.UserService;
-import org.example.trendyolfinalproject.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,7 +44,6 @@ public class AuthController {
     }
 
 
-
     @PostMapping("/reset-password")
     public void reset(@RequestParam String email,
                       @RequestParam String code,
@@ -72,7 +67,15 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
+    @PostMapping("/user-activate")
+    public ApiResponse<String> activeUser(@PathParam("email") String email) {
+        return ApiResponse.success(authService.activateUser(email));
+    }
 
+    @PatchMapping("/verify-reactivate-otp")
+    public ApiResponse<String> verifyReactivateOtp(@PathParam("email") String email, @RequestParam("otp") String otp) {
+        return ApiResponse.success(authService.verifyReactivateOtp(email, otp));
+    }
 
 
 }

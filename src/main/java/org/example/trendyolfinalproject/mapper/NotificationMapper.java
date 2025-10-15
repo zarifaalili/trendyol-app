@@ -14,7 +14,7 @@ public interface NotificationMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
-    @Mapping(target = "readStatus", expression = "java(org.example.trendyolfinalproject.model.ReadStatus.UNREAD)")
+    @Mapping(target = "readStatus", expression = "java(org.example.trendyolfinalproject.model.enums.ReadStatus.UNREAD)")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "sentAt", expression = "java(java.time.LocalDateTime.now())")
     Notification toEntity(NotificationCreateRequest request);

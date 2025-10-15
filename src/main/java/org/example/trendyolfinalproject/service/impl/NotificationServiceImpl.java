@@ -10,7 +10,7 @@ import org.example.trendyolfinalproject.exception.customExceptions.NotFoundExcep
 import org.example.trendyolfinalproject.mapper.NotificationMapper;
 import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.model.enums.ReadStatus;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.NotificationResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;

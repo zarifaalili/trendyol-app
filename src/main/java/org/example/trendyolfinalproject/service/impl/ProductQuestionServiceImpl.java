@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.mapper.ProductQuestionMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.ProductAnswerRequest;
 import org.example.trendyolfinalproject.model.request.ProductQuestionRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;

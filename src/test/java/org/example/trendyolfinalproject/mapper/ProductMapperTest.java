@@ -4,7 +4,7 @@ import org.example.trendyolfinalproject.dao.entity.Brand;
 import org.example.trendyolfinalproject.dao.entity.Category;
 import org.example.trendyolfinalproject.dao.entity.Product;
 import org.example.trendyolfinalproject.dao.entity.Seller;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.ProductRequest;
 import org.example.trendyolfinalproject.model.response.ProductResponse;
 import org.junit.jupiter.api.BeforeEach;

@@ -49,7 +49,6 @@ public class BasketServiceImpl implements BasketService {
             currentTotal = calculateRawTotalAmount().getData();
         }
 
-
         var user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
         auditLogService.createAuditLog(user, "Get total amount of basket", "Get total price of basket successfully. Basket id: " + basket1.getId());
 

@@ -20,6 +20,5 @@ public class ShipmentMovementCreateRequest {
     private String location;
     @NotNull(message = "Updated by cannot be null")
     private String updatedBy;
-//    private LocalDateTime timestamp;
 }
 

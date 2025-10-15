@@ -4,21 +4,18 @@ import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.client.EmailClient;
-import org.example.trendyolfinalproject.dao.entity.Basket;
 import org.example.trendyolfinalproject.dao.entity.Order;
 import org.example.trendyolfinalproject.dao.entity.ResetCode;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
-import org.example.trendyolfinalproject.exception.customExceptions.EmailAlreadyExistsException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
-import org.example.trendyolfinalproject.exception.customExceptions.VerifyEmailException;
 import org.example.trendyolfinalproject.mapper.UserMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.enums.Role;
-import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.model.request.UserRequest;
-import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
-import org.example.trendyolfinalproject.model.response.*;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.SellerResponse;
+import org.example.trendyolfinalproject.model.response.UserProfileResponse;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.EmailService;
 import org.example.trendyolfinalproject.service.NotificationService;
@@ -30,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -292,13 +288,16 @@ public class UserServiceImpl implements UserService {
         log.info("Actionlog.deleteUser.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
         user.setIsActive(false);
         userRepository.save(user);
         log.info("Actionlog.deleteUser.end : ");
 
+        auditLogService.createAuditLog(user, "Deactive User", "Your account deactive successfully. User id: " + user.getId());
+        notificationService.sendNotification(user, "Your account deactive. Your account name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
         return ApiResponse.<String>builder()
                 .status(HttpStatus.OK.value())
-                .message("User deleted successfully")
+                .message("User deactived successfully")
                 .data("User with id " + user.getId() + " deactivated")
                 .build();
     }
@@ -343,9 +342,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String deactiveUser() {
+    public ApiResponse<String> deactiveUser(Long userId) {
         log.info("Actionlog.deactiveUser.start : ");
-        var userId = getCurrentUserId();
+        var adminId = getCurrentUserId();
+        var admin = userRepository.findById(adminId).orElseThrow(() -> new NotFoundException("Admin not found with id: " + adminId));
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         if (!user.getIsActive()) {
             throw new RuntimeException("User is already deactive");
@@ -354,53 +354,53 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         auditLogService.createAuditLog(user, "Deactive User", "User deactive successfully. User id: " + user.getId());
         emailService.sendEmail(user.getEmail(), "Deactive Account Info", "Your account deactive successfully. Your account name " + user.getName());
-        notificationService.sendNotification(user, "Your account deactive successfully. Your account name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
+        notificationService.sendNotification(user, "Your account deactive. Your account name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
+        notificationService.sendNotification(admin, "User deactive. User name " + user.getName(), NotificationType.USER_DEACTIVE, user.getId());
         log.info("Actionlog.deactiveUser.end : ");
-        return "User deactive successfully";
+        return ApiResponse.<String>builder().status(HttpStatus.OK.value()).message("User deactive successfully").data("User with id " + user.getId() + " deactivated").build();
     }
 
-    @Override
-    public String activateUser(String email) {
-        log.info("Actionlog.activateUser.start : ");
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
-
-        if (user.getIsActive()) {
-            throw new RuntimeException("User is already active");
-        }
-        String otp = generateOtp();
-        ResetCode resetCode = new ResetCode();
-        resetCode.setEmail(email);
-        resetCode.setCode(otp);
-        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
-        resetCodeRepository.save(resetCode);
-        emailService.sendOtp(email, otp);
-
-        log.info("Actionlog.activateUser.end : ");
-        return "We sent otp to your email to activate your account";
-    }
-
-    @Override
-    public String verifyReactivateOtp(String email, String otp) {
-        log.info("Actionlog.verifyReactivateOtp.start : ");
-
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
-
-        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
-                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
-
-        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
-        }
-        resetCodeRepository.delete(resetCode);
-        user.setIsActive(true);
-        userRepository.save(user);
-
-        log.info("Actionlog.verifyReactivateOtp.end : ");
-        return "User reactivated successfully";
-    }
-
+//    @Override
+//    public String activateUser(String email) {
+//        log.info("Actionlog.activateUser.start : ");
+//        var user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+//
+//        if (user.getIsActive()) {
+//            throw new RuntimeException("User is already active");
+//        }
+//        String otp = generateOtp();
+//        ResetCode resetCode = new ResetCode();
+//        resetCode.setEmail(email);
+//        resetCode.setCode(otp);
+//        resetCode.setExpireTime(LocalDateTime.now().plusMinutes(5));
+//        resetCodeRepository.save(resetCode);
+//        emailService.sendOtp(email, otp);
+//
+//        log.info("Actionlog.activateUser.end : ");
+//        return "We sent otp to your email to activate your account";
+//    }
+//
+//    @Override
+//    public String verifyReactivateOtp(String email, String otp) {
+//        log.info("Actionlog.verifyReactivateOtp.start : ");
+//
+//        var user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+//
+//        ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
+//                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+//
+//        if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
+//            throw new RuntimeException("OTP expired");
+//        }
+//        resetCodeRepository.delete(resetCode);
+//        user.setIsActive(true);
+//        userRepository.save(user);
+//
+//        log.info("Actionlog.verifyReactivateOtp.end : ");
+//        return "User reactivated successfully";
+//    }
 
 
     @Override

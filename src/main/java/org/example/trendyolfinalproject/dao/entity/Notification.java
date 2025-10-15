@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.trendyolfinalproject.model.enums.DeliveryChannelType;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.ReadStatus;
+import org.example.trendyolfinalproject.model.enums.ReadStatus;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -38,7 +38,6 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     private DeliveryChannelType deliveryChannelType;
-
 
     private LocalDateTime createdAt;
     private LocalDateTime sentAt;

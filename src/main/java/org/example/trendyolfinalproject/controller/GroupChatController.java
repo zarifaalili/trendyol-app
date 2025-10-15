@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/groupChats")
+@RequestMapping("/api/group-chats")
 @RequiredArgsConstructor
 public class GroupChatController {
 
@@ -35,7 +35,7 @@ public class GroupChatController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
     }
 
-    @PostMapping("/{groupId}/membersWithEmail")
+    @PostMapping("/{groupId}/members-with-email")
     public ResponseEntity<ApiResponse<Void>> addMembersWithEmail(@PathVariable Long groupId,
                                                                  @RequestBody List<String> emails) {
         groupChatService.addMemmbersWithEmail(groupId, emails);

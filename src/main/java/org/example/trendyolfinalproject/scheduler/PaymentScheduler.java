@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.PaymentTransaction;
 import org.example.trendyolfinalproject.dao.repository.PaymentTransactionRepository;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.service.AdminService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

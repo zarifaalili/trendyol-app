@@ -1,7 +1,7 @@
 package org.example.trendyolfinalproject.service;
 
 import org.example.trendyolfinalproject.dao.entity.Shipment;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ShipmentHistoryResponse;
 

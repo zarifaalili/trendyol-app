@@ -22,27 +22,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final SellerFollowService sellerFollowService;
-
-//    @PostMapping("/signUp")
-//    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
-//        ApiResponse<String> response = userService.registerUser(userRegisterRequest);
-//        return ResponseEntity.status(response.getStatus()).body(response);
-//    }
-//
-//
-//    @PostMapping("/signUp/verify-otp")
-//    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
-//            @RequestBody @Valid VerifyAndRegisterRequest verifyRequest) {
-//        ApiResponse<AuthResponse> response = userService.verifyOtp(verifyRequest);
-//        return ResponseEntity.status(response.getStatus()).body(response);
-//    }
 
     @PutMapping
     public ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
         return userService.updateUser(userRequest);
     }
-
 
     @PatchMapping
     public ApiResponse<UserResponse> patchUpdateUser(@RequestBody UserRequest userRequest) {
@@ -59,32 +43,22 @@ public class UserController {
         return userService.verifyEmail(email, otp);
     }
 
-    @DeleteMapping
+    @PatchMapping("/deactivate-me")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<Void> deleteUser() {
+    public ResponseEntity<Void> deactivateMe() {
         userService.deleteUser();
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/getUserProfile")
+    @GetMapping("/profile")
     public ApiResponse<UserProfileResponse> getUserProfile() {
         return userService.getUserProfile();
     }
 
-    @PatchMapping("/deactivate")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public String deactiveUser() {
-        return userService.deactiveUser();
-    }
-
-    @PostMapping("/activate")
-    public String activeUser(@PathParam("email") String email) {
-        return userService.activateUser(email);
-    }
-
-    @PatchMapping("/verifyReactivateOtp")
-    public String verifyReactivateOtp(@PathParam("email") String email, @RequestParam("otp") String otp) {
-        return userService.verifyReactivateOtp(email, otp);
+    @PatchMapping("/deactivate/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> deactiveUser(@PathVariable Long userId) {
+        return userService.deactiveUser(userId);
     }
 
     @GetMapping("/search")
@@ -101,12 +75,6 @@ public class UserController {
         return userService.getFollowedSellers();
     }
 
-
-    @DeleteMapping("/unfollow-seller/{sellerId}")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> unfollowSeller(@PathVariable Long sellerId) {
-        return sellerFollowService.unfollow(sellerId);
-    }
 
 
     @PostMapping("/{email}/refer")

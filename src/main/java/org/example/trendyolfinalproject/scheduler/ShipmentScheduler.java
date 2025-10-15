@@ -4,7 +4,7 @@ package org.example.trendyolfinalproject.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.Shipment;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.dao.repository.ShipmentRepository; // Bu importu əlavə etdim
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

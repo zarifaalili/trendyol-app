@@ -15,9 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ReviewCreateRequest {
 
-//    @NotNull(message = "User ID cannot be null")
-//    private Long userId;
-
     @NotNull(message = "Product ID cannot be null")
     private Long productId;
 
@@ -28,7 +25,6 @@ public class ReviewCreateRequest {
 
     @NotBlank(message = "Comment cannot be blank")
     private String comment;
-
 
     private List<String> imageUrls;
 

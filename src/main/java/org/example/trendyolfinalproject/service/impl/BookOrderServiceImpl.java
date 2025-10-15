@@ -53,6 +53,7 @@ public class BookOrderServiceImpl implements BookOrderService {
         var paymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(user.getId(), true).orElseThrow(() -> new RuntimeException("Payment method not found"));
 
         if (paymentMethod.getBalance().compareTo(BigDecimal.valueOf(book.getPrice())) < 0) {
+            log.error("Not enough balance");
             throw new RuntimeException("Not enough balance");
         }
         paymentMethod.setBalance(paymentMethod.getBalance().subtract(BigDecimal.valueOf(book.getPrice())));
@@ -67,6 +68,7 @@ public class BookOrderServiceImpl implements BookOrderService {
         order.setPaid(true);
         book.setBuyCount(lastBycount);
         bookOrderRepository.save(order);
+        log.debug("book order saved");
 
         auditLogService.createAuditLog(user, "Book ordered", "Book ordered successfully. Book id: " + book.getId());
         notificationService.sendNotification(user, "Book ordered", NotificationType.BOOK_ORDER, book.getId());

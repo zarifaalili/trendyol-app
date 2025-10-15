@@ -1,7 +1,6 @@
 package org.example.trendyolfinalproject.model.response;
 
 import lombok.Data;
-import org.example.trendyolfinalproject.model.Status;
 
 import java.time.LocalDateTime;
 

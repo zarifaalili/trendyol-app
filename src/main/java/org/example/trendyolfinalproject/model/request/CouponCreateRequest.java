@@ -39,7 +39,6 @@ public class CouponCreateRequest {
     @FutureOrPresent(message = "End date must be in the future or present")
     private LocalDateTime endDate;
 
-    //    @Min(value = 0, message = "Usage limit cannot be negative")
     private Integer usageLimit;
 
     @Min(value = 0, message = "Per user limit cannot be negative")

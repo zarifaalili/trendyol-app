@@ -1,0 +1,252 @@
+package org.example.trendyolfinalproject.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.dao.entity.WishList;
+import org.example.trendyolfinalproject.dao.repository.ProductVariantRepository;
+import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.mapper.WishListMapper;
+import org.example.trendyolfinalproject.model.enums.Role;
+import org.example.trendyolfinalproject.model.request.WishListCreateRequest;
+import org.example.trendyolfinalproject.model.response.WishListResponse;
+import org.example.trendyolfinalproject.service.AuditLogService;
+import org.example.trendyolfinalproject.service.impl.WishListServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class WishListServiceImplTest {
+
+    @Mock
+    private WishlistRepository wishlistRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ProductVariantRepository productVariantRepository;
+
+    @Mock
+    private WishListMapper wishListMapper;
+
+    @Mock
+    private AuditLogService auditLogService;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private HttpServletRequest httpServletRequest;
+
+    @InjectMocks
+    private WishListServiceImpl wishListService;
+
+    private User user;
+    private WishList wishlist;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        user = new User();
+        user.setId(1L);
+        user.setEmail("test@example.com");
+        user.setRole(Role.CUSTOMER);
+
+        wishlist = new WishList();
+        wishlist.setId(1L);
+        wishlist.setUser(user);
+
+        // Simulate RequestContextHolder with mock HttpServletRequest
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(httpServletRequest));
+        when(httpServletRequest.getAttribute("userId")).thenReturn(1L);
+    }
+
+    // ===== addToFavorite =====
+    @Test
+    void testAddToFavorite_Success() {
+        WishListCreateRequest request = new WishListCreateRequest(1L);
+
+        when(userRepository.findByIdAndRole(1L, Role.CUSTOMER)).thenReturn(Optional.of(user));
+        when(productVariantRepository.findById(1L)).thenReturn(Optional.of(new WishList().getProductVariant()));
+        when(wishlistRepository.findByUserAndProductVariant_Id(user, 1L)).thenReturn(Optional.empty());
+        when(wishListMapper.toEntity(request)).thenReturn(new WishList());
+        when(wishlistRepository.save(any(WishList.class))).thenReturn(wishlist);
+        when(wishListMapper.toResponse(wishlist)).thenReturn(new WishListResponse());
+
+        var response = wishListService.addToFavorite(request);
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getMessage().contains("Created favorite"));
+    }
+
+    @Test
+    void testAddToFavorite_UserNotFound() {
+        WishListCreateRequest request = new WishListCreateRequest(1L);
+        when(userRepository.findByIdAndRole(1L, Role.CUSTOMER)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> wishListService.addToFavorite(request));
+        assertTrue(exception.getMessage().contains("User not found"));
+    }
+
+    // ===== deleteFromFavorites =====
+    @Test
+    void testDeleteFromFavorites_Success() {
+        when(wishlistRepository.findById(1L)).thenReturn(Optional.of(wishlist));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        var response = wishListService.deleteFromFavorites(1L);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        verify(wishlistRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteFromFavorites_NoPermission() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        wishlist.setUser(otherUser);
+
+        when(wishlistRepository.findById(1L)).thenReturn(Optional.of(wishlist));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> wishListService.deleteFromFavorites(1L));
+        assertTrue(exception.getMessage().contains("don't have permission"));
+    }
+
+    // ===== getFavorites =====
+    @Test
+    void testGetFavorites_Success_FromDB() {
+        when(redisTemplate.opsForValue().get("wishlist:1")).thenReturn(null);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        List<WishList> favorites = List.of(wishlist);
+        when(wishlistRepository.findByUser(user)).thenReturn(favorites);
+        when(wishListMapper.toResponseList(favorites)).thenReturn(List.of(new WishListResponse()));
+
+        var response = wishListService.getFavorites();
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(), any(Duration.class));
+    }
+
+    @Test
+    void testGetFavorites_UserNotFound() {
+        when(redisTemplate.opsForValue().get("wishlist:1")).thenReturn(null);
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> wishListService.getFavorites());
+        assertTrue(exception.getMessage().contains("User not found"));
+    }
+
+    // ===== serchWishList =====
+    @Test
+    void testSearchWishList_Success() {
+        List<WishList> favorites = List.of(wishlist);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.findByProductVariant_Product_NameContainingIgnoreCase("test")).thenReturn(favorites);
+        when(wishListMapper.toResponseList(favorites)).thenReturn(List.of(new WishListResponse()));
+
+        var response = wishListService.serchWishList("test");
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void testSearchWishList_NotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.findByProductVariant_Product_NameContainingIgnoreCase("abc")).thenReturn(new ArrayList<>());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> wishListService.serchWishList("abc"));
+        assertTrue(exception.getMessage().contains("Search result not found"));
+    }
+
+    // ===== getProductVariantsByDecreasedCost =====
+    @Test
+    void testGetProductVariantsByDecreasedCost_Success() {
+        List<WishList> favorites = List.of(wishlist);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.getProductVariantsByDecreasedCost()).thenReturn(favorites);
+        when(wishListMapper.toResponseList(favorites)).thenReturn(List.of(new WishListResponse()));
+
+        var response = wishListService.getProductVariantsByDecreasedCost();
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void testGetProductVariantsByDecreasedCost_NotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.getProductVariantsByDecreasedCost()).thenReturn(new ArrayList<>());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> wishListService.getProductVariantsByDecreasedCost());
+        assertTrue(exception.getMessage().contains("Search result not found"));
+    }
+
+    // ===== shareWishListWithUser =====
+    @Test
+    void testShareWishListWithUser_Success() {
+        User targetUser = new User();
+        targetUser.setId(2L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(targetUser));
+        when(wishlistRepository.findById(1L)).thenReturn(Optional.of(wishlist));
+        when(wishlistRepository.save(any())).thenReturn(wishlist);
+
+        var response = wishListService.shareWishListWithUser(1L, 2L);
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertTrue(wishlist.getSharedWith().contains(targetUser));
+    }
+
+    @Test
+    void testShareWishListWithUser_WishListNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.findById(1L)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> wishListService.shareWishListWithUser(1L, 2L));
+        assertTrue(exception.getMessage().contains("WishList not found"));
+    }
+
+    @Test
+    void testShareWishListWithUser_AccessDenied() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        wishlist.setUser(otherUser);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(wishlistRepository.findById(1L)).thenReturn(Optional.of(wishlist));
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> wishListService.shareWishListWithUser(1L, 3L));
+        assertTrue(exception.getMessage().contains("Access denied"));
+    }
+
+}

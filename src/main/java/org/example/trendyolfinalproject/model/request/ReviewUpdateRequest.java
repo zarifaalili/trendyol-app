@@ -24,5 +24,4 @@ public class ReviewUpdateRequest {
     @NotNull(message = "Is approved cannot be null")
     private Boolean isApproved;
 
-
 }

@@ -73,7 +73,7 @@ public class CollectionServiceImpl implements CollectionService {
         log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
         Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new RuntimeException("Collection not found with id: " + request.getCollectionId()));
+        var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new NotFoundException("Collection not found with id: " + request.getCollectionId()));
         if (!collection.getUser().getId().equals(userId)) {
             throw new RuntimeException("You don't have permission to add product to this collection");
         }
@@ -82,13 +82,14 @@ public class CollectionServiceImpl implements CollectionService {
         if (collectionItem.isPresent()) {
             throw new AlreadyException("Product already exists in collection");
         }
-        var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + request.getProductVariantId()));
+        var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + request.getProductVariantId()));
         var entity = collectionItemMapper.toEntity(request);
         entity.setProductVariant(productVariant);
         entity.setCollection(collection);
         entity.setAddedAt(LocalDateTime.now());
         var saved = collectionItemRepository.save(entity);
         var response = collectionItemMapper.toResponse(saved);
+
 
         auditLogService.createAuditLog(collection.getUser(), "Add Product to Collection", "Product added to collection successfully. Product id: " + saved.getId());
 
@@ -105,12 +106,12 @@ public class CollectionServiceImpl implements CollectionService {
     public ApiResponse<CollectionItemFromWishListResponse> addProductToCollectionFromWishList(CollectionItemFromWishListRequest request) {
         log.info("Actionlog.addProductToCollectionFromWishList.start : wishListId={}", request.getWishListId());
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         var wishListItem = wishlistRepository.findById(request.getWishListId()).orElseThrow(
                 () -> new NotFoundException(("Favorite not found with id: " + request.getWishListId()))
         );
-        var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new RuntimeException("Collection not found with id: " + request.getCollectionId()));
+        var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new NotFoundException("Collection not found with id: " + request.getCollectionId()));
 
         if (!(collection.getUser().getId().equals(userId)
                 && wishListItem.getUser().getId().equals(userId))) {
@@ -145,7 +146,36 @@ public class CollectionServiceImpl implements CollectionService {
         log.info("Actionlog.getAllCollections.start : ");
         Long userId = getCurrentUserId();
         var collections = collectionRepository.findByUser_Id(userId);
-        var response = collectionMapper.toResponseList(collections);
+        List<CollectionResponse> response = collections.stream().map(c -> {
+            List<CollectionItemResponse> items = collectionItemRepository
+                    .findByCollection_Id(c.getId())  // CollectionItem-ləri ayrıca çəkirik
+                    .stream()
+                    .map(ci -> new CollectionItemResponse(
+                            ci.getId(),
+                            ci.getProductVariant().getId(),
+                            ci.getProductVariant().getProduct().getName(),
+                            ci.getAddedAt()
+                    ))
+                    .toList();
+
+            List<Long> productVariantIds = items.stream()
+                    .map(CollectionItemResponse::getProductVariantId)
+                    .toList();
+
+            return CollectionResponse.builder()
+                    .id(c.getId())
+                    .userId(c.getUser().getId())
+                    .name(c.getName())
+                    .createdAt(c.getCreatedAt())
+                    .updatedAt(c.getUpdatedAt())
+                    .isShared(c.getIsShared())
+                    .shareToken(c.getShareToken())
+                    .viewCount(c.getViewCount())
+                    .items(items)
+                    .productVariantIds(productVariantIds)
+                    .build();
+        }).toList();
+
         log.info("Actionlog.getAllCollections.end : ");
         return ApiResponse.<List<CollectionResponse>>builder()
                 .status(200)

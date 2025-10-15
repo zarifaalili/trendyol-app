@@ -56,4 +56,10 @@ public class SellerController {
     public ApiResponse<Double> getRaiting(@PathVariable Long sellerId) {
         return sellerService.getSellerAverageRating(sellerId);
     }
+
+    @DeleteMapping("/{sellerId}/unfollow")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<String> unfollowSeller(@PathVariable Long sellerId) {
+        return sellerFollowService.unfollow(sellerId);
+    }
 }

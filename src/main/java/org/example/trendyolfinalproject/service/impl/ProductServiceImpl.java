@@ -6,9 +6,8 @@ import org.example.trendyolfinalproject.dao.entity.Product;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ProductMapper;
-import org.example.trendyolfinalproject.mapper.ProductVariantMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
-import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.ProductRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ProductResponse;
@@ -47,8 +46,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ApiResponse<ProductResponse> createProduct(ProductRequest request) {
         log.info("Actionlog.createProduct.start : name={}", request.getName());
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("Seller not found with id: " + currentUserId));
         var checkCategory = categoryRepository.findById(request.getCategoryId()).orElseThrow(
@@ -97,8 +95,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ApiResponse<List<ProductResponse>> getProductByName(String name) {
         log.info("Actionlog.getProductByName.start : name={}", name);
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId =getCurrentUserId();
         var user = userRepository.findById(currentUserId).orElseThrow();
         List<Product> products = productRepository.findbyName(name);
         if (products.isEmpty()) {

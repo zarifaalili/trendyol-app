@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdressCreateRequest {
-//    @NotNull(message = "User ID cannot be null")
-//    private Long userId;
-
     @NotBlank(message = "City cannot be blank")
     private String city;
 
@@ -27,6 +24,4 @@ public class AdressCreateRequest {
 
     @NotBlank(message = "Country cannot be blank")
     private String country;
-
-//    private Boolean isDefault;
 }
