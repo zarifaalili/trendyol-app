@@ -34,12 +34,9 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public ApiResponse<CouponResponse> createCoupon(CouponCreateRequest request) {
-
         log.info("Actionlog.createCoupon.start : ");
-
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
         var exist = couponRepository.findByCode(request.getCode()).orElse(null);
         if (exist != null) {
             throw new AlreadyException("Coupon code already exists");
@@ -49,7 +46,6 @@ public class CouponServiceImpl implements CouponService {
         var response = couponMapper.toResponse(saved);
 
         if (Boolean.TRUE.equals(request.getFirstOrderOnly())) {
-
             var newUsers = userRepository.findAllWithoutOrders();
             for (var newUser : newUsers) {
                 notificationService.sendNotification(
@@ -61,7 +57,6 @@ public class CouponServiceImpl implements CouponService {
             }
 
         } else if (request.getMinOrderCount() != null) {
-
             var users = userRepository.findAllByOrderCount(request.getMinOrderCount().longValue());
             for (var u : users) {
                 notificationService.sendNotification(
@@ -88,7 +83,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public ApiResponse<Void> deleteCoupon(Long id) {
         log.info("Actionlog.deleteCoupon.start : id={}", id);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         var coupon = couponRepository.findById(id).orElseThrow(() -> new RuntimeException("Coupon not found : " + id));
         couponRepository.deleteById(id);
@@ -98,11 +93,10 @@ public class CouponServiceImpl implements CouponService {
 
     }
 
-
     @Override
     public  ApiResponse<String> deactiveCoupon(Long id) {
         log.info("Actionlog.deactiveCoupon.start : id={}", id);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         var coupon = couponRepository.findByIdAndIsActive(id, true).orElseThrow(() -> new RuntimeException("Active Coupon not found : " + id));
         coupon.setIsActive(false);
@@ -115,7 +109,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public ApiResponse<String> activeCoupon(Long id) {
         log.info("Actionlog.activeCoupon.start : id={}", id);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var coupon = couponRepository.findByIdAndIsActive(id, false).orElseThrow(() -> new NotFoundException("Deactive Coupon not found : " + id));
         coupon.setIsActive(true);
@@ -151,7 +145,6 @@ public class CouponServiceImpl implements CouponService {
         return new ApiResponse<>(HttpStatus.OK.value(), "Expired coupons fetched", response);
     }
 
-
     @Override
     public ApiResponse<String> checkValidCoupon(String code) {
         log.info("Actionlog.checkValidCoupon.start : code={}", code);
@@ -176,19 +169,5 @@ public class CouponServiceImpl implements CouponService {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
-
-//    public void assignCoupon(Long userId, Long couponId) {
-//        log.info("Actionlog.assignCoupon.start : userId={}, couponId={}", userId, couponId);
-//        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-//        var coupon = couponRepository.findById(couponId).orElseThrow(() -> new NotFoundException("Coupon not found"));
-//        if (coupon.getIsActive()) {
-//            throw new AlreadyException("Coupon is already active");
-//        }
-//        coupon.setIsActive(true);
-//        couponRepository.save(coupon);
-//        auditLogService.createAuditLog(user, "Assign Coupon", "Coupon assigned successfully. Coupon id: " + coupon.getCode());
-//        log.info("Actionlog.assignCoupon.end : userId={}, couponId={}", userId, couponId);
-//    }
 
 }

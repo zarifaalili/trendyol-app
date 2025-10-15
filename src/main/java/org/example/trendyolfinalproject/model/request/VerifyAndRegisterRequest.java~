@@ -1,0 +1,4 @@
+package org.example.trendyolfinalproject.model.request;
+
+public class VerifyAndRegisterRequest {
+}

@@ -34,5 +34,7 @@ public enum Status {
 
     ANSWERED,
 
-    REJECTED
+    REJECTED,
+
+    COMPLETED
 }

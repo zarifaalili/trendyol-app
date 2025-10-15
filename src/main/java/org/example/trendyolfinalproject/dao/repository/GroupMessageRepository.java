@@ -33,4 +33,6 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long
 
 
     Optional<GroupMessage> findByPinnedAndGroup(Boolean pinned, ChatGroup group);
+
+    Optional<GroupMessage> findByIdAndPinned(Long id, Boolean pinned);
 }

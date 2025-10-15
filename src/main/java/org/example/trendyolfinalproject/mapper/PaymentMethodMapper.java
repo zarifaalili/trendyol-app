@@ -15,7 +15,7 @@ public interface PaymentMethodMapper {
 
     @Mapping(source = "userId.id", target = "userId")
     @Mapping(source = "cardNumber", target = "maskedCardNumber", qualifiedByName = "maskCardNumber")
-    @Mapping(target = "balance",ignore = true)
+//    @Mapping(target = "balance",ignore = true)
     PaymentMethodResponse toResponse(PaymentMethod paymentMethod);
 
 

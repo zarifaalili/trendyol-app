@@ -25,7 +25,7 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    private ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id) {
+    public ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id) {
         return categoryService.getCategoryById(id);
     }
 

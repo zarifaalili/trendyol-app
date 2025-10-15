@@ -53,58 +53,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final FileStorageService fileStorageService;
     private final SellerRepository sellerRepository;
 
-
     @Transactional
     @Override
     public ApiResponse<ProductVariantResponse> createProductVariant(ProductVariantCreateRequest request) {
-
         log.info("Actionlog.createProductVariant.start : productId={}", request.getProductId());
-
-
         var user = getCurrentUserId();
         var user1 = userRepository.findById(user).orElseThrow(() -> new RuntimeException("User not found"));
-
         var product = productRepository.findById(request.getProductId()).orElseThrow(
                 () -> new NotFoundException("Product not found with id: " + request.getProductId())
         );
-
         var relatedProduct = product.getSeller().getUser().getId();
 
         if (!user.equals(relatedProduct)) {
             throw new RuntimeException("You are not authorized to created this product");
         }
-
         var existingVariant = productVariantRepository.findBySku(request.getSku()).orElse(null);
         if (existingVariant != null) {
             throw new AlreadyException("ProductVariant already exists with sku: " + request.getSku());
         }
-
         var productVariant = productVariantMapper.toEntity(request);
         productVariant.setProduct(product);
 
-
-//        List<ProductImage> variantImages = new ArrayList<>();
-//
-//
-//        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-//            boolean isFirstImage = true;
-//            int displayOrder = 1;
-//            for (String imageUrl : request.getImageUrls()) {
-//                ProductImage productImage = new ProductImage();
-//                productImage.setImageUrl(imageUrl);
-//                productImage.setProductVariant(productVariant);
-//                productImage.setProduct(product);
-//
-//                productImage.setIsMainImage(isFirstImage);
-//                productImage.setDisplayOrder(displayOrder++);
-//                productImage.setAltText(product.getName() + " " + (isFirstImage ? "main" : (displayOrder - 1)) + " image");
-//
-//                variantImages.add(productImage);
-//                isFirstImage = false;
-//            }
-//        }
-//
-//        productVariant.setVariantImages(variantImages);
         var saved = productVariantRepository.save(productVariant);
         product.setStockQuantity(product.getStockQuantity() + request.getStockQuantity());
         productRepository.save(product);
@@ -125,7 +94,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         var user = getCurrentUserId();
         var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
         var product = productVariant.getProduct();
-
         if (product.getSeller().getId().equals(user)) {
             throw new RuntimeException("You are not authorized to update this product");
         }
@@ -135,9 +103,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         log.info("Actionlog.deleteProductVariant.end : id={}", id);
 
         auditLogService.createAuditLog(userRepository.findById(user).orElseThrow(() -> new RuntimeException("User not found")), "Delete ProductVariant", "ProductVariant deleted successfully. ProductVariant id: " + id);
-
         productVariantMapper.toResponse(productVariant);
-
         return ApiResponse.<Void>builder()
                 .status(200)
                 .message("Product variant deleted successfully")
@@ -158,7 +124,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .data(mapper)
                 .build();
     }
-
 
     @Override
     public ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(Long id) {
@@ -199,7 +164,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     private String encodeImageToBase64(String imagePath) {
         try {
-
             Path path = Paths.get(System.getProperty("user.dir") + imagePath);
             byte[] bytes = Files.readAllBytes(path);
             return Base64.getEncoder().encodeToString(bytes);
@@ -208,20 +172,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
     }
 
-
-//    public ProductVariantSimpleResponse getProductVariant(Long id) {
-//        log.info("Actionlog.getProductVariant.start : id={}", id);
-//        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
-//        recommendationService.saveUserView(getCurrentUserId(), productVariantMapper.toSimpleResponse(productVariant));
-//        log.info("Actionlog.getProductVariant.end : id={}", id);
-//        return productVariantMapper.toSimpleResponse(productVariant);
-//    }
-
     @Override
     public ApiResponse<List<ProductVariantResponse>> getUserRecommendations() {
         var userId = getCurrentUserId();
         var ids = recommendationService.getLastViewedIds(userId);
-
         var response = ids.getData().stream()
                 .map(pid -> productVariantRepository.findById(pid)
                         .map(productVariantMapper::toResponse)
@@ -235,7 +189,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .data(response)
                 .build();
     }
-
 
     @Override
     public ApiResponse<List<ProductVariantResponse>> getProductVariantsByFilter(ProductVariantFilterRequest filter) {
@@ -253,27 +206,20 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         if (filter.getColor() != null) {
             predicates.add(cb.equal(variantRoot.get("color"), filter.getColor()));
         }
-
         if (filter.getSize() != null) {
             predicates.add(cb.equal(variantRoot.get("size"), filter.getSize()));
         }
-
         if (filter.getCategoryId() != null) {
             predicates.add(cb.equal(categoryJoin.get("id"), filter.getCategoryId()));
         }
-
         if (filter.getMinPrice() != null) {
             predicates.add(cb.greaterThanOrEqualTo(productJoin.get("price"), filter.getMinPrice()));
         }
-
         if (filter.getMaxPrice() != null) {
             predicates.add(cb.lessThanOrEqualTo(productJoin.get("price"), filter.getMaxPrice()));
         }
-
         predicates.add(cb.greaterThan(variantRoot.get("stockQuantity"), 0));
-
         query.select(variantRoot).where(cb.and(predicates.toArray(new Predicate[0])));
-
         List<ProductVariant> variants = entityManager.createQuery(query).getResultList();
 
         if (variants.isEmpty()) {
@@ -291,7 +237,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .build();
     }
 
-
     @Transactional
     @Override
     public ApiResponse<ProductVariantResponse> addImages(Long variantId, List<MultipartFile> images) {
@@ -303,7 +248,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
         List<ProductImage> variantImages = variant.getVariantImages() != null ?
                 variant.getVariantImages() : new ArrayList<>();
-
         for (MultipartFile image : images) {
             String imageUrl = fileStorageService.storeFile(image);
             ProductImage productImage = new ProductImage();
@@ -318,14 +262,12 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         variant.setVariantImages(variantImages);
         var saved = productVariantRepository.save(variant);
         var mapper = productVariantMapper.toResponse(saved);
-
         return ApiResponse.<ProductVariantResponse>builder()
                 .status(200)
                 .message("Images added successfully to product variant")
                 .data(mapper)
                 .build();
     }
-
 
     @Override
     public ApiResponse<ProductVariantResponse> updateProductVariantStock(Long productVariantId, Integer newStock) {
@@ -342,7 +284,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         productVariant.setStockQuantity(newStock);
         if (newStock > oldStock) {
             product.setStockQuantity(product.getStockQuantity() + newStock - oldStock);
-
         } else {
             product.setStockQuantity(product.getStockQuantity() - oldStock - newStock);
         }
@@ -360,17 +301,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .build();
     }
 
-
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
-
-//    private ProductVariantResponse mapToResponse(ProductVariant variant) {
-//        // mapper logic
-//        return new ProductVariantResponse(variant.getId(), variant.getSku(), variant.getProduct().getPrice());
-//    }
-
-
-}
+    }

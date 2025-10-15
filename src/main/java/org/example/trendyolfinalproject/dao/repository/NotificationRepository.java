@@ -18,12 +18,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserIdAndReadStatus(Long userId, ReadStatus readStatus);
 
 
-    @Query("""
-    SELECT n
-    FROM Notification n
-    WHERE LOWER(n.message) LIKE LOWER(CONCAT('%', :keyword, '%'))
-""")
-    List<Notification> search(@Param("keyword") String keyword);
+//    @Query("""
+//    SELECT n
+//    FROM Notification n
+//    WHERE LOWER(n.message) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//""")
+//    List<Notification> search(@Param("keyword") String keyword);
+
+    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND LOWER(n.message) LIKE LOWER(CONCAT('%', :message, '%'))")
+    List<Notification> searchByUserIdAndMessage(@Param("userId") Long userId, @Param("message") String message);
+
 
     List<Notification> findByReadStatus(ReadStatus readStatus);
 }

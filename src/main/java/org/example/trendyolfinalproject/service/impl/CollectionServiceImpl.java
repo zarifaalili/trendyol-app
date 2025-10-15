@@ -43,12 +43,8 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public ApiResponse<CollectionResponse> createCollection(CollectionCreateRequest request) {
         log.info("Actionlog.createCollection.start : request={}", request);
-
-
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
-
         var exists = collectionRepository.findByUser_IdAndName(user.getId(), request.getName()).orElse(null);
         if (exists != null) {
             throw new AlreadyException("Collection name already exists");
@@ -75,18 +71,13 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public ApiResponse<CollectionItemResponse> addProductToCollection(CollectionItemRequest request) {
         log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
-
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
         var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new RuntimeException("Collection not found with id: " + request.getCollectionId()));
-
         if (!collection.getUser().getId().equals(userId)) {
             throw new RuntimeException("You don't have permission to add product to this collection");
         }
-
         var collectionItem = collectionItemRepository.findByProductVariant_IdAndCollection_Id(request.getProductVariantId(), request.getCollectionId());
-
 
         if (collectionItem.isPresent()) {
             throw new AlreadyException("Product already exists in collection");
@@ -113,9 +104,8 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public ApiResponse<CollectionItemFromWishListResponse> addProductToCollectionFromWishList(CollectionItemFromWishListRequest request) {
         log.info("Actionlog.addProductToCollectionFromWishList.start : wishListId={}", request.getWishListId());
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
 
         var wishListItem = wishlistRepository.findById(request.getWishListId()).orElseThrow(
                 () -> new NotFoundException(("Favorite not found with id: " + request.getWishListId()))
@@ -126,7 +116,6 @@ public class CollectionServiceImpl implements CollectionService {
                 && wishListItem.getUser().getId().equals(userId))) {
             throw new RuntimeException("You don't have permission to add product to this collection");
         }
-
         var productVariant = wishListItem.getProductVariant();
         var collectionItem = collectionItemRepository.findByProductVariant_IdAndCollection_Id(productVariant.getId(), request.getCollectionId()).orElse(null);
         if (collectionItem != null) {
@@ -149,32 +138,12 @@ public class CollectionServiceImpl implements CollectionService {
                 .data(response)
                 .build();
 
-//        log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
-//        var collectionItem = collectionItemRepository.findByProductVariant_IdAndCollection_Id(request.getProductVariantId(), request.getCollectionId()).orElse(null);
-//
-//        if (collectionItem != null) {
-//            throw new RuntimeException("Product already exists in collection");
-//        }
-//        var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new RuntimeException("Collection not found with id: " + request.getCollectionId()));
-//        var productFromwishList = wishlistRepository.findByProductVariant_Id(request.getProductVariantId()).orElseThrow(
-//                () -> new RuntimeException("ProductVariant not found in wishlist with id: " + request.getProductVariantId())
-//        );
-//
-//        var entity = collectionItemMapper.toEntity(request);
-//        entity.setCollection(collection);
-//        entity.setAddedAt(LocalDateTime.now());
-//        entity.setProductVariant(productFromwishList.getProductVariant());
-//        var saved = collectionItemRepository.save(entity);
-//        var response = collectionItemMapper.toResponse(saved);
-//        log.info("Actionlog.addProductToCollection.end : productVariantId={}", request.getProductVariantId());
-//        return response;
-
     }
 
     @Override
     public ApiResponse<List<CollectionResponse>> getAllCollections() {
         log.info("Actionlog.getAllCollections.start : ");
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var collections = collectionRepository.findByUser_Id(userId);
         var response = collectionMapper.toResponseList(collections);
         log.info("Actionlog.getAllCollections.end : ");
@@ -230,8 +199,6 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         var collectionItems = collectionItemRepository.findByCollection_Id(collection.getId());
-
-
         var productVariantIds = collectionItems.stream()
                 .map(item -> item.getProductVariant().getId())
                 .toList();
@@ -282,6 +249,7 @@ public class CollectionServiceImpl implements CollectionService {
             throw new RuntimeException("You don't have permission to rename this collection");
         }
         collection.setName(newName);
+        collection.setUpdatedAt(LocalDateTime.now());
         collectionRepository.save(collection);
         var response = collectionMapper.toResponse(collection);
         auditLogService.createAuditLog(user, "Rename Collection", "Collection renamed successfully. Collection id: " + collection.getId());

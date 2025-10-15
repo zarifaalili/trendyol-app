@@ -43,16 +43,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ApiResponse<String> approveSeller(Long sellerId) {
         log.info("Actionlog.approveSeller.start : sellerId={}", sellerId);
-
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
-
         var admin = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
-
         if (!admin.getRole().equals(Role.ADMIN)) {
             throw new RuntimeException("you cant approve seller. You are not admin");
         }
-
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found"));
         if (seller.getStatus().equals(Status.ACTIVE)) {
             throw new RuntimeException("Seller is already active");
@@ -65,21 +61,16 @@ public class AdminServiceImpl implements AdminService {
             userRepository.save(user);
         }
         notificationService.sendNotification(user, "Your seller account has been approved", NotificationType.SELLER_APPROVED, sellerId);
-
         log.info("Actionlog.approveSeller.end : sellerId={}", sellerId);
         return new ApiResponse<>(200, "Seller approved successfully", null);
-
     }
-
 
     @Override
     public ApiResponse<String> rejectSeller(Long sellerId) {
         log.info("Actionlog.rejectSeller.start : sellerId={}", sellerId);
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
-
         var admin = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
-
         if (!admin.getRole().equals(Role.ADMIN)) {
             throw new RuntimeException("you cant reject seller. You are not admin");
         }
@@ -87,7 +78,6 @@ public class AdminServiceImpl implements AdminService {
         if (seller.getStatus().equals(Status.ACTIVE)) {
             throw new RuntimeException("Seller is already active");
         }
-
         var user = seller.getUser();
         if (seller.getStatus().equals(Status.PENDING)) {
             seller.setStatus(Status.REJECTED);
@@ -96,7 +86,6 @@ public class AdminServiceImpl implements AdminService {
             sellerRepository.save(seller);
         }
         notificationService.sendNotification(user, "Your seller account has been rejected", NotificationType.SELLER_REJECTED, sellerId);
-
         log.info("Actionlog.rejectSeller.end : sellerId={}", sellerId);
         return new ApiResponse<>(200, "Seller rejected successfully", null);
     }
@@ -106,7 +95,6 @@ public class AdminServiceImpl implements AdminService {
     public ApiResponse<List<User>> getAllAdmins() {
         log.info("Actionlog.getAllAdmins.start : ");
         List<User> admins = userRepository.findAllByRole(Role.ADMIN);
-
         if (admins.isEmpty()) {
             throw new NotFoundException("No admins found");
         }
@@ -118,25 +106,20 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void paySellersForToday() {
         Map<Seller, BigDecimal> earnings = orderService.calculateSellerEarningsToday();
-
         if (earnings.isEmpty()) {
             return;
         }
-
         paymentMethodService.payToSellers(earnings);
     }
 
     @Override
     public ApiResponse<SalesReportResponse> getSalesReport(LocalDateTime since) {
         log.info("Actionlog.getSalesReport.start : ");
-
         var totalRevenue = orderItemRepository.getTotalRevenue();
         var totalCouponsUsed = userCouponRepository.getTotalCouponsUsed();
         var product = orderItemRepository.findMostSoldProduct(PageRequest.of(0, 1))
                 .stream().findFirst().orElse(null);
-
         var activeUsers = orderRepository.countActiveUsers(since);
-
         var salesReport = new SalesReportResponse(totalRevenue, totalCouponsUsed.longValue(), product, activeUsers);
         log.info("Actionlog.getSalesReport.end : ");
         return new ApiResponse<>(200, "Sales report fetched successfully", salesReport);
@@ -147,14 +130,12 @@ public class AdminServiceImpl implements AdminService {
         log.info("Actionlog.getUserAuditLogs.start : userId={}", userId);
         var curentUserId = getCurrentUserId();
         var currentUser = userRepository.findById(curentUserId).orElseThrow(() -> new NotFoundException("User not found"));
-
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var auditLogs = auditLogRepository.findByUserId(user);
 
         if (auditLogs.isEmpty()) {
             throw new NotFoundException("Audit logs not found");
         }
-
         var response = auditLogs.stream()
                 .map(auditLog -> AuditLogResponse.builder()
                         .userId(auditLog.getUserId())
@@ -164,8 +145,6 @@ public class AdminServiceImpl implements AdminService {
                         .build()
                 )
                 .toList();
-
-
         auditLogService.createAuditLog(currentUser, "Get user audit logs", "User id: " + user.getId());
         log.info("Actionlog.getUserAuditLogs.end : userId={}", userId);
         return new ApiResponse<>(200, "User audit logs fetched successfully", response);

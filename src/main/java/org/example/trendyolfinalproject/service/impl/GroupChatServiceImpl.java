@@ -69,9 +69,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         var groupChat = chatGroupMapper.toEntity(chatGroupRequest);
         groupChat.setOwner(user);
         groupChatRepository.save(groupChat);
-
         groupMessageService.generateAndSaveGroupKey(groupChat);
-
         GroupMember owner = new GroupMember();
         owner.setGroup(groupChat);
         owner.setUser(user);
@@ -83,7 +81,6 @@ public class GroupChatServiceImpl implements GroupChatService {
         groupChat.getMembers().add(owner);
         groupMemberRepository.save(owner);
 
-
         if (chatGroupRequest.getMemberIds() != null) {
             for (Long memberId : chatGroupRequest.getMemberIds()) {
                 if (!memberId.equals(userId)) {
@@ -92,18 +89,16 @@ public class GroupChatServiceImpl implements GroupChatService {
                     member.setUser(userRepository.findById(memberId).orElseThrow(() -> new NotFoundException("User not found with id: " + memberId)));
                     member.setRole(GroupRole.MEMBER);
                     member.setJoinedAt(LocalDateTime.now());
+                    member.setAddedById(userId);
                     groupMemberRepository.save(member);
                     groupChat.getMembers().add(member);
                 }
             }
         }
 
-
         var response = chatGroupMapper.toResponse(groupChat);
         log.info("ActionLog.createGroupChat.end : ");
         return response;
-
-
     }
 
     @Override
@@ -114,36 +109,27 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
                 () -> new NotFoundException("Member not found with id: " + userId)
         );
-
-
         var memberPermission = group.getAddMemberPermissions();
         var memberRole = member.getRole();
-
 
         if (member.getMuted()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are muted in this group.");
         }
-
         if (memberRole.equals(GroupRole.LEAVED) ||
                 memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
         }
-
         if (memberPermission.equals(GroupPermission.OWNERS_AND_ADMINS)) {
             if (!memberRole.equals(GroupRole.OWNER) && !memberRole.equals(GroupRole.ADMIN)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owners and admins can add new members to this group.");
             }
         }
 
-
         for (Long id : userIds) {
-
             var existingMember = groupMemberRepository.findByGroupAndUser_Id(group, id);
-
             if (existingMember.isEmpty()) {
                 var groupMember = new GroupMember();
                 groupMember.setGroup(group);
@@ -154,53 +140,38 @@ public class GroupChatServiceImpl implements GroupChatService {
                 groupMemberRepository.save(groupMember);
                 group.getMembers().add(groupMember);
             }
-
         }
-
-
         log.info("ActionLog.addMembers.end memberId: {}, groupId: {}, memberIds: {}", userIds, groupId, userIds);
     }
-
 
     @Override
     public void addMemmbersWithEmail(Long groupId, List<String> emails) {
         log.info("ActionLog.addMemmbersWithEmail.start memberId: {}, groupId: {}, emails: {}", getCurrentUserId(), groupId, emails);
-
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
                 () -> new NotFoundException("Member not found with id: " + getCurrentUserId())
         );
-
         var memberPermission = group.getAddMemberPermissions();
         var memberRole = member.getRole();
-
-
         if (member.getMuted()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are muted in this group.");
         }
-
         if (memberRole.equals(GroupRole.LEAVED) ||
                 memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
         }
-
         if (memberPermission.equals(GroupPermission.OWNERS_AND_ADMINS)) {
             if (!memberRole.equals(GroupRole.OWNER) && !memberRole.equals(GroupRole.ADMIN)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owners and admins can add new members to this group.");
             }
         }
-
-
         for (String email : emails) {
-
             var userWithEmail = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with email: " + email));
             var id = userWithEmail.getId();
             var existingMember = groupMemberRepository.findByGroupAndUser_Id(group, id);
-
             if (existingMember.isEmpty()) {
                 var groupMember = new GroupMember();
                 groupMember.setGroup(group);
@@ -214,48 +185,37 @@ public class GroupChatServiceImpl implements GroupChatService {
 
         }
         log.info("ActionLog.addMemmbersWithEmail.end memberId: {}, groupId: {}, emails: {}", getCurrentUserId(), groupId, emails);
-
-
     }
 
     @Override
     public void removeMember(Long groupId, Long userIdToRemove) {
         log.info("ActionLog.removeMember.start memberId: {}, groupId: {}, userIdToRemove: {}", getCurrentUserId(), groupId, userIdToRemove);
-
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
                 () -> new NotFoundException("Member not found with id: " + getCurrentUserId())
         );
-
         var memberToRemove = groupMemberRepository.findByGroupAndUser_Id(group, userIdToRemove).orElseThrow(
                 () -> new NotFoundException("Member not found with id: " + userIdToRemove)
         );
-
         var memberRole = member.getRole();
 
         if (member.getMuted()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are muted in this group.");
         }
-
         if (!memberRole.equals(GroupRole.OWNER) && !memberRole.equals(GroupRole.ADMIN)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owners and admins can remove members from this group.");
         }
-
         if (memberToRemove.getRole().equals(GroupRole.OWNER)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can't remove the owner of the group.");
         }
-
         memberToRemove.setRemovedById(getCurrentUserId());
         memberToRemove.setRole(GroupRole.REMOVED);
         groupMemberRepository.save(memberToRemove);
         group.getMembers().remove(memberToRemove);
         log.info("ActionLog.removeMember.end memberId: {}, groupId: {}, userIdToRemove: {}", getCurrentUserId(), groupId, userIdToRemove);
-
-
     }
 
     @Override
@@ -265,37 +225,27 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         String encryptedMessage = groupMessageService.encryptGroupMessage(dto.getText(), group);
-
         var member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
                 () -> new NotFoundException("Member not found with id: " + getCurrentUserId())
         );
-
         var memberMuted = member.getMuted();
         if (memberMuted) {
             throw new RuntimeException("You are muted in this group.You cant sent a message to this group");
         }
-
         if (member.getMuted()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are muted in this group.");
         }
-
         var permission = group.getSendMessagePermissions();
-
-
         if (member.getRole().equals(GroupRole.LEAVED) ||
                 member.getRole().equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
         }
-
         if (permission.equals(GroupPermission.OWNERS_AND_ADMINS)) {
             if (!member.getRole().equals(GroupRole.OWNER) && !member.getRole().equals(GroupRole.ADMIN)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owners and admins can send messages to this group.");
             }
         }
-
-
         GroupMessage message = new GroupMessage();
         message.setGroup(group);
         message.setSender(user);
@@ -338,9 +288,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         }
 
         log.info("ActionLog.sendMessage.end memberId: {}, groupId: {}, message: {}", getCurrentUserId(), groupId, dto.getText());
-
     }
-
 
     @Override
     public void deleteMessage(Long groupId, Long messageId, String scope) {
@@ -349,21 +297,14 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var message = groupMessageRepository.findByIdAndGroup(messageId, group).orElseThrow(
                 () -> new NotFoundException("Message not found with id: " + messageId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
                 () -> new NotFoundException("Member not found in this group with id: " + user.getId())
         );
-
-
         var memberRole = member.getRole();
-
-
         var starredMessage = starredGroupMessageRepository.findByUserAndMessage_Id(user, messageId);
-
         if ("me".equalsIgnoreCase(scope)) {
             var deletedMessage = deletedMessageRepository.existsByMemberAndMessage_Id(member, messageId);
 
@@ -380,7 +321,6 @@ public class GroupChatServiceImpl implements GroupChatService {
             return;
         }
 
-
         if ("all".equalsIgnoreCase(scope)) {
             if (memberRole.equals(GroupRole.ADMIN) || memberRole.equals(GroupRole.OWNER)) {
                 message.setDeletedForAll(true);
@@ -395,10 +335,7 @@ public class GroupChatServiceImpl implements GroupChatService {
                 throw new RuntimeException("Only admin or owner can delete message for all");
             }
         }
-
-
     }
-
 
     @Override
     public Page<ChatMessageResponse> getGroupMessages(Long groupId, int page, int size) {
@@ -415,9 +352,7 @@ public class GroupChatServiceImpl implements GroupChatService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "sentAt"));
 
-
         var messages = groupMessageRepository.findVisibleMessages(group, member, pageable);
-
 
         Page<ChatMessageResponse> response = messages.map(msg -> {
             String decryptedText;
@@ -445,16 +380,12 @@ public class GroupChatServiceImpl implements GroupChatService {
         messageReadStatusRepository.saveAll(unreadMessages);
 
         log.info("ActionLog.getGroupMessages.end memberId: {}, groupId: {}", getCurrentUserId(), groupId);
-
         return response;
-
     }
-
 
     @Override
     public void joinGroup(Long groupId) {
         log.info("ActionLog.joinGroup.start memberId: {}, groupId: {}", getCurrentUserId(), groupId);
-
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
@@ -477,15 +408,12 @@ public class GroupChatServiceImpl implements GroupChatService {
             notificationService.sendNotification(m.getUser(), "New member joined the group", NotificationType.NEW_MEMBER, group.getId());
         });
         auditLogService.createAuditLog(user, "Joined group", group.getTitle());
-
         log.info("ActionLog.joinGroup.end memberId: {}, groupId: {}", getCurrentUserId(), groupId);
     }
-
 
     @Override
     public String sendJoinRequest(Long groupId, MessageRequest message) {
         log.info("ActionLog.sendJoinRequest.start memberId: {}, groupId: {}", getCurrentUserId(), groupId);
-
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
         var group = chatGroupRepository.findByIdAndVisibility(groupId, GroupVisibility.PRIVATE).orElseThrow(
                 () -> new NotFoundException("Private Group not found with id: " + groupId)
@@ -494,6 +422,11 @@ public class GroupChatServiceImpl implements GroupChatService {
 
         if (member != null) {
             throw new AlreadyException("You are already a member of this group.");
+        }
+        var existingRequest = joinRequestRepository.findByGroupAndRequester(group, user);
+
+        if(existingRequest.isPresent()) {
+            throw new AlreadyException("You have already sent a join request to this group.");
         }
 
         var joinRequest = new JoinRequest();
@@ -504,21 +437,16 @@ public class GroupChatServiceImpl implements GroupChatService {
         joinRequestRepository.save(joinRequest);
 
         notificationService.sendNotification(group.getOwner(), "New join request", NotificationType.JOIN_REQUEST, group.getId());
-
         auditLogService.createAuditLog(user, "Sent join request", group.getTitle());
-
         log.info("ActionLog.sendJoinRequest.end memberId: {}, groupId: {}", getCurrentUserId(), groupId);
 
         return "Join request sent successfully. Wait for approval.";
-
     }
-
 
     @Override
     public List<JoinRequestResponse> getJoinRequests(Long groupId) {
         log.info("ActionLog.getJoinRequests.start memberId: {}, groupId: {}", getCurrentUserId(), groupId);
         var owner = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
-
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
@@ -526,19 +454,14 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (!group.getOwner().equals(owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of this group.");
         }
-
         var joinRequests = joinRequestRepository.findByGroup(group);
 
         if (joinRequests.isEmpty()) {
             throw new NotFoundException("No join requests found for this group.");
         }
-
         var responseList = joinRequestMapper.toResponseList(joinRequests);
-
         log.info("ActionLog.getJoinRequests.end memberId: {}, groupId: {}", getCurrentUserId(), groupId);
-
         return responseList;
-
     }
 
     @Transactional
@@ -554,19 +477,15 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (group.equals(groupReal)) {
             throw new RuntimeException("Request isnt related with id: " + groupId);
         }
-
         if (!group.getOwner().equals(owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of this group.");
         }
-
         if (!request.getStatus().equals(RequestStatus.PENDING)) {
             throw new RuntimeException("You cant approve this request, cause it is not pending.");
         }
 
-
         request.setStatus(RequestStatus.APPROVED);
         joinRequestRepository.save(request);
-
         GroupMember member = new GroupMember();
         member.setGroup(group);
         member.setUser(request.getRequester());
@@ -582,13 +501,10 @@ public class GroupChatServiceImpl implements GroupChatService {
             }
         });
 
-
         auditLogService.createAuditLog(owner, "Approved join request", group.getTitle());
         notificationService.sendNotification(request.getRequester(), "Join request approved, group:" + group.getTitle() + "", NotificationType.JOIN_REQUEST_APPROVED, group.getId());
-
         log.info("ActionLog.approveJoinRequest.end memberId: {}, requestId: {}", getCurrentUserId(), requestId);
     }
-
 
     @Override
     public void rejectJoinRequest(Long groupId, Long requestId) {
@@ -601,15 +517,12 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (group.equals(gorupReal)) {
             throw new RuntimeException("Request isnt related with id: " + groupId);
         }
-
         if (!group.getOwner().equals(owner)) {
             throw new RuntimeException("You are not the owner of this group.");
         }
-
         if (!request.getStatus().equals(RequestStatus.PENDING)) {
             throw new RuntimeException("You cant reject this request, cause it is not pending.");
         }
-
 
         request.setStatus(RequestStatus.REJECTED);
         joinRequestRepository.save(request);
@@ -617,9 +530,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         auditLogService.createAuditLog(owner, "Rejected join request", group.getTitle());
         notificationService.sendNotification(request.getRequester(), "Your join request rejected , group:" + group.getTitle(), NotificationType.JOIN_REQUEST_REJECTED, group.getId());
         log.info("ActionLog.rejectJoinRequest.end memberId: {}, requestId: {}", getCurrentUserId(), requestId);
-
     }
-
 
     @Override
     public void deleteJoinRequest(Long groupId, Long requestId) {
@@ -628,27 +539,19 @@ public class GroupChatServiceImpl implements GroupChatService {
 
         var group = request.getGroup();
         var gorupReal = chatGroupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("Group not found with id: " + groupId));
-
-
         if (!request.getRequester().getId().equals(getCurrentUserId())) {
             throw new RuntimeException("You are not the owner of this request.");
         }
-
         if (!group.getId().equals(gorupReal.getId())) {
             throw new RuntimeException("Request isnt related with id: " + groupId);
         }
-
         if (!request.getStatus().equals(RequestStatus.PENDING)) {
             throw new RuntimeException("You cant delete this request, cause it is not pending.");
         }
-
         joinRequestRepository.delete(request);
-
         auditLogService.createAuditLog(request.getRequester(), "Deleted join request", request.getGroup().getTitle());
-
         log.info("ActionLog.deleteJoinRequest.end memberId: {}, requestId: {}", getCurrentUserId(), requestId);
     }
-
 
     @Override
     public void setAdmin(Long groupId, Long newAdminId) {
@@ -658,21 +561,16 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("Group not found with id: " + groupId));
         var admin = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found with id: " + userId));
-
         var member = groupMemberRepository.findByGroupAndUser_Id(group, newAdminId).orElseThrow(
                 () -> new NotFoundException("Member for being Admin not found with id: " + newAdminId)
         );
-
         var adminMember = groupMemberRepository.findByGroupAndUser(group, admin).orElseThrow(
                 () -> new NotFoundException("Member for being Admin not found with id: " + getCurrentUserId())
         );
-
         var memberRole = member.getRole();
         if (memberRole.equals(GroupRole.LEAVED) || memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
-
         }
-
         if (!adminMember.getRole().equals(GroupRole.OWNER)
                 && !adminMember.getRole().equals(GroupRole.ADMIN)) {
             {
@@ -690,11 +588,8 @@ public class GroupChatServiceImpl implements GroupChatService {
 
         auditLogService.createAuditLog(admin, "Set admin", group.getTitle());
         notificationService.sendNotification(member.getUser(), "You are now an admin in group:" + group.getTitle() + "", NotificationType.SET_ADMIN, group.getId());
-
         log.info("ActionLog.setAdmin.end memberId: {}, groupId: {}, newAdminId: {}", getCurrentUserId(), groupId, newAdminId);
-
     }
-
 
     @Override
     public void leaveGroup(Long groupId) {
@@ -706,13 +601,15 @@ public class GroupChatServiceImpl implements GroupChatService {
         );
 
         var memberRole = member.getRole();
+        if(member.getRole().equals(GroupRole.LEAVED) || member.getRole().equals(GroupRole.REMOVED)) {
+            throw new RuntimeException("You are leaved or removed from this group.");
+        }
 
         member.setRole(GroupRole.LEAVED);
         groupMemberRepository.save(member);
 
         var existingAdmins = groupMemberRepository.findByGroupAndRole(group, GroupRole.ADMIN);
         var existingOwners = groupMemberRepository.findByGroupAndRole(group, GroupRole.OWNER);
-
         var lastMember = groupMemberRepository.findTopByGroupAndRoleOrderByJoinedAtDesc(group, GroupRole.MEMBER);
 
         if (memberRole.equals(GroupRole.OWNER)) {
@@ -740,9 +637,7 @@ public class GroupChatServiceImpl implements GroupChatService {
             });
         }
         auditLogService.createAuditLog(member.getUser(), "Left group", group.getTitle());
-
         log.info("ActionLog.leaveGroup.end memberId: {}, groupId: {}", getCurrentUserId(), groupId);
-
     }
 
     @Override
@@ -762,40 +657,28 @@ public class GroupChatServiceImpl implements GroupChatService {
         );
 
         var lastPinnedMessage = groupMessageRepository.findByPinnedAndGroup(true, group).orElse(null);
-
         var memberRole = member.getRole();
-
         var permission = group.getSettingPermissions();
-
         if (memberRole.equals(GroupRole.LEAVED) || memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
-
         }
-
         if (!permission.equals(GroupPermission.ALL_MEMBERS)
                 && memberRole.equals(GroupRole.MEMBER)
         ) {
             throw new RuntimeException("You dont have permission to pin messages");
-
         }
-
         if (lastPinnedMessage != null) {
-            lastPinnedMessage.setPinned(false);
-            groupMessageRepository.save(lastPinnedMessage);
+            throw new RuntimeException("This message already have a pinned message");
         }
 
         message.setPinned(true);
         groupMessageRepository.save(message);
-
         var groupMember = groupMemberRepository.findByGroupAndUser(group, user);
         groupMember.ifPresent(m -> {
             notificationService.sendNotification(m.getUser(), "Message pinned", NotificationType.PIN_MESSAGE, group.getId());
         });
         auditLogService.createAuditLog(user, "Pinned message", group.getTitle());
-
-
         log.info("ActionLog.pinMessage.end memberId: {}, messageId: {}, groupId: {}", getCurrentUserId(), messageId, groupId);
-
     }
 
     @Override
@@ -808,38 +691,29 @@ public class GroupChatServiceImpl implements GroupChatService {
         var message = groupMessageRepository.findByPinnedAndGroup(true, group).orElseThrow(
                 () -> new NotFoundException("Message not found with id: " + messageId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser_Id(group, getCurrentUserId()).orElseThrow(
                 () -> new NotFoundException("Member not found in this group with id: " + getCurrentUserId())
         );
-
         var memberRole = member.getRole();
-
         var permission = group.getSettingPermissions();
-
-        var lastPinnedMessage = groupMessageRepository.findByPinnedAndGroup(true, group).orElse(null);
-
+        var pinnedMessage=groupMessageRepository.findByIdAndPinned(messageId,true).orElse(null);
         if (memberRole.equals(GroupRole.LEAVED) || memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
-
         }
-
         if (!permission.equals(GroupPermission.ALL_MEMBERS)
                 && memberRole.equals(GroupRole.MEMBER)
         ) {
             throw new RuntimeException("You dont have permission to unpin messages");
-
+        }
+        if(pinnedMessage==null){
+            throw new RuntimeException("This message is no pinned message");
         }
 
-        if (lastPinnedMessage == null) {
-            throw new RuntimeException("There is no pinned message");
-        }
         message.setPinned(false);
         groupMessageRepository.save(message);
 
         auditLogService.createAuditLog(member.getUser(), "Unpinned message", group.getTitle());
         log.info("ActionLog.unpinMessage.end memberId: {}, messageId: {}, groupId: {}", getCurrentUserId(), messageId, groupId);
-
     }
 
     @Override
@@ -851,27 +725,18 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser_Id(group, getCurrentUserId()).orElseThrow(
                 () -> new NotFoundException("Member not found in this group with id: " + getCurrentUserId())
         );
-
         Page<GroupMessageIndex> found = groupMessageSearchRepository
                 .searchMessagesByKeywordAndGroup(keyword.toLowerCase().replaceAll("\\s+", " "), groupId, pageable);
-
-
         if (found.isEmpty()) {
             throw new NotFoundException("No messages found for keyword: " + keyword);
         }
-
         var response = chatMessageMapper.toResponseList(found.getContent());
-
         auditLogService.createAuditLog(member.getUser(), "Searched messages", group.getTitle());
         log.info("ActionLog.searchMessages.end memberId: {}, groupId: {}, keyword: {}, page: {}, size: {}", getCurrentUserId(), groupId, keyword, page, size);
-
         return response;
-
-
     }
 
     @Override
@@ -881,22 +746,16 @@ public class GroupChatServiceImpl implements GroupChatService {
         var group = chatGroupRepository.findById(groupId).orElseThrow(
                 () -> new NotFoundException("Group not found with id: " + groupId)
         );
-
         var member = groupMemberRepository.findByGroupAndUser_Id(group, getCurrentUserId()).orElseThrow(
                 () -> new NotFoundException("Member not found in this group with id: " + getCurrentUserId())
         );
-
         var message = groupMessageRepository.findByIdAndGroup(messageId, group).orElseThrow(
                 () -> new NotFoundException("Message not found with id: " + messageId)
         );
-
         var readStatus = messageReadStatusRepository.findByMessage_IdWithUser(messageId);
-
         if (!message.getSender().getId().equals(getCurrentUserId())) {
             throw new RuntimeException("You can  read only your own message");
-
         }
-
         var response = messageReadStatusMapper.toResponseList(readStatus);
         log.info("ActionLog.getMessageReadStatus.end memberId: {}, messageId: {}, groupId: {}", getCurrentUserId(), messageId, groupId);
         return response;
@@ -907,21 +766,15 @@ public class GroupChatServiceImpl implements GroupChatService {
     public List<ChatGroupResponse> searchGroups(String keyword, int page, int size) {
         log.info("ActionLog.searchGroups.start memberId: {}, keyword: {}, page: {}, size: {}", getCurrentUserId(), keyword, page, size);
         Pageable pageable = PageRequest.of(page, size);
-
         var found = chatGroupRepository.searchGroupsByKeyword(keyword.toLowerCase().replaceAll("\\s+", " "), pageable);
 
         if (found.isEmpty()) {
             throw new NotFoundException("No groups found for keyword: " + keyword);
         }
-
         var response = chatGroupMapper.toResponseList(found.getContent());
-
         log.info("ActionLog.searchGroups.end memberId: {}, keyword: {}, page: {}, size: {}", getCurrentUserId(), keyword, page, size);
-
         return response;
     }
-
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

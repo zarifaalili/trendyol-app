@@ -9,8 +9,8 @@ import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.OrderItemMapper;
 import org.example.trendyolfinalproject.mapper.OrderMapper;
-import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.request.OrderCreateRequest;
 import org.example.trendyolfinalproject.model.request.TransactionRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
@@ -60,16 +60,11 @@ public class OrderServiceImpl implements OrderService {
     private final TransactionClient transactionClient;
     private final CardClient cardClient;
 
-//    private final ConcurrentMap<String, String> otpStore = new ConcurrentHashMap<>();
-//    private final ConcurrentMap<String, Long> otpExpiry = new ConcurrentHashMap<>();
-
 
     @Transactional
     @Override
     public ApiResponse<OrderResponse> createOrder(OrderCreateRequest request) {
-
         Long userId = getCurrentUserId();
-
         log.info("Actionlog.createOrder.start : userId={}", userId);
 
         var user = userRepository.findById(userId).orElseThrow(
@@ -80,7 +75,6 @@ public class OrderServiceImpl implements OrderService {
 
         var billingAdress = adressRepository.findByIdAndUserId(request.getBillingAddressId(), user).orElseThrow(
                 () -> new NotFoundException("Adress not found with id: " + request.getBillingAddressId()));
-
 
         Basket basket = basketRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("İstifadəçinin səbəti tapılmadı. İstifadəçi ID: " + userId));
@@ -94,17 +88,15 @@ public class OrderServiceImpl implements OrderService {
             total = total.add(subtotal);
 
         }
-
-
         var paymentMethod2 = paymentMethodRepository.findByUserId_IdAndIsDefault(userId, true).orElseThrow(
                 () -> new NotFoundException("User's default PaymentMethod not found. User id : " + userId)
         );
-        var paymentMethodAdmin = paymentMethodRepository.findByUserId_IdAndIsDefault(9L, true).orElseThrow(
-                () -> new NotFoundException("User's default PaymentMethod not found. User id : 9")
+
+        Long admin=3L;
+        var paymentMethodAdmin = paymentMethodRepository.findByUserId_IdAndIsDefault(admin, true).orElseThrow(
+                () -> new NotFoundException("User's default PaymentMethod not found. User id : 3")
         );
 
-        //  TODO orderin total amountunu duzelt
-        //TODO  card validation et
         var userP = cardClient.validateCard(paymentMethod2.getCardNumber(), paymentMethod2.getCardHolderName());
         var adminP = cardClient.validateCard(paymentMethodAdmin.getCardNumber(), paymentMethodAdmin.getCardHolderName());
 
@@ -117,17 +109,15 @@ public class OrderServiceImpl implements OrderService {
                     .status(Status.FAILED)
                     .currency(paymentMethod2.getCurrency())
                     .build());
-            throw new RuntimeException("Card is not active");
+            throw new NotFoundException("Card is not active");
         }
 
         BigDecimal discountAmount = basket.getDiscountAmount() != null ? basket.getDiscountAmount() : BigDecimal.ZERO;
         BigDecimal finalAmoount = basket.getFinalAmount() != null ? basket.getFinalAmount() : BigDecimal.ZERO;
 
-
         if (paymentMethod2.getBalance().compareTo(finalAmoount) < 0) {
 
             var paymentTransaction = paymentTransactionService.createFailedPaymentTransaction(paymentMethod2, total, paymentMethod2.getCurrency());
-
             paymentTransactionService.savePaymentTransaction(paymentTransaction);
             transactionClient.createTransaction(TransactionRequest.builder()
                     .amount(finalAmoount)
@@ -136,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
                     .status(Status.FAILED)
                     .currency(paymentMethod2.getCurrency())
                     .build());
-            throw new RuntimeException("PaymentMethod balance is not enough");
+            throw new NotFoundException("PaymentMethod balance is not enough");
 
         } else {
             var amount = paymentMethod2.getBalance().subtract(finalAmoount);
@@ -167,7 +157,6 @@ public class OrderServiceImpl implements OrderService {
             var savedOrder = orderRepository.save(order);
             shipmentService.createShipment(savedOrder);
 
-
             var paymentTransaction = paymentTransactionService.createSuccessPaymentTransaction(savedOrder);
             paymentTransactionRepository.save(paymentTransaction);
 
@@ -180,18 +169,14 @@ public class OrderServiceImpl implements OrderService {
                 orderItemRepository.save(orderItem);
             }
 
-
             basketElementRepository.deleteAll(basketElements);
 
             basket.setDiscountAmount(BigDecimal.ZERO);
             basket.setFinalAmount(BigDecimal.ZERO);
             basketRepository.save(basket);
 
-
             var mapper = orderMapper.toResponse(savedOrder);
-
             basketRepository.save(basket);
-
             auditLogService.createAuditLog(user, "Order", "Order created successfully. Order id: " + savedOrder.getId());
             notificationService.sendNotification(user, "Order created successfully. Order id: " + savedOrder.getId(), NotificationType.ORDER_CREATED, savedOrder.getId());
             log.info("Actionlog.createOrder.end : userId={}", userId);
@@ -201,46 +186,35 @@ public class OrderServiceImpl implements OrderService {
                     .data(mapper)
                     .build();
         }
-
-
     }
-
 
     private String generateTrackingNumber() {
         var maxTrackingNumber = orderRepository.findMaxTrackingNumber();
-
         if (maxTrackingNumber == null) {
             return "000001";
         } else {
-
             return String.format("%06d", Integer.parseInt(maxTrackingNumber) + 1);
         }
     }
 
-
     @Override
     public ApiResponse<String> cancelOrder(Long orderId) {
-
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
         Long userId = getCurrentUserId();
-        var admin = 9L;
+        var admin = 3L;
         var adminpaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(admin, true).orElseThrow(() -> new NotFoundException("User's default PaymentMethod not found. User id : 9"));
-
         var order = orderRepository.findById(orderId).orElseThrow(
                 () -> new NotFoundException("Order not found with id: " + orderId));
         var own = order.getUser().getId().equals(userId);
         if (!own) {
             throw new RuntimeException("You can not cancel this order. Order id: " + orderId);
         }
-
         var status = order.getStatus();
         if (!(status.equals(Status.PENDING) || status.equals(Status.PROCESSING))) {
             throw new RuntimeException("Order can not be cancelled. Order id: " + orderId);
         }
         order.setStatus(Status.CANCELLED);
         orderRepository.save(order);
-
-        //stoklara qaytarmagi yaz pulu da qaytarmagi yaz payment methoda
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId_Id(orderId);
         for (OrderItem orderItem : orderItems) {
@@ -254,64 +228,44 @@ public class OrderServiceImpl implements OrderService {
             int currentStock = productVariant.getStockQuantity();
             int updatedStock = currentStock + orderItem.getQuantity().intValue();
             productVariant.setStockQuantity(updatedStock);
-
             product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity().intValue());
             productRepository.save(product);
             productVariantRepository.save(productVariant);
-
-
         }
         orderItemRepository.deleteAll(orderItems);
-
         var paymentMethod = order.getPaymentMethodId();
         if (paymentMethod != null) {
             paymentMethod.setBalance(paymentMethod.getBalance().add(order.getTotalAmount()));
             paymentMethodRepository.save(paymentMethod);
         }
         adminpaymentMethod.setBalance(adminpaymentMethod.getBalance().subtract(order.getTotalAmount()));
-
         order.setStatus(Status.CANCELLED);
         orderRepository.save(order);
-
         var userPayment = paymentMethodRepository.findByUserId_IdAndIsDefault(userId, true).orElseThrow(() -> new NotFoundException("Payment method not found"));
         cardClient.transfer(adminpaymentMethod.getCardNumber(), userPayment.getCardNumber(), order.getTotalAmount());
         auditLogService.createAuditLog(order.getUser(), "Order", "Order cancelled successfully. Order id: " + orderId);
-
         paymentTransactionService.returnedPaymentTransaction(order, orderId);
-
-
         return new ApiResponse<>(200, "Order cancelled successfully.", "Order id: " + orderId);
-
     }
-
 
     @Override
     public ApiResponse<List<OrderResponse>> getOrders() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getOrdersByUserId.start : userId={}", userId);
         var orders = orderRepository.findByUserId_Id(userId);
-
         if (orders.isEmpty()) {
             throw new NotFoundException("Order not found");
         }
-
         var response = orderMapper.toResponseList(orders);
         log.info("Actionlog.getOrdersByUserId.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL ORDERS", "Orders get successfully.");
         return new ApiResponse<>(200, "Orders retrieved successfully.", response);
-
-//orderin iceriyine baxmagi folan hamisina baxmagi get etmeyi yaz
-
-        //cancel ordere de payment transactionu yaz pul daxil oldu kimi
-
     }
 
     @Override
     public ApiResponse<List<OrderResponse>> getContinuedOrders() {
-
         Long userId = getCurrentUserId();
         log.info("Actionlog.getContinuedOrdersByUserId.start : userId={}", userId);
-
         var orders = orderRepository.findByUserId_Id(userId);
         var continuedOrders = orders.stream().filter(
                 order -> order.getStatus() != Status.CANCELLED && order.getStatus() != Status.RETURNED && order.getStatus() != Status.DELIVERED).toList();
@@ -320,7 +274,6 @@ public class OrderServiceImpl implements OrderService {
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL CONTINUED ORDERS", "Continued orders get successfully.");
         return new ApiResponse<>(200, "Continued orders retrieved successfully.", response);
     }
-
 
     @Override
     public ApiResponse<List<OrderResponse>> getCancelledOrders() {
@@ -338,19 +291,15 @@ public class OrderServiceImpl implements OrderService {
         return new ApiResponse<>(200, "Cancelled orders retrieved successfully.", response);
     }
 
-
     @Override
     public ApiResponse<List<OrderResponse>> searchProductInOrders(String productName) {
-
         Long userId = getCurrentUserId();
-
         log.info("Actionlog.searchProductInOrders.start : userId={}", userId);
         var orders = orderRepository.findByUserId_Id(userId);
         if (orders.isEmpty()) {
             throw new RuntimeException("Order not found with user id: " + userId);
         }
         var product = orderItemRepository.findOrdersByUserIdAndProductName(userId, productName);
-
         if (product.isEmpty()) {
             throw new NotFoundException("No orders found for userId: " + userId + " with product: " + productName);
         }
@@ -358,7 +307,6 @@ public class OrderServiceImpl implements OrderService {
         log.info("Actionlog.searchProductInOrders.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "Search product in orders", "Product in Orders get successfully.");
         return new ApiResponse<>(200, "Product orders retrieved successfully.", response);
-
     }
 
     private Long getCurrentUserId() {
@@ -369,37 +317,21 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Map<Seller, BigDecimal> calculateSellerEarningsToday() {
         List<Order> deliveredOrders = orderRepository.findByStatus(Status.DELIVERED);
-
         LocalDate today = LocalDate.now();
-//        LocalDateTime startOfDay = today.atStartOfDay();
-//        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
-
-      /*  if (sellerPaymentLogRepository.existsByPaymentDate(today)) {
-            throw new RuntimeException("Today's earnings have already been calculated.");
-        }*/
-
-//        List<Order> todayOrders = orderRepository.findByOrderDateBetween(startOfDay, endOfDay);
 
         Map<Seller, BigDecimal> sellerEarnings = new HashMap<>();
-
         for (Order order : deliveredOrders) {
-
             List<OrderItem> orderItems = orderItemRepository.findByOrderId_Id(order.getId());
-
             for (OrderItem item : orderItems) {
-
                 var productVariant = item.getProductVariantId();
                 Seller seller = productVariant.getProduct().getSeller();
-
 
                 if (sellerPaymentLogRepository.existsByOrderItemAndSeller(item, seller)) {
                     continue;
                 }
 
-
                 BigDecimal itemTotal = item.getUnitPrice().multiply(item.getQuantity());
                 sellerEarnings.merge(seller, itemTotal, BigDecimal::add);
-
                 SellerPaymentLog sellerPaymentLog = new SellerPaymentLog();
                 sellerPaymentLog.setOrderItem(item);
                 sellerPaymentLog.setSeller(seller);
@@ -428,13 +360,11 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<SellerRevenueResponse> getSellerRevenueStats(Long sellerId) {
         log.info("Actionlog.getSellerRevenueStats.start : sellerId={}", sellerId);
         BigDecimal revenue = orderRepository.getTotalRevenueBySeller(sellerId);
         Long orderCount = orderRepository.getTotalOrdersBySeller(sellerId);
-
         var response = new SellerRevenueResponse(revenue != null ? revenue : BigDecimal.ZERO, orderCount != null ? orderCount : 0L);
         log.info("Actionlog.getSellerRevenueStats.end : sellerId={}", sellerId);
         return ApiResponse.<SellerRevenueResponse>builder()
@@ -452,24 +382,18 @@ public class OrderServiceImpl implements OrderService {
 
         var orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new NotFoundException("OrderItem not found with id: " + orderItemId));
-
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-
         if (!userId.equals(orderItem.getOrderId().getUser().getId())) {
             throw new RuntimeException("You cannot send return request for this order item. Order item id: " + orderItemId);
         }
-
         if (!orderItem.getOrderId().getStatus().equals(Status.DELIVERED)) {
             throw new RuntimeException("Order item is not delivered. You cannot send return request. Order item id: " + orderItemId);
         }
-
         if (orderItem.getOrderId().getUpdatedAt().isBefore(LocalDateTime.now().minusDays(7))) {
             throw new RuntimeException("Return request period (7 days) has expired for order item id: " + orderItemId);
         }
-
         String imagePath = fileStorageService.storeFilee(imageFile);
-
         var returnRequest = ReturnRequest.builder()
                 .orderItem(orderItem)
                 .user(user)
@@ -491,7 +415,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<String> getReturnRequestStatus(Long returnRequestId) {
         log.info("Actionlog.getReturnRequestStatus.start : returnRequestId={}", returnRequestId);
@@ -499,11 +422,9 @@ public class OrderServiceImpl implements OrderService {
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var returnRequest = returnRequestRepository.findById(returnRequestId)
                 .orElseThrow(() -> new NotFoundException("ReturnRequest not found with id: " + returnRequestId));
-
         if (!user.getId().equals(returnRequest.getUser().getId())) {
             throw new RuntimeException("You can not get this return request status. Return request id: " + returnRequestId);
         }
-
         log.info("Actionlog.getReturnRequestStatus.end : returnRequestId={}", returnRequestId);
         String status = returnRequest.isApproved() ? "Approved" : "Pending";
         return ApiResponse.<String>builder()
@@ -513,24 +434,18 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<List<ReturnRequestResponse>> getReturnRequests() {
         Long userId = getCurrentUserId();
         log.info("Actionlog.getReturnRequestsByUserId.start : userId={}", userId);
-
         var returnRequests = returnRequestRepository.findAll();
-
         var responseList = maptoList(returnRequests);
-
         log.info("Actionlog.getReturnRequestsByUserId.end : userId={}, size={}", userId, responseList.size());
-
         auditLogService.createAuditLog(
                 userRepository.findById(userId).orElseThrow(),
                 "GET ALL RETURN REQUESTS",
                 "Return requests retrieved successfully."
         );
-
         return ApiResponse.<List<ReturnRequestResponse>>builder()
                 .status(200)
                 .message("Return requests retrieved successfully.")
@@ -564,7 +479,6 @@ public class OrderServiceImpl implements OrderService {
                         .build())
                 .toList();
     }
-
 
     @Override
     public ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests() {
@@ -662,7 +576,6 @@ public class OrderServiceImpl implements OrderService {
         cardClient.transfer(adminPayment.getCardNumber(), userPayment.getCardNumber(), adminAmount);
         cardClient.transfer(sellerPayment.getCardNumber(), userPayment.getCardNumber(), sellerAmount);
 
-
         transactionClient.createTransaction(TransactionRequest.builder()
                 .amount(adminAmount)
                 .receiver(userPayment.getCardNumber())
@@ -699,7 +612,6 @@ public class OrderServiceImpl implements OrderService {
     private Integer generateTransactionId() {
         return (int) (Math.random() * 900000) + 100000;
     }
-
 
 }
 

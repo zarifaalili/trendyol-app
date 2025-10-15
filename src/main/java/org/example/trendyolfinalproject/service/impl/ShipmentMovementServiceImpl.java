@@ -40,8 +40,6 @@ public class ShipmentMovementServiceImpl implements ShipmentMovementService {
         Shipment shipment = shipmentRepository.findById(request.getShipmentId()).orElseThrow(
                 () -> new NotFoundException("Shipment not found")
         );
-
-
         var exist = shipmentMovementRepository.findByShipmentIdAndActionNote(request.getShipmentId(), request.getActionNote()).orElse(null);
         if (exist != null) {
             throw new AlreadyException("Shipment movement already exists");
@@ -63,15 +61,10 @@ public class ShipmentMovementServiceImpl implements ShipmentMovementService {
                 shipmentHistoryService.addupdatedShipmentHistory(entity.getShipment(), entity.getLocation(), Status.IN_TRANSIT, entity.getTimestamp());
                 order.setStatus(Status.SHIPPED);
                 break;
-
-//            case "in transit":
-//                shipmentHistoryService.addupdatedShipmentHistory(entity.getShipment(), entity.getLocation(), Status.IN_TRANSIT, entity.getTimestamp());
-//                break;
             case "customs":
                 shipment.setStatus(Status.IN_CUSTOMS);
                 shipmentHistoryService.addupdatedShipmentHistory(entity.getShipment(), entity.getLocation(), Status.IN_CUSTOMS, entity.getTimestamp());
                 break;
-
             case "at delivery hub":
                 shipment.setStatus(Status.AT_DELIVERY_HUB);
                 shipmentHistoryService.addupdatedShipmentHistory(entity.getShipment(), entity.getLocation(), Status.AT_DELIVERY_HUB, entity.getTimestamp());
@@ -87,9 +80,7 @@ public class ShipmentMovementServiceImpl implements ShipmentMovementService {
                 order.setStatus(Status.DELIVERED);
                 break;
         }
-//        var userId = getCurrentUserId();
         var user = shipment.getOrder().getUser();
-
         orderRepository.save(order);
         shipmentRepository.save(shipment);
         shipmentMovementRepository.save(entity);

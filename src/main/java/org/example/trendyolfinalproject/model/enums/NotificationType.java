@@ -39,5 +39,6 @@ public enum NotificationType {
     LEAVE_GROUP,
     PIN_MESSAGE,
     PASSWORD_RESET,
-    WHEEL_CREATED
+    WHEEL_CREATED,
+    SYSTEM
 }

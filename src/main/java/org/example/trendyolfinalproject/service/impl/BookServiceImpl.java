@@ -52,7 +52,6 @@ public class BookServiceImpl implements BookService {
             book.setPrice(price);
             book.setFilePath("/books/" + fileName);
             book.setSeller(seller);
-
             bookRepository.save(book);
 
         } catch (IOException e) {

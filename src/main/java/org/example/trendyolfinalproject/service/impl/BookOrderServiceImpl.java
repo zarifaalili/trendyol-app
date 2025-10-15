@@ -1,6 +1,7 @@
 package org.example.trendyolfinalproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.Book;
 import org.example.trendyolfinalproject.dao.entity.BookOrder;
 import org.example.trendyolfinalproject.dao.repository.BookOrderRepository;
@@ -29,6 +30,7 @@ import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookOrderServiceImpl implements BookOrderService {
 
     private final BookRepository bookRepository;
@@ -40,7 +42,8 @@ public class BookOrderServiceImpl implements BookOrderService {
 
     @Transactional
     @Override
-    public Long createOrder(Long bookId) {
+    public void createOrder(Long bookId) {
+        log.info("Actionlog.createOrder.start : bookId={}", bookId);
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
@@ -52,7 +55,6 @@ public class BookOrderServiceImpl implements BookOrderService {
         if (paymentMethod.getBalance().compareTo(BigDecimal.valueOf(book.getPrice())) < 0) {
             throw new RuntimeException("Not enough balance");
         }
-
         paymentMethod.setBalance(paymentMethod.getBalance().subtract(BigDecimal.valueOf(book.getPrice())));
 
         var paymentMethodSeller = paymentMethodRepository.findByUserId_IdAndIsDefault(seller, true).orElseThrow(() -> new RuntimeException("Payment method not found"));
@@ -68,17 +70,16 @@ public class BookOrderServiceImpl implements BookOrderService {
 
         auditLogService.createAuditLog(user, "Book ordered", "Book ordered successfully. Book id: " + book.getId());
         notificationService.sendNotification(user, "Book ordered", NotificationType.BOOK_ORDER, book.getId());
-        return order.getId();
+        log.info("Actionlog.createOrder.end : bookId={}", bookId);
     }
 
     @Override
     public ResponseEntity<Resource> readBook(Long orderId) {
+        log.info("Actionlog.readBook.start : orderId={}", orderId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
         BookOrder order = bookOrderRepository.findByIdAndUserIdAndIsPaidTrue(orderId, user.getId())
                 .orElseThrow(() -> new RuntimeException("Order not paid or not found"));
-
         Path path = Paths.get(System.getProperty("user.dir") + order.getBook().getFilePath());
         Resource resource;
         try {
@@ -87,10 +88,10 @@ public class BookOrderServiceImpl implements BookOrderService {
         } catch (MalformedURLException | FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-
         auditLogService.createAuditLog(user, "Book read", "Book read successfully. Book id: " + order.getBook().getId());
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle() + "\"");
+        log.info("Actionlog.readBook.end : orderId={}", orderId);
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
@@ -101,8 +102,7 @@ public class BookOrderServiceImpl implements BookOrderService {
 
     @Override
     public ResponseEntity<Resource> readBookUnpaid(Long orderId) {
-
-
+        log.info("Actionlog.readBookUnpaid.start : orderId={}", orderId);
         BookOrder order = bookOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not paid or not found"));
 
@@ -117,6 +117,7 @@ public class BookOrderServiceImpl implements BookOrderService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle() + "\"");
+        log.info("Actionlog.readBookUnpaid.end : orderId={}", orderId);
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)

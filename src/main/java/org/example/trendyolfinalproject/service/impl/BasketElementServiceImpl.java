@@ -38,9 +38,7 @@ public class BasketElementServiceImpl implements BasketElementService {
     @Override
     public ApiResponse<BasketElementResponse> createBasketElement(BasketElementRequest request) {
 
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
-
+        Long currentUserId = getCurrentUserId();
         if (currentUserId == null) {
             throw new RuntimeException("Firstly you should login");
         }
@@ -48,12 +46,11 @@ public class BasketElementServiceImpl implements BasketElementService {
 
         log.info("Actionlog.createBasketElement.start :  basketId={}", basket.getId());
         var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(
-                () -> new RuntimeException("ProductVariant not found with id: " + request.getProductVariantId()));
+                () -> new NotFoundException("ProductVariant not found with id: " + request.getProductVariantId()));
         var productId = productVariant.getProduct().getId();
 
         var product = productRepository.findById(productId).orElseThrow(
-                () -> new RuntimeException("Product not found with id: " + productId));
-
+                () -> new NotFoundException("Product not found with id: " + productId));
 
         updateFinalAndDiscountAmount();
         var existingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), productId, request.getProductVariantId()).orElse(null);
@@ -61,8 +58,6 @@ public class BasketElementServiceImpl implements BasketElementService {
         if (productVariant.getStockQuantity() == 0) {
             throw new RuntimeException("ProductVariant is out of stock");
         }
-
-
 
         if (existingElement != null) {
             existingElement.setQuantity(existingElement.getQuantity() + 1);
@@ -115,8 +110,7 @@ public class BasketElementServiceImpl implements BasketElementService {
     @Override
     public ApiResponse<String> deleteBasketElement(DeleteBasketElementRequest request) {
 
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
         log.info("Actionlog.deleteBasketElement.start : basketId={}", basket.getId());
         var basketElementId = request.getBasketElementId();
@@ -126,8 +120,6 @@ public class BasketElementServiceImpl implements BasketElementService {
 
         var exitingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), product.getId(), productVariant.getId()).orElseThrow(
                 () -> new RuntimeException("Element not found"));
-//        var product = productRepository.findById(request.getProductId()).orElseThrow(() -> new RuntimeException("Product not found with id: " + request.getProductId()));
-//        var productVariant = productVariantRepository.findById(request.getProductVariantId()).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + request.getProductVariantId()));
         basketElementRepository.delete(exitingElement);
 
         updateFinalAndDiscountAmount();
@@ -139,7 +131,6 @@ public class BasketElementServiceImpl implements BasketElementService {
 
         log.info("Actionlog.deleteBasketElement.end : basketId={}", basket.getId());
 
-
         return ApiResponse.<String>builder()
                 .status(200)
                 .message("Basket element deleted successfully")
@@ -149,11 +140,8 @@ public class BasketElementServiceImpl implements BasketElementService {
 
     @Override
     public ApiResponse<BasketElementResponse> decrieceQuantity(DeleteBasketElementRequest request) {
-
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
-
         log.info("Actionlog.decreaseQuantity.start : basketId={}", basket.getId());
 
         var basketElementId = request.getBasketElementId();
@@ -163,9 +151,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         var exitingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), product.getId(), productVariant1.getId()).orElseThrow(
                 () -> new RuntimeException("Element not found"));
 
-//        var product = productRepository.findById(request.getProductId()).orElseThrow(() -> new RuntimeException("Product not found with id: " + request.getProductId()));
         var productVariant = productVariantRepository.findById(productVariant1.getId()).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + productVariant1.getId()));
-
 
         if (exitingElement.getQuantity() == 1) {
             throw new RuntimeException("if quantity is 1 it cannot be decreased");
@@ -190,10 +176,8 @@ public class BasketElementServiceImpl implements BasketElementService {
 
 
     public void updateFinalAndDiscountAmount() {
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
-
         BigDecimal finalAmount = basketService.calculateRawTotalAmount().getData();
         basket.setFinalAmount(finalAmount);
         if (basket.getDiscountAmount() == null) {
@@ -205,18 +189,21 @@ public class BasketElementServiceImpl implements BasketElementService {
     @Override
     public ApiResponse<List<BasketElementResponse>> getBasketElements() {
         log.info("Actionlog.getBasketElements.start");
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
         var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
         var response = basketElementMapper.toResponseList(basketElements);
         log.info("Actionlog.getBasketElements.end");
-
         return ApiResponse.<List<BasketElementResponse>>builder()
                 .status(200)
                 .message("Basket elements retrieved successfully")
                 .data(response)
                 .build();
+    }
+
+    private Long getCurrentUserId() {
+        return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
     }
 
 }

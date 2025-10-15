@@ -17,6 +17,5 @@ public class CategoryCreateRequest {
     @NotNull(message = "Category description cannot be null")
     private String description;
 
-    @NotNull(message = "Parent category ID cannot be null")
     private Long parentCategoryId;
 }

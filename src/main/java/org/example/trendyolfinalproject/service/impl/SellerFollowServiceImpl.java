@@ -30,14 +30,16 @@ public class SellerFollowServiceImpl implements SellerFollowService {
     private final NotificationService notificationService;
     private final SellerRepository sellerRepository;
 
-
     @Override
     public ApiResponse<String> follow(Long sellerId) {
         log.info("Actionlog.follow.start : sellerId={}", sellerId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found with id: " + sellerId));
-
+        var alreadyFollowed = sellerFollowRepository.findBySellerAndFollower(seller, user).isPresent();
+        if (alreadyFollowed) {
+            throw new RuntimeException("You are already following this seller");
+        }
         var follow = SellerFollow.builder()
                 .followedAt(java.time.LocalDateTime.now())
                 .follower(user)
@@ -51,7 +53,6 @@ public class SellerFollowServiceImpl implements SellerFollowService {
         return ApiResponse.success("You have followed " + seller.getUser().getName());
     }
 
-
     @Override
     public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
         log.info("Actionlog.getAllFollowers.start : ");
@@ -59,7 +60,6 @@ public class SellerFollowServiceImpl implements SellerFollowService {
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with id: " + userId));
         var followers = sellerFollowRepository.findBySeller(seller);
-
         var response = followers.stream()
                 .map(f -> SellerFollowResponse.builder()
                         .seller(f.getSeller().getUser().getName())
@@ -67,8 +67,6 @@ public class SellerFollowServiceImpl implements SellerFollowService {
                         .follower(f.getFollower().getName())
                         .build())
                 .toList();
-
-
         log.info("Actionlog.getAllFollowers.end : ");
         return ApiResponse.<List<SellerFollowResponse>>builder()
                 .data(response)
@@ -92,11 +90,8 @@ public class SellerFollowServiceImpl implements SellerFollowService {
         return ApiResponse.success("You have unfollowed " + seller.getUser().getName());
     }
 
-
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
-
 }

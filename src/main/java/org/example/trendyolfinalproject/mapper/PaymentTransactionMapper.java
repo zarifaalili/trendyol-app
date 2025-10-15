@@ -10,14 +10,6 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface PaymentTransactionMapper {
 
-    PaymentTransactionMapper INSTANCE = Mappers.getMapper(PaymentTransactionMapper.class);
-
-
-//    @Mapping(target = "id", ignore = true)
-//    @Mapping(target = "order", ignore = true)
-//    @Mapping(target = "payment", ignore = true)
-//    PaymentTransaction toEntity(PaymentTransactionCreateRequest request);
-
 
 
     @Mapping(source = "order.id", target = "orderId")

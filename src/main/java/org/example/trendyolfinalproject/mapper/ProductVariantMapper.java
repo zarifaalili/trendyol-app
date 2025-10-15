@@ -31,7 +31,7 @@ public interface ProductVariantMapper {
     @Mapping(target = "previousPrice", source = "product.previousPrice")
     ProductVariantSimpleResponse toSimpleResponse(ProductVariant productVariant);
 
-    ProductVariant toVariant(ProductVariantResponse productVariantResponse);
+//    ProductVariant toVariant(ProductVariantResponse productVariantResponse);
 
     List<ProductVariantResponse> toResponseList(List<ProductVariant> productVariants);
 

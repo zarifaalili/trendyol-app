@@ -48,10 +48,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     public ApiResponse<PaymentMethodResponse> createPaymentMethod(PaymentMethodCreateRequest request) {
         log.info("Actionlog.createPaymentMethod.start : ");
         var userId = getCurrentUserId();
-
         var user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("User not found with id: " + userId));
-
         var holderName = request.getCardHolderName().toUpperCase();
         var validation = cardClient.validateCard(request.getCardNumber(), holderName);
         if (!validation) {
@@ -62,21 +60,17 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         if (exists) {
             throw new RuntimeException("PaymentMethod already exists");
         }
-
         var balance = cardClient.getBalance(request.getCardNumber());
         var entity = paymentMethodMapper.toEntity(request);
         entity.setUserId(user);
         entity.setBalance(balance);
         entity.setCardHolderName(holderName);
 
-
         boolean existIsDefaultTrue = paymentMethodRepository.existsByUserId_Id(userId);
         entity.setIsDefault(!existIsDefaultTrue);
-
         var saved = paymentMethodRepository.save(entity);
         var response = paymentMethodMapper.toResponse(saved);
         response.setBalance(balance);
-
         auditLogService.createAuditLog(user, "PaymentMethod created", "PaymentMethod created successfully. PaymentMethod id: " + saved.getId());
         log.info("Actionlog.createPaymentMethod.end : ");
         return ApiResponse.<PaymentMethodResponse>builder()
@@ -86,15 +80,12 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<String> addbalance(AddBalanceRequest request) {
 
         log.info("Actionlog.addbalance.start : ");
         var paymentMethod = paymentMethodRepository.findByCardNumber(request.getCardNumber()).orElseThrow(
                 () -> new RuntimeException("PaymentMethod not found with cardNumber: " + request.getCardNumber()));
-
-
         paymentMethod.setBalance(paymentMethod.getBalance().add(request.getAmount()));
         cardClient.addBalance(paymentMethod.getCardNumber(), request.getAmount());
         auditLogService.createAuditLog(paymentMethod.getUserId(), "Balance added", "Balance added successfully. PaymentMethod id: " + paymentMethod.getId());
@@ -116,7 +107,6 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<PaymentMethodResponse> changeDefaultPaymentMethod(ChangeDefaultPaymentMethod request) {
         log.info("Actionlog.changeDefaultPaymentMethod.start : ");
@@ -125,14 +115,12 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 () -> new RuntimeException("User not found with id: " + userId));
         var paymentMethod = paymentMethodRepository.findById(request.getPaymentMethodId()).orElseThrow(
                 () -> new RuntimeException("PaymentMethod not found with id: " + request.getPaymentMethodId()));
-
         if (!paymentMethod.getUserId().getId().equals(userId)) {
             throw new RuntimeException("PaymentMethod dont relate with user");
         }
         if (paymentMethod.getIsDefault()) {
             throw new RuntimeException("PaymentMethod already default");
         }
-
         var userPaymentMethods = paymentMethodRepository.findByUserId_Id(userId);
         userPaymentMethods.forEach(pm -> pm.setIsDefault(false));
         paymentMethodRepository.saveAll(userPaymentMethods);
@@ -151,8 +139,6 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .build();
     }
 
-
-
     @Transactional
     @Override
     public ApiResponse<String> payToSellers(Map<Seller, BigDecimal> earnings) {
@@ -160,20 +146,18 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
             var paymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(seller.getUser().getId(), true).orElseThrow(
                     () -> new NotFoundException("PaymentMethod not found for seller: " + seller.getUser().getName())
             );
-            var admin = userRepository.findById(9L).orElseThrow(
-                    () -> new NotFoundException("User not found with id: " + (9L))
+            var admin = userRepository.findById(3L).orElseThrow(
+                    () -> new NotFoundException("User not found with id: " + (3L))
             );
             var adminPaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(admin.getId(), true).orElseThrow(
                     () -> new NotFoundException("PaymentMethod not found for admin: " + admin.getName())
             );
-
 
             var softAmount = amount.multiply(new BigDecimal("0.95"));
             adminPaymentMethod.setBalance(adminPaymentMethod.getBalance().subtract(softAmount));
             paymentMethod.setBalance(paymentMethod.getBalance().add(softAmount));
             paymentMethodRepository.save(paymentMethod);
             paymentMethodRepository.save(adminPaymentMethod);
-
 
             paymentTransactionService.createSuccessPaymentTransactionFromAdminToSellers(admin, seller.getUser(), amount, paymentMethod);
             transactionClient.createTransaction(TransactionRequest.builder()
@@ -212,12 +196,10 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         var receiver = paymentMethodRepository.findByCardNumber(request.getCardNumber()).orElseThrow(
                 () -> new NotFoundException("PaymentMethod not found for user: " + user.getName())
         );
-
         var existingCard = cardClient.simplevalidateCard(request.getCardNumber());
         if (!existingCard) {
             throw new RuntimeException("Card is not valid");
         }
-
         if (paymentMethod.getBalance().compareTo(request.getAmount()) < 0) {
             transactionClient.createTransaction(TransactionRequest.builder()
                     .amount(request.getAmount())
@@ -231,11 +213,11 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                     .build()
             );
             throw new RuntimeException("Not enough balance");
-
         }
-
         paymentMethod.setBalance(paymentMethod.getBalance().subtract(request.getAmount()));
+        receiver.setBalance(receiver.getBalance().add(request.getAmount()));
         paymentMethodRepository.save(paymentMethod);
+        paymentMethodRepository.save(receiver);
 
         transactionClient.createTransaction(TransactionRequest.builder()
                 .amount(request.getAmount())
@@ -271,7 +253,6 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 .build();
     }
 
-
     public String maskCardNumber(String cardNumber) {
         if (cardNumber == null || cardNumber.length() < 8) {
             throw new IllegalArgumentException("Card number is too short!");
@@ -281,7 +262,6 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         String masked = "X".repeat(cardNumber.length() - 8);
         return first4 + masked + last4;
     }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

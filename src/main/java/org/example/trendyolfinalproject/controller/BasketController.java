@@ -30,10 +30,7 @@ public class BasketController {
 
         return basketService.getTotalAmount();
     }
-//    @PostMapping("/createBasket")
-//    public BasketResponse createBasket(@RequestBody BasketCreateRequest request) {
-//        return basketService.getOrcreateBasket(request);
-//    }
+
 
     @GetMapping("/raw-price")
     @PreAuthorize("hasRole('CUSTOMER')")

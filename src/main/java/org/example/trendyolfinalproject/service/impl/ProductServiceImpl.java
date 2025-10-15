@@ -43,35 +43,25 @@ public class ProductServiceImpl implements ProductService {
     private final OrderItemRepository orderItemRepository;
 
     private static final String PRODUCT_KEY_PREFIX = "product:";
-    private final ProductVariantRepository productVariantRepository;
-    private final ProductVariantMapper productVariantMapper;
 
     @Override
     public ApiResponse<ProductResponse> createProduct(ProductRequest request) {
         log.info("Actionlog.createProduct.start : name={}", request.getName());
-
         Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
-
         var user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("Seller not found with id: " + currentUserId));
-
         var checkCategory = categoryRepository.findById(request.getCategoryId()).orElseThrow(
                 () -> new NotFoundException("Category not found")
         );
-
         var checkBrand = brandRepository.findById(request.getBrandId()).orElseThrow(
                 () -> new NotFoundException("Brand not found")
         );
-
-
         var checkSeller = sellerRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new NotFoundException("Seller not found with userId: 12"));
-
         if (!checkSeller.getStatus().equals(Status.ACTIVE)) {
             throw new RuntimeException("Seller is not active. Please wait for approval.");
         }
-
 
         var entity = productMapper.toEntity(request);
         entity.setCategory(checkCategory);
@@ -79,12 +69,9 @@ public class ProductServiceImpl implements ProductService {
         entity.setSeller(checkSeller);
         entity.setPreviousPrice(BigDecimal.ZERO);
 
-
         var saved = productRepository.save(entity);
         var response = productMapper.toResponse(saved);
-
         auditLogService.createAuditLog(user, "Product created", "Product created successfully. Product id: " + saved.getId());
-
         log.info("Actionlog.createProduct.end : name={}", request.getName());
         return ApiResponse.<ProductResponse>builder()
                 .status(201)
@@ -93,23 +80,13 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<Page<ProductResponse>> getProducts(int page, int size) {
         log.info("Actionlog.getProducts.start : ");
-
         Pageable pageable = PageRequest.of(page, size);
-
         Page<Product> products = productRepository.findAllByStatus(Status.ACTIVE, pageable);
         log.info("Actionlog.getProducts.end : ");
-//        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-//                .getRequest().getAttribute("userId");
-//        var user = userRepository.findById(currentUserId).orElseThrow();
-//        if (user.getId() != null) {
-//            auditLogService.createAuditLog(user, "Get all products", "Get all products successfully. Product id: " + products.get(0).getId());
-//        }
         Page<ProductResponse> response = products.map(productMapper::toResponse);
-
         return ApiResponse.<Page<ProductResponse>>builder()
                 .status(200)
                 .message("Products fetched successfully")
@@ -128,9 +105,7 @@ public class ProductServiceImpl implements ProductService {
             throw new NotFoundException("Product not found");
         }
         var mapper = productMapper.toResponseList(products);
-
         auditLogService.createAuditLog(user, "Get product by name", "Get product by name successfully. Product id: " + products.get(0).getId());
-
         log.info("Actionlog.getProductByName.end : name={}", name);
         return ApiResponse.<List<ProductResponse>>builder()
                 .status(200)
@@ -162,23 +137,19 @@ public class ProductServiceImpl implements ProductService {
             notificationService.sendToUsersWithWishListVariant("HURRY UP Your wish list product price decreased.Product : " + updated.getName(), NotificationType.PRODUCT_PRICE_UPDATE, updated.getId());
             notificationService.sendToAllUsers("HURRY UP Product price decreased", NotificationType.PRODUCT_PRICE_UPDATE, updated.getId());
         }
-
         log.info("Actionlog.updateProductPrice.end : productId={}", productId);
         return ApiResponse.<ProductResponse>builder()
                 .status(200)
                 .message("Product price updated successfully")
                 .data(response)
                 .build();
-
     }
 
     @Override
     public ApiResponse<List<ProductResponse>> getSellerProducts() {
         log.info("Actionlog.getSellerProducts.start : ");
         var userId = getCurrentUserId();
-
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
-
         var products = productRepository.findBySellerId(seller.getId());
         var mapper = productMapper.toResponseList(products);
         log.info("Actionlog.getSellerProducts.end : ");
@@ -189,9 +160,8 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-
     @Override
-    public ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(  String startDateStr, String endDateStr, int page, int size) {
+    public ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(String startDateStr, String endDateStr, int page, int size) {
         log.info("Actionlog.getTotalProductsBetweenDates.start : productId={}", startDateStr);
         var userId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
@@ -203,13 +173,11 @@ public class ProductServiceImpl implements ProductService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
-
         if (startDate.isAfter(endDate)) {
             throw new RuntimeException("Start date must be before end date");
         }
 
         Pageable pageable = PageRequest.of(page, size);
-
         var orderItems = orderItemRepository.findByCreatedAtBetweenAndProductId_Seller_Id(startDateTime, endDateTime, seller.getId(), pageable);
 
         if (orderItems.isEmpty()) {
@@ -223,7 +191,6 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> products = productRepository.findSellerProductsBetweenDates(
                 seller.getId(), startDateTime, endDateTime, pageable);
         Page<ProductResponse> response = products.map(productMapper::toResponse);
-
         log.info("Actionlog.getTotalProductsBetweenDates.end : productId={}", startDateStr);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .status(200)
@@ -231,7 +198,6 @@ public class ProductServiceImpl implements ProductService {
                 .data(response)
                 .build();
     }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

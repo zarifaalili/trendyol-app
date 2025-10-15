@@ -42,7 +42,4 @@ public class ShipmentServiceImpl implements ShipmentService {
 
         shipmentHistoryService.addShipmentHistory(shipment);
     }
-
-
-
 }

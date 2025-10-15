@@ -15,8 +15,8 @@ import org.example.trendyolfinalproject.model.Status;
 public class SellerCreateRequest {
 
 
-    @NotNull(message = "User ID cannot be null")
-    private Long userId;
+//    @NotNull(message = "User ID cannot be null")
+//    private Long userId;
 
     @NotBlank(message = "Company name cannot be blank")
     @Size(max = 100, message = "Company name cannot exceed 100 characters")

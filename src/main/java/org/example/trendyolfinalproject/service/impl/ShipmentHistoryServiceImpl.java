@@ -32,26 +32,29 @@ public class ShipmentHistoryServiceImpl implements ShipmentHistoryService {
     private final ShipmentRepository shipmentRepository;
     private final UserRepository userRepository;
 
-
     @Override
     public void addShipmentHistory(Shipment shipment) {
+        log.info("Actionlog.addShipmentHistory.start : shipmentId={}", shipment.getId());
         ShipmentHistory shipmentHistory = new ShipmentHistory();
         shipmentHistory.setShipment(shipment);
         shipmentHistory.setStatus(Status.PENDING);
         shipmentHistory.setLocation("WAREHOUSE");
         shipmentHistory.setTimestamp(shipment.getCreatedAt());
         shipmentHistoryRepository.save(shipmentHistory);
+        log.info("Actionlog.addShipmentHistory.end : shipmentId={}", shipment.getId());
 
     }
 
     @Override
     public void addupdatedShipmentHistory(Shipment shipment, String location, Status status, LocalDateTime timestamp) {
+        log.info("Actionlog.addupdatedShipmentHistory.start : shipmentId={}", shipment.getId());
         ShipmentHistory shipmentHistory = new ShipmentHistory();
         shipmentHistory.setShipment(shipment);
         shipmentHistory.setStatus(status);
         shipmentHistory.setLocation(location);
         shipmentHistory.setTimestamp(timestamp);
         shipmentHistoryRepository.save(shipmentHistory);
+        log.info("Actionlog.addupdatedShipmentHistory.end : shipmentId={}", shipment.getId());
     }
 
     @Override
@@ -65,13 +68,10 @@ public class ShipmentHistoryServiceImpl implements ShipmentHistoryService {
         if (!user.getId().equals(userId)) {
             throw new RuntimeException("You can not get this shipment history");
         }
-
-
         var shipmentHistories = shipmentHistoryRepository.findByShipmentId_Id(shipmentId);
         if (shipmentHistories.isEmpty()) {
             throw new NotFoundException("Shipment not found");
         }
-
         auditLogService.createAuditLog(user, "Get Shipment History", "Get Shipment History");
         log.info("Actionlog.getShipmentHistory.end : shipmentId={}", shipmentId);
         var response = shipmentHistoryMapper.toResponseList(shipmentHistories);
@@ -101,10 +101,8 @@ public class ShipmentHistoryServiceImpl implements ShipmentHistoryService {
                 .build();
     }
 
-
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
 }

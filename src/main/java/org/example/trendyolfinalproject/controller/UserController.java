@@ -6,6 +6,7 @@ import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
 import org.example.trendyolfinalproject.model.request.UserRequest;
+import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
 import org.example.trendyolfinalproject.model.response.*;
 import org.example.trendyolfinalproject.service.SellerFollowService;
 import org.example.trendyolfinalproject.service.UserService;
@@ -23,21 +24,19 @@ public class UserController {
     private final UserService userService;
     private final SellerFollowService sellerFollowService;
 
-    @PostMapping("/signUp")
-    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
-        ApiResponse<String> response = userService.registerUser(userRegisterRequest);
-        return ResponseEntity.status(response.getStatus()).body(response);
-    }
-
-
-    @PostMapping("/signUp/verify-otp/{email}/{otp}")
-    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
-            @PathVariable String email,
-            @PathVariable String otp,
-            @RequestBody @Valid UserRegisterRequest userRegisterRequest) {
-        ApiResponse<AuthResponse> response = userService.verifyOtp(email, otp, userRegisterRequest);
-        return ResponseEntity.status(response.getStatus()).body(response);
-    }
+//    @PostMapping("/signUp")
+//    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
+//        ApiResponse<String> response = userService.registerUser(userRegisterRequest);
+//        return ResponseEntity.status(response.getStatus()).body(response);
+//    }
+//
+//
+//    @PostMapping("/signUp/verify-otp")
+//    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+//            @RequestBody @Valid VerifyAndRegisterRequest verifyRequest) {
+//        ApiResponse<AuthResponse> response = userService.verifyOtp(verifyRequest);
+//        return ResponseEntity.status(response.getStatus()).body(response);
+//    }
 
     @PutMapping
     public ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
@@ -60,7 +59,6 @@ public class UserController {
         return userService.verifyEmail(email, otp);
     }
 
-
     @DeleteMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Void> deleteUser() {
@@ -72,7 +70,6 @@ public class UserController {
     public ApiResponse<UserProfileResponse> getUserProfile() {
         return userService.getUserProfile();
     }
-
 
     @PatchMapping("/deactivate")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -118,9 +115,4 @@ public class UserController {
         return userService.referTrendyol(email);
     }
 
-//
-//    @PostMapping("/salam/{salam}")
-//    public String salam(@PathVariable String salam) {
-//        return userService.salam(salam);
-//    }
 }

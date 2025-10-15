@@ -28,5 +28,29 @@ public class ApiResponse<T> {
                 .data(null)
                 .build();
     }
+
+    public static <T> ApiResponse<T> created(T data, String message) {
+        return ApiResponse.<T>builder()
+                .status(201)
+                .message(message)
+                .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> forbidden(String message) {
+        return ApiResponse.<T>builder()
+                .status(403)
+                .message(message)
+                .data(null)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> notFound(String message) {
+        return ApiResponse.<T>builder()
+                .status(404)
+                .message(message)
+                .data(null)
+                .build();
+    }
 }
 

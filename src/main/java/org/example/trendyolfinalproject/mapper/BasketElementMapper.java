@@ -20,7 +20,6 @@ public interface BasketElementMapper {
     @Mapping(target = "basket", ignore = true)
     @Mapping(target = "productId", ignore = true)
     @Mapping(target = "productVariantId", ignore = true)
-//    @Mapping(source = "basketId", target = "basket.id")
     @Mapping(target = "addedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target="quantity", ignore = true)
     BasketElement toEntity(BasketElementRequest request);
@@ -31,7 +30,6 @@ public interface BasketElementMapper {
     @Mapping(source = "productId.price", target = "productPrice")
     @Mapping(source = "productVariantId.id", target = "productVariantId")
     @Mapping(source = "productVariantId", target = "productVariantName", qualifiedByName = "mapProductVariantToName")
-//    @Mapping(source = "productVariantId.priceAdjustment", target = "productVariantPrice")
     @Mapping(target = "subtotal", expression = "java(calculateSubtotal(basketElement.getQuantity(), basketElement.getProductId().getPrice(), null))")
     BasketElementResponse toResponse(BasketElement basketElement);
 

@@ -34,7 +34,6 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final PaymentMethodRepository paymentMethodRepository;
-    private final PaymentTransactionMapper paymentTransactionMapper;
     private final TransactionClient transactionClient;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -55,10 +54,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         transaction.setPayment(paymentMethod);
         transaction.setTransactionId(generateTransactionId());
         transaction.setProviderResponse("successful payment");
-
         paymentTransactionRepository.save(transaction);
     }
-
 
     @Override
     public PaymentTransaction createSuccessPaymentTransaction(Order order) {
@@ -72,9 +69,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         paymentTransaction.setStatus(Status.PENDING);
         paymentTransaction.setProviderResponse("successful payment");
         return paymentTransactionRepository.save(paymentTransaction);
-
     }
-
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
@@ -93,7 +88,6 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     public void returnedPaymentTransaction(Order order, Long orderId) {
-
         PaymentTransaction paymentTransaction = new PaymentTransaction();
         paymentTransaction.setOrder(order);
         paymentTransaction.setPayment(order.getPaymentMethodId());
@@ -106,11 +100,9 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         paymentTransactionRepository.save(paymentTransaction);
     }
 
-
     private Integer generateTransactionId() {
         return (int) (Math.random() * 900000) + 100000;
     }
-
 
     @Override
     public ApiResponse<List<PaymentTransactionResponse>> getPaymentTransaction(Long paymentMethodId) {
@@ -121,12 +113,9 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
             throw new NotFoundException("PaymentMethod not found with id: " + paymentMethodId);
         }
         var paymentTransactions = paymentTransactionRepository.findByPayment(payment);
-
         if (paymentTransactions.isEmpty()) {
             throw new NotFoundException("PaymentTransaction not found with payment id: " + paymentMethodId);
         }
-
-
         var responses = paymentTransactions.stream()
                 .map(t -> PaymentTransactionResponse.builder()
                         .providerResponse(t.getProviderResponse())

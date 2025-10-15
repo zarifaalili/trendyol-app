@@ -40,16 +40,13 @@ public class WheelServiceImpl implements WheelService {
     private final BasketRepository basketRepository;
     private final BasketElementRepository basketElementRepository;
 
-
     @Transactional
     @Override
     public void createWheel(WheelRequest wheelRequest) {
         log.info("ActionLog.createWheel.start : userId={}", getCurrentUserId());
-
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
         var wheel = wheelMapper.toEntity(wheelRequest);
 
         var prizes = wheelRequest.getPrizes().stream()
@@ -66,7 +63,6 @@ public class WheelServiceImpl implements WheelService {
         auditLogService.createAuditLog(user, "createWheel", "Wheel created");
         notificationService.sendToAllUsers("New wheel created", NotificationType.WHEEL_CREATED, wheel.getId());
 
-
         log.info("ActionLog.createWheel.end : wheelId={}, prizesCount={}", wheel.getId(), prizes.size());
     }
 
@@ -74,7 +70,6 @@ public class WheelServiceImpl implements WheelService {
     @Override
     public SpinWheelResponse spinWheel(Long wheelId) {
         log.info("ActionLog.spinWheel.start : userId={}, wheelId={}", getCurrentUserId(), wheelId);
-
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -88,8 +83,6 @@ public class WheelServiceImpl implements WheelService {
         if (existingUserWheel != null) {
             throw new RuntimeException("User already spun this wheel");
         }
-
-
         var prices = wheel.getPrizes();
         var randomIndex = ThreadLocalRandom.current().nextInt(prices.size());
         var selectedPrice = prices.get(randomIndex);
@@ -103,13 +96,9 @@ public class WheelServiceImpl implements WheelService {
             wheelOfUser.setStartedAt(LocalDateTime.now());
             wheelOfUser.setPrize(selectedPrice);
             wheelOfUser.setExpiresAt(wheel.getEndTime());
-
             userWheelRepository.save(wheelOfUser);
         }
-
-
         var response = wheelMapper.toResponse(wheelOfUser);
-
         log.info("ActionLog.spinWheel.end : userId={}, wheelId={}", userId, wheelId);
         auditLogService.createAuditLog(user, "spinWheel", "Wheel spun");
         return response;
@@ -121,16 +110,13 @@ public class WheelServiceImpl implements WheelService {
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
         var userWheel = userWheelRepository.findByUser(user)
                 .orElseThrow(() -> new NotFoundException("User wheel not found"));
         var expiresAtInstant = userWheel.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant();
 
         long millisLeft = expiresAtInstant.toEpochMilli() - System.currentTimeMillis();
         if (millisLeft < 0) millisLeft = 0;
-
         Duration duration = Duration.ofMillis(millisLeft);
-
         long days = duration.toDays();
         long hours = duration.toHoursPart();
         long minutes = duration.toMinutesPart();
@@ -153,37 +139,27 @@ public class WheelServiceImpl implements WheelService {
     public void useWheelPrice(Long userWheelId) {
         log.info("ActionLog.useWheelPrice.start : userWheelId={}", userWheelId);
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found"));
-
         var userWheel = userWheelRepository.findById(userWheelId).orElseThrow(() -> new NotFoundException("User wheel not found"));
-
         if (!userWheel.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can only use your own wheel");
         }
-
         if (userWheel.getUsedAt() != null) {
             throw new RuntimeException("You have already used this wheel");
         }
-
         if (userWheel.getExpiresAt() != null && userWheel.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("This wheel has expired");
         }
-
         var basket = basketRepository.findByUserId(getCurrentUserId()).orElseThrow(() -> new NotFoundException("Basket not found"));
-
         List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
-
         if (basketElements.isEmpty()) {
-            throw new RuntimeException("Basket not empty");
+            throw new RuntimeException("Basket is empty");
         }
-
         BigDecimal total = BigDecimal.ZERO;
         for (BasketElement basketElement : basketElements) {
-
             total = total.add(
                     basketElement.getProductId().getPrice().multiply(BigDecimal.valueOf(basketElement.getQuantity()))
             );
         }
-
 
         var prize = userWheel.getPrize();
         if (prize == null) {
@@ -191,29 +167,24 @@ public class WheelServiceImpl implements WheelService {
         }
 
         BigDecimal baseAmount;
-
         if (basket.getDiscountAmount() != null &&
                 basket.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
             baseAmount = basket.getFinalAmount();
         } else {
             baseAmount = total;
         }
-
         if (prize.getMinOrder() != null &&
                 baseAmount.compareTo(prize.getMinOrder()) < 0) {
             BigDecimal minAdd = prize.getMinOrder().subtract(baseAmount);
             throw new RuntimeException("You need to add " + minAdd + " to your order to use this wheel");
         }
-
         BigDecimal discountAmount = prize.getAmount();
         if (discountAmount.compareTo(baseAmount) > 0) {
             discountAmount = baseAmount;
         }
-
         BigDecimal totalDiscount = basket.getDiscountAmount() != null
                 ? basket.getDiscountAmount().add(discountAmount)
                 : discountAmount;
-
 
         basket.setDiscountAmount(totalDiscount);
         basket.setFinalAmount(total.subtract(totalDiscount));
@@ -224,37 +195,28 @@ public class WheelServiceImpl implements WheelService {
 
         auditLogService.createAuditLog(user, "useWheelPrice", "Wheel price used");
         log.info("ActionLog.useWheelPrice.end : userWheelId={}", userWheelId);
-
     }
-
 
     @Transactional
     @Override
     public void cancelWheelPrize(Long userWheelId) {
         log.info("ActionLog.cancelWheelPrize.start : userWheelId={}", userWheelId);
-
         var user = userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
         var userWheel = userWheelRepository.findById(userWheelId)
                 .orElseThrow(() -> new NotFoundException("User wheel not found"));
-
         if (!userWheel.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can only cancel your own wheel prize");
         }
-
         if (userWheel.getUsedAt() == null) {
             throw new RuntimeException("This wheel prize has not been used yet");
         }
-
         var basket = basketRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new NotFoundException("Basket not found"));
-
         var prize = userWheel.getPrize();
         if (prize == null) {
             throw new RuntimeException("No prize associated with this user wheel");
         }
-
         List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
         BigDecimal total = basketElements.stream()
                 .map(be -> be.getProductId().getPrice().multiply(BigDecimal.valueOf(be.getQuantity())))
@@ -270,37 +232,28 @@ public class WheelServiceImpl implements WheelService {
         basket.setDiscountAmount(updatedDiscount);
         basket.setFinalAmount(total.subtract(updatedDiscount));
         basketRepository.save(basket);
-
         userWheel.setUsedAt(null);
         userWheelRepository.save(userWheel);
-
         auditLogService.createAuditLog(user, "cancelWheelPrize", "Wheel prize cancelled");
         log.info("ActionLog.cancelWheelPrize.end : userWheelId={}", userWheelId);
     }
 
-
     @Override
     public List<UserWheelResponse> getAllWheels() {
         log.info("ActionLog.getAllWheels.start : userId={}", getCurrentUserId());
-
         var user = userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
         var userWheels = userWheelRepository.findByUser_IdAndUsedAtIsNull(getCurrentUserId());
-
         if (userWheels.isEmpty()) {
             throw new NotFoundException("No wheels found");
         }
-
         var responses = userWheels.stream()
                 .map(wheelMapper::toUserWheelResponse)
                 .toList();
 
-
         log.info("ActionLog.getAllWheels.end : userId={}", getCurrentUserId());
         return responses;
     }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

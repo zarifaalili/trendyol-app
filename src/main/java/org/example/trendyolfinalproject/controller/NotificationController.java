@@ -24,7 +24,7 @@ public class NotificationController {
         return notificationService.readSingleNotification(id);
     }
 
-    @PostMapping("/unread")
+    @GetMapping("/unread")
     public ApiResponse<List<NotificationResponse>> readUnreadNotification() {
         return notificationService.getUnreadNotifications();
     }

@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface BookOrderService {
 
-    Long createOrder(Long bookId);
+    void createOrder(Long bookId);
 
     ResponseEntity<Resource> readBook(Long orderId);
 

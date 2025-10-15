@@ -31,18 +31,18 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final AuditLogService auditLogService;
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantMapper productVariantMapper;
-    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
     @Override
     public ApiResponse<Void> saveUserView(Long userId, Long productVariantId) {
+        log.info("Saving user view");
         String key = "user:views:" + userId;
         long timestamp = System.currentTimeMillis();
 
         redisTemplate.opsForZSet().remove(key, productVariantId.toString());
         redisTemplate.opsForZSet().add(key, productVariantId.toString(), timestamp);
-
         redisTemplate.opsForZSet().removeRange(key, 0, -11);
+        log.info("User view saved successfully");
         return ApiResponse.<Void>builder()
                 .status(200)
                 .message("User view saved successfully")
@@ -52,6 +52,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     public ApiResponse<List<Long>> getLastViewedIds(Long userId) {
+        log.info("Fetching last viewed products");
         String key = "user:views:" + userId;
         var ids = redisTemplate.opsForZSet().reverseRange(key, 0, 9);
         if (ids == null || ids.isEmpty()) {
@@ -62,6 +63,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                     .build();
         }
         var idList = ids.stream().map(x -> Long.parseLong(x.toString())).toList();
+        log.info("Last viewed products fetched successfully");
         return ApiResponse.<List<Long>>builder()
                 .status(200)
                 .message("Last viewed products fetched successfully")
@@ -84,12 +86,10 @@ public class RecommendationServiceImpl implements RecommendationService {
         var similarVariants = productVariantRepository.findSimilarProductVariants(
                 product.getCategory().getId(), minPrice, maxPrice, product.getId()
         );
-
         if (similarVariants.isEmpty()) {
             throw new NotFoundException("No similar products found");
         }
         var mapper = productVariantMapper.toResponseList(similarVariants);
-
         auditLogService.createAuditLog(user, "Get similar product", "Get similar product successfully. Product id: " + product.getId());
         log.info("Actionlog.getSimilarProduct.end : product={}", productId);
         return ApiResponse.<List<ProductVariantResponse>>builder()
@@ -97,7 +97,6 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .message("Similar products fetched successfully")
                 .data(mapper)
                 .build();
-
     }
 
     @Override
@@ -105,16 +104,14 @@ public class RecommendationServiceImpl implements RecommendationService {
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-
         List<Object[]> trendingObjects = orderItemRepository.findTrendingProductsWithSales(LocalDateTime.now().minusDays(7));
 
         if (trendingObjects.isEmpty()) {
             trendingObjects = orderItemRepository.findDefaultTrendingProductsWithSales();
         }
-
         List<ProductVariantResponse> trending = trendingObjects.stream()
                 .map(obj -> {
-                    ProductVariant variant = (ProductVariant) obj[0]; // artıq təhlükəsiz cast
+                    ProductVariant variant = (ProductVariant) obj[0];
                     return productVariantMapper.toResponse(variant);
                 })
                 .toList();
@@ -126,23 +123,6 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .data(trending)
                 .build();
     }
-
-
-//    public List<ProductVariantResponse> getTrendingProduct() {
-//        log.info("Actionlog.getTrendingProduct.start");
-//        var userId = getCurrentUserId();
-//        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-//        var variants = orderItemRepository.findTrendingProducts(LocalDateTime.of(2025, 8, 3, 0, 0));
-//        if (variants.isEmpty()) {
-//            var deafultTrending = orderItemRepository.findDefaultTrendingProducts();
-//            return productVariantMapper.toResponseList(deafultTrending);
-//        }
-//        var mapper = productVariantMapper.toResponseList(variants);
-//        auditLogService.createAuditLog(user, "Get trending product", "Get trending product successfully.");
-//        log.info("Actionlog.getTrendingProduct.end");
-//        return mapper;
-//    }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,14 @@ public class Handler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(new Response(e.getMessage(), HttpStatus.NOT_FOUND.toString()));
     }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Response> handle(ResponseStatusException e) {
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(new Response(e.getReason(), String.valueOf(e.getStatusCode().value())));
+    }
+
 
     @ExceptionHandler(CouponUsageLimitExceededException.class)
     public ResponseEntity<Response> handle(CouponUsageLimitExceededException e) {

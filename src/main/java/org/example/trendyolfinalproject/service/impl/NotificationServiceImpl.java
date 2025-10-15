@@ -35,20 +35,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendToAllUsers(String message, NotificationType type, Long relatedEntityId) {
+        log.info("Sending notification to all users");
         List<User> users = userRepository.findAll();
         for (User user : users) {
             sendNotification(user, message, type, relatedEntityId);
-
         }
-
+        log.info("Notification sent to all users");
     }
 
     @Override
     public void sendNotification(User user, String message, NotificationType type, Long relatedId) {
-
+        log.info("Notification sent to user: {}", user.getEmail());
         for (DeliveryChannelType deliveryChannelType : DeliveryChannelType.values()) {
-
-
             switch (deliveryChannelType) {
                 case IN_APP, PUSH_NOTIFICATION, SMS -> {
                     Notification notification = new Notification();
@@ -62,106 +60,70 @@ public class NotificationServiceImpl implements NotificationService {
                     notification.setCreatedAt(LocalDateTime.now());
                     notificationRepository.save(notification);
                 }
-
                 case EMAIL -> {
                     emailService.sendEmail(user.getEmail(), "Trendyol", message);
                 }
-
-
-//            if (deliveryChannelType == DeliveryChannelType.IN_APP) {
-//                Notification notification = new Notification();
-//                notification.setUser(user);
-//                notification.setMessage(message);
-//                notification.setType(type);
-//                notification.setDeliveryChannelType(deliveryChannelType);
-//                notification.setRelatedEntityId(relatedId);
-//                notificationRepository.save(notification);
-//            }
-//
-//
-//            if (deliveryChannelType == DeliveryChannelType.EMAIL) {
-//                emailService.sendEmail(user.getEmail(), "Trendyol", message);
-//            }
-//
-//
-//            if (deliveryChannelType == DeliveryChannelType.SMS) {
-//                Notification notification = new Notification();
-//                notification.setUser(user);
-//                notification.setMessage(message);
-//                notification.setType(type);
-//                notification.setDeliveryChannelType(deliveryChannelType);
-//                notification.setRelatedEntityId(relatedId);
-//                notificationRepository.save(notification);
-//            }
-//
-//            if(deliveryChannelType==DeliveryChannelType.PUSH_NOTIFICATION){
-//                Notification notification = new Notification();
-//                notification.setUser(user);
-//                notification.setMessage(message);
-//                notification.setType(type);
-//                notification.setDeliveryChannelType(deliveryChannelType);
-//                notification.setRelatedEntityId(relatedId);
-//                notificationRepository.save(notification);
-//            }
-
-
             }
-
         }
+        log.info("Notification sent to user: {}", user.getEmail());
     }
 
     @Override
     public void sendToUsersWithWishListVariant(String message, NotificationType type, Long variantId) {
+        log.info("Sending notification to users with wish list variant: {}", variantId);
         List<User> users = userRepository.findAllByProductVariantIdInWishList(variantId);
-
         for (User user : users) {
             sendNotification(user, message, type, variantId);
         }
+        log.info("Notification sent to users with wish list variant: {}", variantId);
     }
 
     @Override
     public void sendToUsersWithBasketVariant(String message, NotificationType type, Long variantId) {
+        log.info("Sending notification to users with basket variant: {}", variantId);
         List<User> users = userRepository.findAllByProductVariantIdInBasket(variantId);
-
         for (User user : users) {
             sendNotification(user, message, type, variantId);
         }
+        log.info("Notification sent to users with basket variant: {}", variantId);
     }
 
 
     @Override
     public void sendToAdmins(String message, NotificationType type, Long relatedEntityId) {
+        log.info("Sending notification to admins");
         List<User> admins = userRepository.findAllAdmins();
         for (User admin : admins) {
             sendNotification(admin, message, type, relatedEntityId);
         }
+        log.info("Notification sent to admins");
     }
 
     @Override
     public void sendToAllCustomers(String message, NotificationType type, Long relatedEntityId) {
+        log.info("Sending notification to all customers");
         List<User> users = userRepository.findAll().stream()
                 .filter(user -> user.getRole().name().equals("CUSTOMER"))
                 .toList();
-
         for (User user : users) {
             sendNotification(user, message, type, relatedEntityId);
         }
+        log.info("Notification sent to all customers");
     }
 
 
     @Override
     public ApiResponse<List<NotificationResponse>> getAllNotificationsByUserId() {
         Long userId = getCurrentUserId();
-
-        log.info("Actionlog.getNotification.start : userId={}", userId);
+        log.info("Actionlog.getAllNotificationsByUserId.start : userId={}", userId);
         var notification = notificationRepository.findByUserId(userId);
-
         if (notification.isEmpty()) {
             throw new NotFoundException("Notification not found");
         }
         var response = notificationMapper.toResponseList(notification);
         log.info("Actionlog.getNotification.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "GET ALL NOTIFICATION", "Notification get successfully.");
+        log.info("Actionlog.getAllNotification.end : userId={}", userId);
         return ApiResponse.<List<NotificationResponse>>builder()
                 .status(200)
                 .message("Notifications retrieved successfully")
@@ -176,11 +138,9 @@ public class NotificationServiceImpl implements NotificationService {
         var notification = notificationRepository.findByUserIdAndIdAndDeliveryChannelType(userId, id, DeliveryChannelType.IN_APP).orElseThrow(
                 () -> new NotFoundException("Notification not found with userId: " + userId + " id: " + id)
         );
-
         if (!notification.getReadStatus().equals(ReadStatus.READ)) {
             notification.setReadStatus(ReadStatus.READ);
         }
-
         notificationRepository.save(notification);
         var response = notificationMapper.toResponse(notification);
         log.info("Actionlog.getSingleNotification.end : userId={}", userId);
@@ -214,7 +174,7 @@ public class NotificationServiceImpl implements NotificationService {
     public ApiResponse<List<NotificationResponse>> searchNotification(String message) {
         Long userId = getCurrentUserId();
         log.info("Actionlog.searchNotification.start : userId={}", userId);
-        var notification = notificationRepository.search(message);
+        var notification = notificationRepository.searchByUserIdAndMessage(userId,message);
         if (notification.isEmpty()) {
             return ApiResponse.<List<NotificationResponse>>builder()
                     .status(404)
@@ -246,7 +206,6 @@ public class NotificationServiceImpl implements NotificationService {
                     .build();        }
         unreadNnotification.forEach(notification -> notification.setReadStatus(ReadStatus.READ));
         notificationRepository.saveAll(unreadNnotification);
-
         log.info("Actionlog.markAllNotificationAsRead.end : userId={}", userId);
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(), "Change all notification as read", "MARK ALL NOTIFICATION AS READ");
         return ApiResponse.<String>builder()
@@ -261,7 +220,6 @@ public class NotificationServiceImpl implements NotificationService {
                 .getRequest().getAttribute("userId");
     }
 
-
     @Override
     public  ApiResponse<Integer> getUnreadNotificationCount() {
         Long userId = getCurrentUserId();
@@ -275,7 +233,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .status(200)
                 .message("Unread notification count retrieved successfully")
                 .data(count)
-                .build();    }
-
+                .build();
+    }
 
 }

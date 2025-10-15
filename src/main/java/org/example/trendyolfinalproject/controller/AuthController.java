@@ -5,11 +5,16 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.model.request.AuthRequest;
 import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
+import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
+import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuthResponse;
 import org.example.trendyolfinalproject.service.AuthService;
 import org.example.trendyolfinalproject.service.AuthenticationManager;
 import org.example.trendyolfinalproject.service.PasswordResetService;
+import org.example.trendyolfinalproject.service.UserService;
 import org.example.trendyolfinalproject.util.JwtUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
+
     private final AuthService authService;
     private final PasswordResetService resetService;
 
@@ -56,14 +58,19 @@ public class AuthController {
     }
 
 
+    @PostMapping("/signUp")
+    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
+        ApiResponse<String> response = authService.registerUser(userRegisterRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
 
-//    @PostMapping("/logout")
-//    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-//        String token = authHeader.replace("Bearer ", "");
-//        String message = authService.logout(token);
-//        return ResponseEntity.ok(message);
-//    }
 
+    @PostMapping("/signUp/verify-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @RequestBody @Valid VerifyAndRegisterRequest verifyRequest) {
+        ApiResponse<AuthResponse> response = authService.verifyOtp(verifyRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
 
 
 

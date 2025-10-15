@@ -40,36 +40,23 @@ public class SellerServiceImpl implements SellerService {
 
     @Override
     public ApiResponse<SellerResponse> createSeller(SellerCreateRequest request) {
-
         log.info("Actionlog.createSeller.start : companyName={}", request.getCompanyName());
-
-        Long sellerId = request.getUserId();
-
+        Long sellerId = getCurrentUserId();
         User user = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("User not found"));
-
         if (user.getRole().equals(Role.SELLER)) {
             throw new AlreadyException("User is already a seller");
         }
         if (user.getRole().equals(Role.ADMIN)) {
             throw new RuntimeException("You cant be a seller");
         }
-
         if (sellerRepository.existsByCompanyName(request.getCompanyName())) {
             throw new AlreadyException("Company name already exists");
         }
         if (sellerRepository.existsByTaxId(request.getTaxId())) {
             throw new AlreadyException("Tax ID already exists");
         }
-
-
         var basket = basketRepository.findByUserId(sellerId);
         basket.ifPresent(basketRepository::delete);
-
-
-//        if(!user.getRole().equals(Role.SELLER)){
-//            throw new RuntimeException("User is not a seller");
-//        }
-
 
         user.setRole(Role.SELLER);
         user.setIsActive(false);
@@ -108,7 +95,6 @@ public class SellerServiceImpl implements SellerService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<SellerResponse> getSeller(String companyName) {
         Seller seller = sellerRepository.findFirstByCompanyName(companyName)
@@ -121,20 +107,15 @@ public class SellerServiceImpl implements SellerService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<Double> getSellerAverageRating(Long sellerId) {
-
         var userId = getCurrentUserId();
-
         log.info("Actionlog.getSellerAverageRating.start : sellerId={}", sellerId);
-
         List<Product> sellerProducts = productRepository.findBySellerId(sellerId);
 
         if (sellerProducts.isEmpty()) {
             return ApiResponse.success(0.0);
         }
-
         double totalRating = 0.0;
         int reviewCount = 0;
 
@@ -145,25 +126,18 @@ public class SellerServiceImpl implements SellerService {
                 reviewCount++;
             }
         }
-
         double averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
-
         auditLogService.createAuditLog(
                 userRepository.findById(userId).orElseThrow(),
                 "Seller Average Rating",
                 "Average rating for seller with id: " + sellerId + " is: " + averageRating
         );
-
-
         log.info("Actionlog.getSellerAverageRating.end : sellerId={}", sellerId);
-
         return ApiResponse.success(averageRating);
     }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");
     }
-
 }

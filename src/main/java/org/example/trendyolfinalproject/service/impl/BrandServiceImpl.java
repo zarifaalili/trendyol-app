@@ -29,9 +29,8 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public ApiResponse<BrandResponse> createBrand(BrandCreateRequest request) {
-
         log.info("Actionlog.createBrand.start : name={}", request.getName());
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         if (brandRepository.existsByName(request.getName())) {
             throw new AlreadyException("Brand name already exists : " + request.getName());
@@ -49,11 +48,10 @@ public class BrandServiceImpl implements BrandService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<String> deleteBrand(Long id) {
         log.info("Actionlog.deleteBrand.start : id={}", id);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         var brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found : " + id));
@@ -68,11 +66,10 @@ public class BrandServiceImpl implements BrandService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<BrandResponse> updateBrand(Long id, BrandCreateRequest request) {
         log.info("Actionlog.updateBrand.start : id={}", id);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         var brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found : " + id));
@@ -93,7 +90,7 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public ApiResponse<BrandResponse> getBrandbyName(String name) {
         log.info("Actionlog.getBrandbyName.start : name={}", name);
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
 
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var brand = brandRepository.findBrandByName(name).orElseThrow(() -> new NotFoundException("Brand not found : " + name));
@@ -105,6 +102,11 @@ public class BrandServiceImpl implements BrandService {
                 .message("Brand retrieved successfully")
                 .data(response)
                 .build();
+    }
+
+    private Long getCurrentUserId() {
+        return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
     }
 
 }

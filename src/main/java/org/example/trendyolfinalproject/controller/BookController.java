@@ -31,9 +31,9 @@ public class BookController {
 
     @PostMapping("/{bookId}/orders")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<Long> orderBook(@PathVariable Long bookId) {
-        Long orderId = bookOrderService.createOrder(bookId);
-        return ResponseEntity.ok(orderId);
+    public ResponseEntity<Void> orderBook(@PathVariable Long bookId) {
+        bookOrderService.createOrder(bookId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/orders/{orderId}/file")

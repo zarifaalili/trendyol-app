@@ -16,6 +16,7 @@ public interface ProductQuestionMapper {
 
     @Mapping(target = "customerName", source = "customer.name")
     @Mapping(target = "productName", source = "productVariant.product.name")
+    @Mapping(target = "sellerName", source = "seller.companyName")
     ProductQuestionResponse toResponse(ProductQuestion entity);
 
     List<ProductQuestionResponse> toResponseList(List<ProductQuestion> entities);

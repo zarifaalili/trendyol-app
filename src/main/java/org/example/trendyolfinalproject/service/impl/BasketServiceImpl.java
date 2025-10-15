@@ -35,57 +35,20 @@ public class BasketServiceImpl implements BasketService {
     private final BasketElementRepository basketElementRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
-//    public BasketResponse getOrcreateBasket(BasketCreateRequest request) {
-//
-//        log.info("Actionlog.createBasket.start : userId={}", request.getUserId());
-//        var user = userRepository.findById(request.getUserId()).orElseThrow(
-//                () -> new RuntimeException("User not found with id: " + request.getUserId())
-//        );
-//
-//        var basket = basketRepository.findByUserId(user.getId());
-//        if (basket != null) {
-//            log.info("Actionlog.getOrCreateBasket.exists : userId={}", request.getUserId());
-//            return basketMapper.toResponse(basket);
-//
-//        }
-//
-//        Basket basket1 = new Basket();
-//        basket1.setUser(user);
-//        basket1.setCreatedAt(java.time.LocalDateTime.now());
-//        basket1.setUpdatedAt(java.time.LocalDateTime.now());
-//
-//
-//        var saved = basketRepository.save(basket1);
-//        log.info("Actionlog.createBasket.created : userId={}", request.getUserId());
-//        return basketMapper.toResponse(saved);
-//
-//    }
 
 
     @Override
     public ApiResponse<BigDecimal> getTotalAmount() {
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket1 = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
 
         log.info("Actionlog.getTotalAmount.start : basketId={}", basket1.getId());
-
-
-//        var basket = basketRepository.findById(basketId).orElseThrow(() -> new RuntimeException("Basket not found with id: " + basketId));
-//        var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
 
         BigDecimal currentTotal = basket1.getFinalAmount();
         if (currentTotal == null) {
             currentTotal = calculateRawTotalAmount().getData();
         }
-//        BigDecimal total = BigDecimal.ZERO;
-//        for (BasketElement basketElement : basketElements) {
-//            BigDecimal price = basketElement.getProductId().getPrice();
-//
-//            BigDecimal subtotal = price.multiply(BigDecimal.valueOf(basketElement.getQuantity()));
-//            total = total.add(subtotal);
-//
-//        }
+
 
         var user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
         auditLogService.createAuditLog(user, "Get total amount of basket", "Get total price of basket successfully. Basket id: " + basket1.getId());
@@ -100,8 +63,7 @@ public class BasketServiceImpl implements BasketService {
 
     @Override
     public ApiResponse<BigDecimal> calculateRawTotalAmount() {
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var basket1 = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
         log.info("Actionlog.getTotalPrice.start : basketId={}", basket1.getId(), "userId=" + currentUserId);
 
@@ -146,9 +108,7 @@ public class BasketServiceImpl implements BasketService {
     @Override
     public ApiResponse<BasketSummaryResponse> getBasketSummary() {
         log.info("Actionlog.getBasketSummary.start");
-
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
 
         var basket = basketRepository.findByUserId(currentUserId)
                 .orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
@@ -206,8 +166,12 @@ public class BasketServiceImpl implements BasketService {
         if (basket.getDiscountAmount() == null) {
             return BigDecimal.ZERO;
         }
-
         return basket.getDiscountAmount();
+    }
+
+    private Long getCurrentUserId() {
+        return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
     }
 
 

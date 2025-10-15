@@ -1,0 +1,110 @@
+package org.example.trendyolfinalproject.mapper;
+
+import org.example.trendyolfinalproject.dao.entity.Adress;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.model.request.AdressCreateRequest;
+import org.example.trendyolfinalproject.model.response.AdressResponse;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class AdressMapperTest {
+
+    private final AdressMapper mapper = Mappers.getMapper(AdressMapper.class);
+
+    @Test
+    void toEntity_shouldMapFieldsCorrectly() {
+        // given
+        AdressCreateRequest request = new AdressCreateRequest();
+        request.setCity("Baku");
+        request.setState("Absheron");
+        request.setStreet("Nizami Street");
+        request.setZipCode("AZ1000");
+        request.setCountry("Azerbaijan");
+
+        // when
+        Adress adress = mapper.toEntity(request);
+
+        // then
+        assertNotNull(adress);
+        assertEquals("Baku", adress.getCity());
+        assertEquals("Absheron", adress.getState());
+        assertEquals("Nizami Street", adress.getStreet());
+        assertEquals("AZ1000", adress.getZipCode());
+        assertEquals("Azerbaijan", adress.getCountry());
+        assertNull(adress.getId());
+        assertNull(adress.getUserId());
+        assertNull(adress.getIsDefault());
+    }
+
+    @Test
+    void toResponse_shouldMapFieldsCorrectly() {
+        // given
+        User user = new User();
+        user.setId(10L);
+
+        Adress adress = new Adress();
+        adress.setId(1L);
+        adress.setUserId(user);
+        adress.setCity("Ganja");
+        adress.setState("Kapaz");
+        adress.setStreet("Heydar Street");
+        adress.setZipCode("AZ2000");
+        adress.setCountry("Azerbaijan");
+        adress.setIsDefault(true);
+
+        // when
+        AdressResponse response = mapper.toResponse(adress);
+
+        // then
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals(10L, response.getUserId());
+        assertEquals("Ganja", response.getCity());
+        assertEquals("Kapaz", response.getState());
+        assertEquals("Heydar Street", response.getStreet());
+        assertEquals("AZ2000", response.getZipCode());
+        assertEquals("Azerbaijan", response.getCountry());
+        assertTrue(response.getIsDefault());
+    }
+
+    @Test
+    void toResponseList_shouldMapListCorrectly() {
+        // given
+        User user = new User();
+        user.setId(5L);
+
+        Adress adress1 = new Adress();
+        adress1.setId(1L);
+        adress1.setUserId(user);
+        adress1.setCity("Baku");
+        adress1.setState("Binagadi");
+        adress1.setStreet("28 May");
+        adress1.setZipCode("AZ1010");
+        adress1.setCountry("Azerbaijan");
+
+        Adress adress2 = new Adress();
+        adress2.setId(2L);
+        adress2.setUserId(user);
+        adress2.setCity("Sumqayit");
+        adress2.setState("Corat");
+        adress2.setStreet("Heydar Aliyev Ave");
+        adress2.setZipCode("AZ5000");
+        adress2.setCountry("Azerbaijan");
+
+        List<Adress> adressList = List.of(adress1, adress2);
+
+        // when
+        List<AdressResponse> responseList = mapper.toResponseList(adressList);
+
+        // then
+        assertEquals(2, responseList.size());
+        assertEquals("Baku", responseList.get(0).getCity());
+        assertEquals("Sumqayit", responseList.get(1).getCity());
+        assertEquals(5L, responseList.get(0).getUserId());
+        assertEquals(5L, responseList.get(1).getUserId());
+    }
+}

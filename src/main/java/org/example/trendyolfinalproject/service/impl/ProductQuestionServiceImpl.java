@@ -42,11 +42,9 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         if (userId == null) {
             throw new RuntimeException("You are not logged in");
         }
-
         var productVariant = productVariantRepository.findById(productQuestionRequest.getProductVariantId()).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + productQuestionRequest.getProductVariantId()));
         var seller = productVariant.getProduct().getSeller();
         var sellerUserId = seller.getUser();
-
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         var entity = productQuestionMapper.toEntity(productQuestionRequest);
         entity.setCustomer(user);
@@ -77,7 +75,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         if (!question.getSeller().getUser().getId().equals(userId)) {
             throw new RuntimeException("You can not answer this question");
         }
-
         question.setAnsweredAt(LocalDateTime.now());
         question.setAnswer(productAnswerRequest.getAnswer());
         question.setStatus(Status.ANSWERED);
@@ -100,7 +97,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         var userdId = getCurrentUserId();
         var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
         var question = productQuestionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
-
         if (!question.getCustomer().getId().equals(user.getId())) {
             throw new RuntimeException("You can not delete this question.Because it is not your question");
         }
@@ -114,14 +110,12 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<String> deleteProductAnswer(Long id) {
         log.info("Actionlog.deleteProductAnswer.start : ");
         var userdId = getCurrentUserId();
         var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
         var question = productQuestionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
-
         if (!question.getSeller().getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can not delete this answer.Because it is not your answer");
         }
@@ -146,7 +140,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + productVariantId));
         var product = productVariant.getProduct();
         var seller2 = product.getSeller();
-
         if (!seller.getId().equals(seller2.getId())) {
             throw new RuntimeException("You are not the seller of this product");
         }
@@ -159,7 +152,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
                 .data(response)
                 .build();
     }
-
 
     @Override
     public ApiResponse<List<ProductQuestionResponse>> getProductQuestionsWithStatus(Long productVariantId, String status) {
@@ -175,7 +167,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         }
         var status2 = status.toUpperCase();
         var status1 = Status.valueOf(status2);
-
         var productQuestions = productQuestionRepository.findAllByProductVariantIdAndStatus(productVariantId, status1);
         var response = productQuestionMapper.toResponseList(productQuestions);
         log.info("Actionlog.getAnsweredProductQuestions.end : ");
@@ -185,9 +176,6 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
                 .data(response)
                 .build();
     }
-
-
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())

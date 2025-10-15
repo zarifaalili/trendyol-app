@@ -1,0 +1,100 @@
+package org.example.trendyolfinalproject.mapper;
+
+import org.example.trendyolfinalproject.dao.entity.Brand;
+import org.example.trendyolfinalproject.dao.entity.Category;
+import org.example.trendyolfinalproject.dao.entity.Product;
+import org.example.trendyolfinalproject.dao.entity.Seller;
+import org.example.trendyolfinalproject.model.Status;
+import org.example.trendyolfinalproject.model.request.ProductRequest;
+import org.example.trendyolfinalproject.model.response.ProductResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ProductMapperTest {
+
+    private ProductMapper mapper;
+
+    @BeforeEach
+    void setUp() {
+        mapper = Mappers.getMapper(ProductMapper.class);
+    }
+
+    @Test
+    void testToEntityMapping() {
+        ProductRequest request = ProductRequest.builder()
+                .name("Laptop")
+                .description("Gaming Laptop")
+                .price(new BigDecimal("1500"))
+                .categoryId(1L)
+                .brandId(2L)
+                .weight(new BigDecimal("2.5"))
+                .dimensions(new BigDecimal("35.5"))
+                .build();
+
+        Product entity = mapper.toEntity(request);
+
+        assertNotNull(entity);
+        assertNull(entity.getId()); // id ignore edilib
+        assertNull(entity.getCategory()); // category ignore edilib
+        assertNull(entity.getBrand()); // brand ignore edilib
+        assertNotNull(entity.getCreatedAt());
+        assertNotNull(entity.getUpdatedAt());
+        assertEquals(Status.ACTIVE, entity.getStatus());
+        assertEquals(0, entity.getStockQuantity());
+        assertEquals(request.getName(), entity.getName());
+        assertEquals(request.getDescription(), entity.getDescription());
+        assertEquals(request.getPrice(), entity.getPrice());
+        assertEquals(request.getWeight(), entity.getWeight());
+        assertEquals(request.getDimensions(), entity.getDimensions());
+    }
+
+    @Test
+    void testToResponseMapping() {
+        Category category = new Category();
+        category.setName("Electronics");
+
+        Brand brand = new Brand();
+        brand.setName("Lenovo");
+
+        Seller seller = new Seller();
+        seller.setCompanyName("TechStore");
+
+        Product entity = new Product();
+        entity.setId(100L);
+        entity.setName("Laptop");
+        entity.setDescription("Gaming Laptop");
+        entity.setPrice(new BigDecimal("1500"));
+        entity.setCategory(category);
+        entity.setBrand(brand);
+        entity.setSeller(seller);
+        entity.setStockQuantity(10);
+        entity.setWeight(new BigDecimal("2.5"));
+        entity.setDimensions(new BigDecimal("35.5"));
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setStatus(Status.ACTIVE);
+
+        ProductResponse response = mapper.toResponse(entity);
+
+        assertNotNull(response);
+        assertEquals(entity.getId(), response.getId());
+        assertEquals(entity.getName(), response.getName());
+        assertEquals(entity.getDescription(), response.getDescription());
+        assertEquals(entity.getPrice(), response.getPrice());
+        assertEquals(category.getName(), response.getCategoryName());
+        assertEquals(brand.getName(), response.getBrandName());
+        assertEquals(seller.getCompanyName(), response.getSellerCompanyName());
+        assertEquals(entity.getStockQuantity(), response.getStockQuantity());
+        assertEquals(entity.getWeight(), response.getWeight());
+        assertEquals(entity.getDimensions(), response.getDimensions());
+        assertEquals(entity.getCreatedAt(), response.getCreatedAt());
+        assertEquals(entity.getUpdatedAt(), response.getUpdatedAt());
+        assertEquals(entity.getStatus(), response.getStatus());
+    }
+}

@@ -31,17 +31,13 @@ public class AdressServiceImpl implements AdressService {
 
     @Override
     public ApiResponse<AdressResponse> createAdress(AdressCreateRequest request) {
-
-        Long userId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getAttribute("userId");
+        Long userId = getCurrentUserId();
         log.info("Actionlog.createAdress.start : userId={}", userId);
-
         var user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("User not found with id: " + userId));
-
         var excistingAdress = adressRepository.findByUserId_IdAndCityAndStateAndStreetAndZipCodeAndCountry(
                 userId, request.getCity(), request.getState(), request.getStreet(), request.getZipCode(), request.getCountry()
         );
-
         if (excistingAdress.isPresent()) {
             throw new AlreadyException("Adress already exists");
         }
@@ -54,7 +50,6 @@ public class AdressServiceImpl implements AdressService {
         } else {
             entity.setIsDefault(false);
         }
-
         var saved = adressRepository.save(entity);
         var response = adressMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Create Adress", "Adress created successfully. Adress id: " + saved.getId());
@@ -67,29 +62,22 @@ public class AdressServiceImpl implements AdressService {
                 .build();
     }
 
-
     @Override
     public ApiResponse<String> deleteAdress(Long id) {
 
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         log.info("Actionlog.deleteAdress.start : id={}", id);
         var adress = adressRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Adress not found with id: " + id)
         );
-
         if (!adress.getUserId().getId().equals(currentUserId)) {
             throw new RuntimeException("You don't have permission to delete this Adress");
         }
         adressRepository.deleteById(id);
-
         var adreses = adressRepository.findAllByUserId_Id(currentUserId);
         if (adress.getIsDefault() == true && !adreses.isEmpty()) {
-
             adreses.get(0).setIsDefault(true);
-
         }
-
         adressRepository.save(adreses.get(0));
         auditLogService.createAuditLog(adress.getUserId(), "Delete Adress", "Adress deleted successfully. Adress id: " + id);
         log.info("Actionlog.deleteAdress.end : id={}", id);
@@ -104,17 +92,14 @@ public class AdressServiceImpl implements AdressService {
     @Override
     public ApiResponse<List<AdressResponse>> getAdresses() {
         log.info("Actionlog.getAdresses.start : ");
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         var user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
-
         List<Adress> adresses = adressRepository.findAllByUserId_Id(currentUserId);
         if (adresses.isEmpty()) {
-            throw new RuntimeException("User has no adresses");
+            throw new NotFoundException("User has no adresses");
         }
         List<AdressResponse> response = adressMapper.toResponseList(adresses);
-
         auditLogService.createAuditLog(user, "Get all adresses", "Get all adresses successfully.");
         log.info("Actionlog.getAdresses.end : ");
         return ApiResponse.<List<AdressResponse>>builder()
@@ -126,32 +111,25 @@ public class AdressServiceImpl implements AdressService {
 
     @Override
     public ApiResponse<AdressResponse> updateAdress(Long id, AdressCreateRequest request) {
-        Long currentUserId = (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest().getAttribute("userId");
+        Long currentUserId = getCurrentUserId();
         log.info("Actionlog.updateAdress.start : id={}", id);
-
         var adress = adressRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Adress not found with id: " + id)
         );
-
         if (!adress.getUserId().getId().equals(currentUserId)) {
             throw new RuntimeException("You don't have permission to update this Adress");
         }
-
         if (request.getCity() != null) adress.setCity(request.getCity());
         if (request.getState() != null) adress.setState(request.getState());
         if (request.getStreet() != null) adress.setStreet(request.getStreet());
         if (request.getZipCode() != null) adress.setZipCode(request.getZipCode());
         if (request.getCountry() != null) adress.setCountry(request.getCountry());
-//        if (request.getIsDefault() != null) adress.setIsDefault(request.getIsDefault());
 
         var saved = adressRepository.save(adress);
         var response = adressMapper.toResponse(saved);
-
         var user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
         auditLogService.createAuditLog(user, "Update Adress", "Adress updated successfully. Adress id: " + id);
-
         log.info("Actionlog.updateAdress.end : id={}", id);
         return ApiResponse.<AdressResponse>builder()
                 .status(200)
@@ -159,6 +137,12 @@ public class AdressServiceImpl implements AdressService {
                 .data(response)
                 .build();
     }
+
+    private Long getCurrentUserId() {
+        return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest().getAttribute("userId");
+    }
+
 
 
 }

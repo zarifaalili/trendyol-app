@@ -53,7 +53,8 @@ public class GroupChatController {
     public ResponseEntity<ApiResponse<Void>> sendMessage(@PathVariable Long groupId,
                                                          @RequestBody @Valid ChatMessageRequest chatMessageRequest) {
         groupChatService.sendMessage(groupId, chatMessageRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(null, "Message sent"));
     }
 
 
@@ -76,14 +77,21 @@ public class GroupChatController {
     @PostMapping("/{groupId}/join")
     public ResponseEntity<ApiResponse<Void>> joinGroup(@PathVariable Long groupId) {
         groupChatService.joinGroup(groupId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null, "Joined group"));
     }
 
     @PostMapping("{groupId}/request")
     public ResponseEntity<ApiResponse<String>> requestToJoinGroup(@PathVariable Long groupId,
                                                                   @RequestBody @Valid MessageRequest messageRequest) {
         groupChatService.sendJoinRequest(groupId, messageRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Request sent")
+                .data(null)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{groupId}/requests")

@@ -44,34 +44,27 @@ public class UserCouponServiceImpl implements UserCouponService {
     public ApiResponse<String> useUserCoupon(Long couponId) {
         var userId = getCurrentUserId();
         log.info("Actionlog.useUserCoupon.start : userId={}, couponId={}", userId, couponId);
-
         var coupon = couponRepository.findById(couponId).orElseThrow(() -> new RuntimeException("Coupon not found with id: " + couponId));
         var basket = basketRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Basket not found"));
-
-
         if (Boolean.TRUE.equals(coupon.getFirstOrderOnly())) {
             long orderCount = orderRepository.countByUser_Id(userId);
             if (orderCount > 0) {
                 throw new RuntimeException("This coupon can only be used on your first order");
             }
         }
-
         var minOrderCount = coupon.getMinOrderCount();
         var userOrderCount = orderRepository.countByUser_Id(userId);
         if (minOrderCount != null
                 && minOrderCount != userOrderCount) {
             throw new RuntimeException("You cant use this coupon");
         }
-
         if (basket.getDiscountAmount() != null && basket.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
             throw new RuntimeException("A coupon has already been applied to this basket. Please cancel it before applying a new one.");
         }
         if (!coupon.getIsActive() || coupon.getEndDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Coupon is not active or expired");
         }
-
-
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var check = userCouponRepository.findByUserAndCoupon(user, coupon);
         UserCoupon entity;
@@ -79,11 +72,7 @@ public class UserCouponServiceImpl implements UserCouponService {
             entity = check.get();
             if (coupon.getPerUserLimit() != null && entity.getUsageCount().intValue() >= coupon.getPerUserLimit()) {
                 throw new CouponUsageLimitExceededException("Coupon usage limit reached");
-//            throw new RuntimeException("Coupon is already used");
             }
-//            var basket = basketRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Basket not found"));
-//            List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
-
         } else {
             entity = new UserCoupon();
             entity.setUser(user);
@@ -91,13 +80,10 @@ public class UserCouponServiceImpl implements UserCouponService {
             entity.setUsageCount(BigDecimal.ZERO);
         }
 
-
         List<BasketElement> basketElements = basketElementRepository.findByBasket_Id(basket.getId());
-
         if (basketElements.isEmpty()) {
             throw new RuntimeException("Basket is empty");
         }
-
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (BasketElement basketElement : basketElements) {
             if (basketElement.getProductId() == null || basketElement.getProductId().getPrice() == null) {
@@ -108,19 +94,12 @@ public class UserCouponServiceImpl implements UserCouponService {
 
         }
 
-//                    .stream()
-//                    .map(basketElement -> basketElement.getProductId().getPrice()
-//                            .multiply(BigDecimal.valueOf(basketElement.getQuantity())))
-//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-//            var minAdd = coupon.getMinimumOrderAmount().subtract(totalAmount);
-
         if (coupon.getMinimumOrderAmount() != null && totalAmount.compareTo(coupon.getMinimumOrderAmount()) < 0) {
             BigDecimal minAdd = coupon.getMinimumOrderAmount().subtract(totalAmount);
             throw new MinimumOrderAmountNotMetException("Minimum order amount not met. You should add at least this much. " + minAdd
                     + "more to use this coupon. " +
                     "Minimum required amount is " + coupon.getMinimumOrderAmount());
         }
-
 
         BigDecimal discountAmount;
         if (coupon.getDiscountType() == DiscountType.PERCENTAGE) {
@@ -153,15 +132,11 @@ public class UserCouponServiceImpl implements UserCouponService {
             }
             couponRepository.save(coupon);
         }
-
-
         auditLogService.createAuditLog(user, "Use Coupon", "Used coupon with id " + couponId);
         log.info("Actionlog.useUserCoupon.end : userId={}, couponId={}", userId, couponId);
 
         return ApiResponse.success("Coupon applied successfully");
-
     }
-
 
     @Override
     public ApiResponse<String> cancelUserCoupon(Long couponId) {
@@ -170,17 +145,14 @@ public class UserCouponServiceImpl implements UserCouponService {
         log.info("Actionlog.cancelUserCoupon.start : userId={}, couponId={}", userId, couponId);
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         var coupon = couponRepository.findById(couponId).orElseThrow(() -> new RuntimeException("Coupon not found with id: " + couponId));
-
         var userCouponUsed = userCouponRepository.findByUserAndCoupon(user, coupon);
         if (userCouponUsed.isEmpty()) {
             throw new RuntimeException("User hasnt used yhis coupon");
         }
-
         var userCoupon = userCouponUsed.get();
         if (userCoupon.getUsageCount().intValue() == 0) {
             throw new RuntimeException("user has no usage of this coupon to cancel");
         }
-
         userCoupon.setUsageCount(userCoupon.getUsageCount().subtract(BigDecimal.ONE));
         userCoupon.setLastUseddate(null);
         userCouponRepository.save(userCoupon);
@@ -189,7 +161,6 @@ public class UserCouponServiceImpl implements UserCouponService {
             coupon.setUsageLimit(coupon.getUsageLimit() + 1);
             couponRepository.save(coupon);
         }
-
         var basket1 = basketRepository.findByUserId(userId);
         BigDecimal rawTotal = basketService.calculateRawTotalAmount().getData();
         if (basket1.isPresent()) {
@@ -199,14 +170,10 @@ public class UserCouponServiceImpl implements UserCouponService {
             basketRepository.save(basket);
 
         }
-
         auditLogService.createAuditLog(user, "CANCEL COUPON", "Coupon cancelled");
         log.info("Actionlog.cancelUserCoupon.end : userId={}, couponId={}", userId, couponId);
-
         return ApiResponse.success("Coupon cancelled successfully");
-
     }
-
 
     @Override
     public ApiResponse<List<UserCouponResponse>> getUserCouponHistory(Long userId) {
@@ -218,7 +185,6 @@ public class UserCouponServiceImpl implements UserCouponService {
         if (userUsedCoupons.isEmpty()) {
             throw new NotFoundException("User has no coupon history");
         }
-
         List<UserCouponResponse> response = userUsedCoupons.stream()
                 .map(uc -> UserCouponResponse.builder()
                         .id(uc.getId())
@@ -237,10 +203,7 @@ public class UserCouponServiceImpl implements UserCouponService {
                 .data(response)
                 .message("User Coupon History")
                 .build();
-
-
     }
-
 
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
