@@ -95,6 +95,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         productRepository.save(product);
         productVariant.setStockQuantity(productVariant.getStockQuantity() - 1);
         productVariantRepository.save(productVariant);
+        log.debug("producvariant stock quantity updated");
         updateFinalAndDiscountAmount();
 
         basket.setUpdatedAt(LocalDateTime.now());
@@ -120,7 +121,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         var productVariant = basketElement.getProductVariantId();
 
         var exitingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), product.getId(), productVariant.getId()).orElseThrow(
-                () -> new RuntimeException("Element not found"));
+                () -> new NotFoundException("Element not found"));
         basketElementRepository.delete(exitingElement);
 
         updateFinalAndDiscountAmount();
@@ -130,6 +131,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         productVariant.setStockQuantity(productVariant.getStockQuantity() + exitingElement.getQuantity());
         productVariantRepository.save(productVariant);
 
+        log.debug("productvariant stock quantity updated");
         log.info("Actionlog.deleteBasketElement.end : basketId={}", basket.getId());
 
         return ApiResponse.<String>builder()
@@ -155,6 +157,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         var productVariant = productVariantRepository.findById(productVariant1.getId()).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + productVariant1.getId()));
 
         if (exitingElement.getQuantity() == 1) {
+            log.error("if quantity is 1 it cannot be decreased");
             throw new RuntimeException("if quantity is 1 it cannot be decreased");
         }
         exitingElement.setQuantity(exitingElement.getQuantity() - 1);
@@ -164,6 +167,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         productRepository.save(product);
         productVariant.setStockQuantity(productVariant.getStockQuantity() + 1);
         productVariantRepository.save(productVariant);
+        log.debug("productvariant stock quantity updated");
 
         updateFinalAndDiscountAmount();
 
@@ -192,6 +196,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         log.info("Actionlog.getBasketElements.start");
         Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
+        log.debug("Basket found with id: {}", basket.getId());
         var basketElements = basketElementRepository.findByBasket_Id(basket.getId());
         var response = basketElementMapper.toResponseList(basketElements);
         log.info("Actionlog.getBasketElements.end");

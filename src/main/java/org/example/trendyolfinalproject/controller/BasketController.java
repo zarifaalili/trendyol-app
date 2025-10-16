@@ -27,7 +27,6 @@ public class BasketController {
     @GetMapping("/price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<BigDecimal> getBasketPrice() {
-
         return basketService.getTotalAmount();
     }
 
@@ -35,7 +34,6 @@ public class BasketController {
     @GetMapping("/raw-price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<BigDecimal> getRowTotalAmount() {
-
         return basketService.calculateRawTotalAmount();
     }
 

@@ -58,7 +58,6 @@ public class ReviewController {
     }
 
     @GetMapping("/negative")
-    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<NegativeReviewProjection>> getNegativeReview() {
         return reviewService.getNegativeReview();
     }
@@ -68,6 +67,13 @@ public class ReviewController {
     public ApiResponse<List<ReviewResponse>> getProductReviewsWithFilter(@PathVariable Long productId,
                                                                          @RequestParam(required = false) Integer[] rating, @RequestParam(required = false) String subject) {
         return reviewService.getProductReviewsWithFilter(productId, rating, subject);
+    }
+
+    @PatchMapping("/approve/{reviewId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> approve(@PathVariable Long reviewId) {
+        reviewService.approveReview(reviewId);
+        return ApiResponse.success("Approved");
     }
 
 }

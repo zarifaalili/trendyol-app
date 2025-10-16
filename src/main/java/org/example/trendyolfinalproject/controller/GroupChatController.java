@@ -32,14 +32,14 @@ public class GroupChatController {
     public ResponseEntity<ApiResponse<Void>> addMembers(@PathVariable Long groupId,
                                                         @RequestBody List<Long> memberIds) {
         groupChatService.addMemmbers(groupId, memberIds);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null, "Members added"));
     }
 
     @PostMapping("/{groupId}/members-with-email")
     public ResponseEntity<ApiResponse<Void>> addMembersWithEmail(@PathVariable Long groupId,
                                                                  @RequestBody List<String> emails) {
         groupChatService.addMemmbersWithEmail(groupId, emails);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null, "Members added"));
     }
 
     @DeleteMapping("/{groupId}/members/{userId}")

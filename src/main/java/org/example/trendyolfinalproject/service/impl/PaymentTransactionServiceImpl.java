@@ -103,35 +103,68 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         return (int) (Math.random() * 900000) + 100000;
     }
 
+//    @Override
+//    public ApiResponse<List<PaymentTransactionResponse>> getPaymentTransaction(Long paymentMethodId) {
+//        log.info("Actionlog.getPaymentTransaction.start : ");
+//        var userId = getCurrentUserId();
+//        var payment = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() -> new NotFoundException("PaymentMethod not found with id: " + paymentMethodId));
+//        if (!payment.getUserId().getId().equals(userId)) {
+//            throw new NotFoundException("PaymentMethod not found with id: " + paymentMethodId);
+//        }
+//        var paymentTransactions = paymentTransactionRepository.findByPayment(payment);
+//        if (paymentTransactions.isEmpty()) {
+//            throw new NotFoundException("PaymentTransaction not found with payment id: " + paymentMethodId);
+//        }
+//        var responses = paymentTransactions.stream()
+//                .map(t -> PaymentTransactionResponse.builder()
+//                        .providerResponse(t.getProviderResponse())
+//                        .amount(t.getAmount())
+//                        .currency(t.getCurrency())
+//                        .id(t.getId())
+//                        .status(t.getStatus())
+//                        .transactionDate(t.getTransactionDate())
+//                        .transactionId(t.getTransactionId())
+//                        .paymentMethodId(t.getPayment().getId())
+//                        .orderId(t.getOrder() != null ? t.getOrder().getId() : null)
+//                        .maskedCardNumber(t.getPayment().getCardNumber())
+//                        .build())
+//                .toList();
+//
+//        log.info("Actionlog.getPaymentTransaction.end : ");
+//        return ApiResponse.<List<PaymentTransactionResponse>>builder()
+//                .status(200)
+//                .message("Transactions retrieved successfully")
+//                .data(responses)
+//                .build();
+//    }
+
     @Override
-    public ApiResponse<List<PaymentTransactionResponse>> getPaymentTransaction(Long paymentMethodId) {
+    public ApiResponse<List<TransactionResponse>> getPaymentTransaction(Long paymentMethodId) {
         log.info("Actionlog.getPaymentTransaction.start : ");
         var userId = getCurrentUserId();
         var payment = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() -> new NotFoundException("PaymentMethod not found with id: " + paymentMethodId));
         if (!payment.getUserId().getId().equals(userId)) {
             throw new NotFoundException("PaymentMethod not found with id: " + paymentMethodId);
         }
-        var paymentTransactions = paymentTransactionRepository.findByPayment(payment);
+
+        var paymentTransactions = transactionClient.getAllTransactions(payment.getCardNumber());
         if (paymentTransactions.isEmpty()) {
             throw new NotFoundException("PaymentTransaction not found with payment id: " + paymentMethodId);
         }
         var responses = paymentTransactions.stream()
-                .map(t -> PaymentTransactionResponse.builder()
+                .map(t -> TransactionResponse.builder()
                         .providerResponse(t.getProviderResponse())
                         .amount(t.getAmount())
                         .currency(t.getCurrency())
-                        .id(t.getId())
-                        .status(t.getStatus())
+                        .sender(t.getSender())
+                        .receiver(t.getReceiver())
                         .transactionDate(t.getTransactionDate())
-                        .transactionId(t.getTransactionId())
-                        .paymentMethodId(t.getPayment().getId())
-                        .orderId(t.getOrder() != null ? t.getOrder().getId() : null)
-                        .maskedCardNumber(t.getPayment().getCardNumber())
+                        .transactionDate(t.getTransactionDate())
                         .build())
                 .toList();
 
         log.info("Actionlog.getPaymentTransaction.end : ");
-        return ApiResponse.<List<PaymentTransactionResponse>>builder()
+        return ApiResponse.<List<TransactionResponse>>builder()
                 .status(200)
                 .message("Transactions retrieved successfully")
                 .data(responses)

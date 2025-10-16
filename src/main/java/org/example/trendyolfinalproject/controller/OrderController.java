@@ -73,47 +73,5 @@ public class OrderController {
         return orderService.getSellerRevenueStats(sellerId);
     }
 
-//    @PostMapping(value = "/send-refund-request", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ApiResponse<String> createRefundRequest(
-//            @RequestParam("orderItemId") Long orderItemId,
-//            @RequestParam("reason") String reason,
-//            @RequestPart("imageFile") MultipartFile imageFile) {
-//
-//        return orderService.sendReturnRequest(orderItemId, reason, imageFile);
-//
-//    }
-//
-//    @GetMapping("/return-request/{requestId}/status")
-//    @PreAuthorize("hasRole('CUSTOMER')")
-//    public ApiResponse<String> getRefundRequestStatus(@PathVariable Long requestId) {
-//        return orderService.getReturnRequestStatus(requestId);
-//    }
-//
-//    @GetMapping("/return-request")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ApiResponse<List<ReturnRequestResponse>> getAllReturnRequests() {
-//        return orderService.getReturnRequests();
-//    }
-//
-//    @PatchMapping("/return-requests/{requestId}/approve")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ApiResponse<String> acceptReturnRequest(@PathVariable Long requestId) {
-//        return orderService.approveReturnRequest(requestId);
-//    }
-//
-//
-//    @GetMapping("/return-requests/approved")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ApiResponse<List<ReturnRequestResponse>> getApprovedReturnRequests() {
-//        return orderService.getApprovedReturnRequests();
-//    }
-//
-//    @GetMapping("/return-requests/not-approved")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ApiResponse<List<ReturnRequestResponse>> getNotApprovedReturnRequests() {
-//        return orderService.getNotApprovedReturnRequests();
-//    }
-
-
 
 }

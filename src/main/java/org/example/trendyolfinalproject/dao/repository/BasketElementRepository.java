@@ -1,6 +1,7 @@
 package org.example.trendyolfinalproject.dao.repository;
 
 import org.example.trendyolfinalproject.dao.entity.BasketElement;
+import org.example.trendyolfinalproject.dao.entity.ProductVariant;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,8 @@ public interface BasketElementRepository extends JpaRepository<BasketElement, Lo
     @Query("SELECT DISTINCT b.basket.user FROM BasketElement b " +
             "WHERE b.addedAt < :threshold")
     List<User> findAllUsersWithAbandonedBaskets(@Param("threshold") LocalDateTime threshold);
+
+    void deleteAllByProductVariantId(ProductVariant productVariantId);
+
+    void deleteAllByProductVariantId_Id(Long productVariantIdId);
 }

@@ -64,8 +64,10 @@ public class ReturnRequestImpl implements ReturnRequestService {
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         var returnRequest = returnRequestRepository.findById(returnRequestId)
                 .orElseThrow(() -> new NotFoundException("ReturnRequest not found with id: " + returnRequestId));
-
-        returnRequest.setApproved(true);
+        if (returnRequest.isApproved()){
+            throw new RuntimeException("ReturnRequest already approved");
+        }
+            returnRequest.setApproved(true);
         returnRequestRepository.save(returnRequest);
 
         var orderItemPrice = returnRequest.getOrderItem().getUnitPrice().multiply(returnRequest.getOrderItem().getQuantity());
@@ -104,6 +106,8 @@ public class ReturnRequestImpl implements ReturnRequestService {
                     .currency(userPayment.getCurrency())
                     .providerResponse("Payment of Refund is failed received from seller orderItem: " + returnRequest.getOrderItem().getProductId().getName())
                     .build());
+
+            paymentTransactionService.createFailedPaymentTransaction(adminPayment, adminAmount, adminPayment.getCurrency());
 
             throw new RuntimeException("Trendyols balance is not enough");
         }
@@ -164,6 +168,11 @@ public class ReturnRequestImpl implements ReturnRequestService {
                 .orElseThrow(() -> new NotFoundException("OrderItem not found with id: " + orderItemId));
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        var existingReturnRequest = returnRequestRepository.findByOrderItem_IdAndUser_Id(orderItemId, userId).orElse(null);
+        if (existingReturnRequest != null) {
+            throw new RuntimeException("You have already sent return request for this order item. Order item id: " + orderItemId);
+        }
         if (!userId.equals(orderItem.getOrderId().getUser().getId())) {
             throw new RuntimeException("You cannot send return request for this order item. Order item id: " + orderItemId);
         }

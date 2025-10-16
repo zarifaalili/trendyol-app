@@ -223,6 +223,22 @@ public class ReviewServiceImpl implements ReviewService {
 
     }
 
+    @Override
+    public void approveReview(Long reviewId) {
+        log.info("ActionLog.approveReview.start");
+        var userId = getCurrentUserId();
+        var user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException("User not found with id: " + userId)
+        );
+        var review = reviewRepository.findByIdAndIsApproved(reviewId, false).orElseThrow(
+                () -> new NotFoundException("Review not found with id: " + reviewId)
+        );
+        review.setIsApproved(true);
+        reviewRepository.save(review);
+        auditLogService.createAuditLog(user, "Approve review", "Approve review");
+        log.info("ActionLog.approveReview.end");
+    }
+
     private Long getCurrentUserId() {
         return (Long) ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest().getAttribute("userId");

@@ -66,6 +66,12 @@ public class GroupChatServiceImpl implements GroupChatService {
         log.info("ActionLog.createGroupChat.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        var existingGroup = groupChatRepository.findByTitleAndOwner(chatGroupRequest.getTitle(), user).orElse(null);
+        if (existingGroup != null) {
+            log.error("Group with title " + chatGroupRequest.getTitle() + " already exists");
+            throw new AlreadyException("Group with title " + chatGroupRequest.getTitle() + " already exists");
+        }
+
         var groupChat = chatGroupMapper.toEntity(chatGroupRequest);
         groupChat.setOwner(user);
         groupChatRepository.save(groupChat);
@@ -84,6 +90,10 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (chatGroupRequest.getMemberIds() != null) {
             for (Long memberId : chatGroupRequest.getMemberIds()) {
                 if (!memberId.equals(userId)) {
+//                    var existingMember=groupMemberRepository.findByGroupAndUser_Id(groupChat,memberId).orElse(null);
+//                    if(existingMember!=null){
+//                        continue;
+//                    }
                     GroupMember member = new GroupMember();
                     member.setGroup(groupChat);
                     member.setUser(userRepository.findById(memberId).orElseThrow(() -> new NotFoundException("User not found with id: " + memberId)));
@@ -124,6 +134,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         }
         if (memberPermission.equals(GroupPermission.OWNERS_AND_ADMINS)) {
             if (!memberRole.equals(GroupRole.OWNER) && !memberRole.equals(GroupRole.ADMIN)) {
+                log.error("Only owners and admins can add new members to this group.");
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owners and admins can add new members to this group.");
             }
         }
@@ -396,6 +407,10 @@ public class GroupChatServiceImpl implements GroupChatService {
             throw new AlreadyException("You are already a member of this group.");
         }
 
+        if (group.getVisibility().equals(GroupVisibility.PRIVATE)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This group is private");
+        }
+
         member = new GroupMember();
         member.setGroup(group);
         member.setUser(user);
@@ -425,7 +440,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         }
         var existingRequest = joinRequestRepository.findByGroupAndRequester(group, user);
 
-        if(existingRequest.isPresent()) {
+        if (existingRequest.isPresent()) {
             throw new AlreadyException("You have already sent a join request to this group.");
         }
 
@@ -601,7 +616,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         );
 
         var memberRole = member.getRole();
-        if(member.getRole().equals(GroupRole.LEAVED) || member.getRole().equals(GroupRole.REMOVED)) {
+        if (member.getRole().equals(GroupRole.LEAVED) || member.getRole().equals(GroupRole.REMOVED)) {
             throw new RuntimeException("You are leaved or removed from this group.");
         }
 
@@ -665,7 +680,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (!permission.equals(GroupPermission.ALL_MEMBERS)
                 && memberRole.equals(GroupRole.MEMBER)
         ) {
-            throw new RuntimeException("You dont have permission to pin messages");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You dont have permission to pin messages");
         }
         if (lastPinnedMessage != null) {
             throw new RuntimeException("This message already have a pinned message");
@@ -696,7 +711,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         );
         var memberRole = member.getRole();
         var permission = group.getSettingPermissions();
-        var pinnedMessage=groupMessageRepository.findByIdAndPinned(messageId,true).orElse(null);
+        var pinnedMessage = groupMessageRepository.findByIdAndPinned(messageId, true).orElse(null);
         if (memberRole.equals(GroupRole.LEAVED) || memberRole.equals(GroupRole.REMOVED)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are leaved or removed from this group.");
         }
@@ -705,7 +720,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         ) {
             throw new RuntimeException("You dont have permission to unpin messages");
         }
-        if(pinnedMessage==null){
+        if (pinnedMessage == null) {
             throw new RuntimeException("This message is no pinned message");
         }
 

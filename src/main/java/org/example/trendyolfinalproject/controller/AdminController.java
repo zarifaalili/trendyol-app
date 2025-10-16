@@ -6,6 +6,7 @@ import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuditLogResponse;
 import org.example.trendyolfinalproject.model.response.SalesReportResponse;
 import org.example.trendyolfinalproject.service.AdminService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +23,12 @@ public class AdminController {
     @PostMapping("/approve-seller/{sellerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> approveSeller(@PathVariable Long sellerId) {
-
         return adminService.approveSeller(sellerId);
     }
 
     @PostMapping("/sellers/{sellerId}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> rejectSeller(@PathVariable Long sellerId) {
-
         return adminService.rejectSeller(sellerId);
     }
 
@@ -39,25 +38,16 @@ public class AdminController {
         return adminService.getAllAdmins();
     }
 
-//    @PostMapping("/sellers/payments/today")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public void paySellersForToday() {
-//        adminService.paySellersForToday();
-//    }
-
-
     @GetMapping("/sales-report")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<SalesReportResponse> getSalesReport(@RequestParam("startDate") LocalDateTime startDate) {
+    public ApiResponse<SalesReportResponse> getSalesReport(@RequestParam("startDate")   LocalDateTime startDate) {
         return adminService.getSalesReport(startDate);
     }
-
 
     @GetMapping("/users/{userId}/activity")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<AuditLogResponse>> getUserActivity(@PathVariable Long userId) {
         return adminService.getUserAuditLogs(userId);
     }
-
 
 }

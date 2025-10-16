@@ -68,6 +68,7 @@ public class CollectionController {
     }
 
     @PatchMapping("/{collectionId}/rename")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<CollectionResponse>> renameCollection(@PathVariable Long collectionId, @PathParam("newName") String newName) {
         var response = collectionService.renameCollection(collectionId, newName);
         return ResponseEntity.ok(response);    }

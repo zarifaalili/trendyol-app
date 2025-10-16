@@ -23,7 +23,6 @@ public class RecommendationController {
         var product = productVariantService.getProductVariant(productId);
         recommendationService.saveUserView(userId, product.getData().getProductId());
         return ApiResponse.success("View saved successfully");
-
     }
 
 

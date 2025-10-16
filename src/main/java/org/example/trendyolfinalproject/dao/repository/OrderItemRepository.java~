@@ -58,6 +58,4 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
        ORDER BY totalSales DESC
     """)
     List<Object[]> findDefaultTrendingProductsWithSales();
-
-    void deleteAllByProductVariantId_Id(Long productVariantIdId);
 }

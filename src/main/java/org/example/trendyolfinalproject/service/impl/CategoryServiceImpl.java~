@@ -82,7 +82,6 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Actionlog.getParentCategory.start : ");
         List<Category> parent = categoryRepository.findAllParentCategories();
         if (parent.isEmpty()) {
-            log.error("Parent category not found");
             throw new NotFoundException("Parent category not found");
         }
         var response = categoryMapper.toResponseList(parent);

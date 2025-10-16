@@ -61,7 +61,6 @@ public class BookOrderServiceImpl implements BookOrderService {
         var paymentMethodSeller = paymentMethodRepository.findByUserId_IdAndIsDefault(seller, true).orElseThrow(() -> new RuntimeException("Payment method not found"));
         paymentMethodSeller.setBalance(paymentMethodSeller.getBalance().add(BigDecimal.valueOf(book.getPrice())));
         paymentMethodRepository.save(paymentMethod);
-        log.debug("payment method updated");
         var lastBycount=book.getBuyCount()+1;
         BookOrder order = new BookOrder();
         order.setBook(book);

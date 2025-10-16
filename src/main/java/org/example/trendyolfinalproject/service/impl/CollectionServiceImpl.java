@@ -47,6 +47,7 @@ public class CollectionServiceImpl implements CollectionService {
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         var exists = collectionRepository.findByUser_IdAndName(user.getId(), request.getName()).orElse(null);
         if (exists != null) {
+            log.error("Collection name already exists");
             throw new AlreadyException("Collection name already exists");
         }
         var entity = collectionMapper.toEntity(request);
@@ -56,6 +57,7 @@ public class CollectionServiceImpl implements CollectionService {
         entity.setName(request.getName());
         entity.generateShareToken();
         var saved = collectionRepository.save(entity);
+        log.info("Collection created successfully. Collection id: {}", saved.getId());
         var response = collectionMapper.toResponse(saved);
 
         auditLogService.createAuditLog(user, "Create Collection", "Collection created successfully. Collection id: " + saved.getId());
@@ -88,8 +90,8 @@ public class CollectionServiceImpl implements CollectionService {
         entity.setCollection(collection);
         entity.setAddedAt(LocalDateTime.now());
         var saved = collectionItemRepository.save(entity);
+        log.info("Product added to collection successfully. Product id: {}", entity.getId());
         var response = collectionItemMapper.toResponse(saved);
-
 
         auditLogService.createAuditLog(collection.getUser(), "Add Product to Collection", "Product added to collection successfully. Product id: " + saved.getId());
 
@@ -120,6 +122,7 @@ public class CollectionServiceImpl implements CollectionService {
         var productVariant = wishListItem.getProductVariant();
         var collectionItem = collectionItemRepository.findByProductVariant_IdAndCollection_Id(productVariant.getId(), request.getCollectionId()).orElse(null);
         if (collectionItem != null) {
+            log.error("ProductVariant already exists in collection");
             throw new AlreadyException("ProductVariant already exists in collection");
         }
 
@@ -148,7 +151,7 @@ public class CollectionServiceImpl implements CollectionService {
         var collections = collectionRepository.findByUser_Id(userId);
         List<CollectionResponse> response = collections.stream().map(c -> {
             List<CollectionItemResponse> items = collectionItemRepository
-                    .findByCollection_Id(c.getId())  // CollectionItem-ləri ayrıca çəkirik
+                    .findByCollection_Id(c.getId())  // CollectionItemlari ayrica cekirik
                     .stream()
                     .map(ci -> new CollectionItemResponse(
                             ci.getId(),

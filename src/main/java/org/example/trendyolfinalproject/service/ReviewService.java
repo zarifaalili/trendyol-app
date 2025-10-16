@@ -26,6 +26,6 @@ public interface ReviewService {
 
     ApiResponse<List<ReviewResponse>> getProductReviewsWithFilter(Long productId, Integer[] rating, String subject);
 
-
+    void approveReview(Long reviewId);
 
 }

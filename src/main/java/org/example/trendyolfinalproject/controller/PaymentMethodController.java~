@@ -40,11 +40,11 @@ public class PaymentMethodController {
         return paymentMethodService.changeDefaultPaymentMethod(request);
     }
 
-    @GetMapping("/{paymentMethodId}/transactions")
-    public ApiResponse<List<TransactionResponse>> getTransactions(@PathVariable Long paymentMethodId) {
-        return paymentTransactionService.getPaymentTransaction(paymentMethodId);
-
-    }
+//    @GetMapping("/{paymentMethodId}/transactions")
+//    public ApiResponse<List<TransactionResponse>> getTransactions(@PathVariable Long paymentMethodId) {
+//        return paymentTransactionService.getPaymentTransaction(paymentMethodId);
+//
+//    }
 
     @PostMapping("/pay")
     public ApiResponse<PaymentResponse> pay(@RequestBody @Valid PaymentRequest request) {

@@ -45,6 +45,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
                                              @Param("subject") String subject);
 
 
-
-
+   Optional<Review> findByIdAndIsApproved(Long id, Boolean isApproved);
 }

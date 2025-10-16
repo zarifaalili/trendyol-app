@@ -9,10 +9,7 @@ import org.example.trendyolfinalproject.dao.entity.Category;
 import org.example.trendyolfinalproject.dao.entity.Product;
 import org.example.trendyolfinalproject.dao.entity.ProductImage;
 import org.example.trendyolfinalproject.dao.entity.ProductVariant;
-import org.example.trendyolfinalproject.dao.repository.ProductRepository;
-import org.example.trendyolfinalproject.dao.repository.ProductVariantRepository;
-import org.example.trendyolfinalproject.dao.repository.SellerRepository;
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ProductVariantMapper;
@@ -52,13 +49,16 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final RecommendationService recommendationService;
     private final FileStorageService fileStorageService;
     private final SellerRepository sellerRepository;
+    private final BasketElementRepository basketElementRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final CollectionItemRepository collectionItemRepository;
 
     @Transactional
     @Override
     public ApiResponse<ProductVariantResponse> createProductVariant(ProductVariantCreateRequest request) {
         log.info("Actionlog.createProductVariant.start : productId={}", request.getProductId());
         var user = getCurrentUserId();
-        var user1 = userRepository.findById(user).orElseThrow(() -> new RuntimeException("User not found"));
+        var user1 = userRepository.findById(user).orElseThrow(() -> new NotFoundException("User not found"));
         var product = productRepository.findById(request.getProductId()).orElseThrow(
                 () -> new NotFoundException("Product not found with id: " + request.getProductId())
         );
@@ -88,33 +88,38 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .build();
     }
 
-    @Override
-    public ApiResponse<Void> deleteProductVariant(Long id) {
-        log.info("Actionlog.deleteProductVariant.start : id={}", id);
-        var user = getCurrentUserId();
-        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
-        var product = productVariant.getProduct();
-        if (product.getSeller().getId().equals(user)) {
-            throw new RuntimeException("You are not authorized to update this product");
-        }
-        product.setStockQuantity(product.getStockQuantity() - productVariant.getStockQuantity());
-        productRepository.save(product);
-        productVariantRepository.delete(productVariant);
-        log.info("Actionlog.deleteProductVariant.end : id={}", id);
-
-        auditLogService.createAuditLog(userRepository.findById(user).orElseThrow(() -> new RuntimeException("User not found")), "Delete ProductVariant", "ProductVariant deleted successfully. ProductVariant id: " + id);
-        productVariantMapper.toResponse(productVariant);
-        return ApiResponse.<Void>builder()
-                .status(200)
-                .message("Product variant deleted successfully")
-                .data(null)
-                .build();
-    }
+//    @Override
+//    @Transactional
+//    public ApiResponse<Void> deleteProductVariant(Long id) {
+//        log.info("Actionlog.deleteProductVariant.start : id={}", id);
+//        var user = getCurrentUserId();
+//        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + id));
+//        var product = productVariant.getProduct();
+//        if (product.getSeller().getId().equals(user)) {
+//            throw new RuntimeException("You are not authorized to update this product");
+//        }
+//        product.setStockQuantity(product.getStockQuantity() - productVariant.getStockQuantity());
+//
+//        basketElementRepository.deleteAllByProductVariantId_Id(id);
+//        orderItemRepository.deleteAllByProductVariantId_Id(id);
+//        collectionItemRepository.deleteAllByProductVariant_Id(id);
+//        productVariantRepository.delete(productVariant);
+//        log.info("Actionlog.deleteProductVariant.end : id={}", id);
+//        productRepository.save(product);
+//
+//        auditLogService.createAuditLog(userRepository.findById(user).orElseThrow(() -> new NotFoundException("User not found")), "Delete ProductVariant", "ProductVariant deleted successfully. ProductVariant id: " + id);
+//        productVariantMapper.toResponse(productVariant);
+//        return ApiResponse.<Void>builder()
+//                .status(200)
+//                .message("Product variant deleted successfully")
+//                .data(null)
+//                .build();
+//    }
 
     @Override
     public ApiResponse<ProductVariantResponse> getProductVariant(Long id) {
         log.info("Actionlog.getProductVariant.start : id={}", id);
-        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
+        var productVariant = productVariantRepository.findById(id).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + id));
         recommendationService.saveUserView(getCurrentUserId(), productVariant.getId());
         log.info("Actionlog.getProductVariant.end : id={}", id);
         var mapper = productVariantMapper.toResponse(productVariant);
@@ -128,7 +133,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     @Override
     public ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(Long id) {
         var productVariant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + id));
 
         List<String> imageUrls = productVariant.getVariantImages()
                 .stream()
@@ -241,7 +246,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     @Override
     public ApiResponse<ProductVariantResponse> addImages(Long variantId, List<MultipartFile> images) {
         var variant = productVariantRepository.findById(variantId)
-                .orElseThrow(() -> new RuntimeException("Variant not found"));
+                .orElseThrow(() -> new NotFoundException("Variant not found"));
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -279,7 +284,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         log.info("Actionlog.updateProductVariantStock.start : productId={}", productVariantId);
         var currentUserId = getCurrentUserId();
         var seller = sellerRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + currentUserId));
-        var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new RuntimeException("Product not found with id: " + productVariantId));
+        var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new NotFoundException("Product not found with id: " + productVariantId));
         var product = productVariant.getProduct();
         var oldStock = productVariant.getStockQuantity();
         var seller1 = productVariant.getProduct().getSeller();

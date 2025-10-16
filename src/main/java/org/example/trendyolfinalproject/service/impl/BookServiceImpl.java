@@ -6,6 +6,7 @@ import org.example.trendyolfinalproject.dao.entity.Book;
 import org.example.trendyolfinalproject.dao.repository.BookRepository;
 import org.example.trendyolfinalproject.dao.repository.SellerRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.service.BookService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -33,7 +34,7 @@ public class BookServiceImpl implements BookService {
     public void uploadBook(MultipartFile bookFile, String title, String author, Double price) {
         log.info("Actionlog.uploadBook.start : ");
         var userId = getCurrentUserId();
-        var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Seller not found with userId: " + userId));
+        var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("Seller not found with userId: " + userId));
 
         try {
             String fileName = UUID.randomUUID() + "_" + bookFile.getOriginalFilename();

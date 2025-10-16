@@ -87,11 +87,11 @@ public class ProductController {
     }
 
 
-    @DeleteMapping("/variants/{id}")
-    @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<Void> deleteProductVariant(@PathVariable Long id) {
-        return productVariantService.deleteProductVariant(id);
-    }
+//    @DeleteMapping("/variants/{id}")
+//    @PreAuthorize("hasRole('SELLER')")
+//    public ApiResponse<Void> deleteProductVariant(@PathVariable Long id) {
+//        return productVariantService.deleteProductVariant(id);
+//    }
 
     @GetMapping("/variants/{id}")
     public ApiResponse<ProductVariantResponse> getProductVariant(@PathVariable Long id) {

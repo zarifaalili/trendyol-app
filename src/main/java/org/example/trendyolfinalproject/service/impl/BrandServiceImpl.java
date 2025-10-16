@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.service.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.repository.BrandRepository;
@@ -49,6 +50,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<String> deleteBrand(Long id) {
         log.info("Actionlog.deleteBrand.start : id={}", id);
         Long userId = getCurrentUserId();
@@ -56,6 +58,7 @@ public class BrandServiceImpl implements BrandService {
 
         var brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found : " + id));
         brandRepository.deleteById(id);
+        log.debug("Brand deleted successfully");
         auditLogService.createAuditLog(user, "Delete Brand", "Brand deleted successfully. Brand id: " + brand.getName());
         log.info("Actionlog.deleteBrand.end : id={}", id);
 
@@ -77,6 +80,7 @@ public class BrandServiceImpl implements BrandService {
         if (request.getName() != null) brand.setName(request.getName());
         if (request.getDescription() != null) brand.setDescription(request.getDescription());
         var saved = brandRepository.save(brand);
+        log.debug("Brand updated successfully");
         var response = brandMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Update Brand", "Brand updated successfully. Brand id: " + saved.getName());
         log.info("Actionlog.updateBrand.end : id={}", id);

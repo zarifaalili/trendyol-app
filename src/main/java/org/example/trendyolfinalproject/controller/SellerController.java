@@ -46,11 +46,13 @@ public class SellerController {
         return sellerFollowService.follow(sellerId);
     }
 
+
     @GetMapping("/followers")
     @PreAuthorize("hasRole('SELLER')")
     public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
         return sellerFollowService.getAllFollowers();
     }
+
 
     @GetMapping("/{sellerId}/raiting")
     public ApiResponse<Double> getRaiting(@PathVariable Long sellerId) {

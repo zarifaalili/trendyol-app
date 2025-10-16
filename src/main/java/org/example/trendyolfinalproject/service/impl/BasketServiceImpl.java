@@ -90,7 +90,7 @@ public class BasketServiceImpl implements BasketService {
     public int notifyAbandonedBaskets() {
         LocalDateTime threshold = LocalDateTime.now().minusHours(24);
         List<User> users = basketElementRepository.findAllUsersWithAbandonedBaskets(threshold);
-
+        log.info("Found {} users with abandoned baskets", users.size());
         for (User user : users) {
             notificationService.sendNotification(
                     user,
@@ -143,7 +143,7 @@ public class BasketServiceImpl implements BasketService {
 
         var user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + currentUserId));
-
+        log.debug("User found with id: {}", user.getId());
         auditLogService.createAuditLog(user, "Get basket summary",
                 "Get basket summary successfully. Basket id: " + basket.getId());
 
