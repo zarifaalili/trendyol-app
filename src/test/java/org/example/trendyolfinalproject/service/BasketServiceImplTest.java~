@@ -1,0 +1,158 @@
+package org.example.trendyolfinalproject.service;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.trendyolfinalproject.dao.entity.Basket;
+import org.example.trendyolfinalproject.dao.entity.BasketElement;
+import org.example.trendyolfinalproject.dao.entity.Product;
+import org.example.trendyolfinalproject.dao.entity.User;
+import org.example.trendyolfinalproject.dao.repository.BasketElementRepository;
+import org.example.trendyolfinalproject.dao.repository.BasketRepository;
+import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.model.enums.NotificationType;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.BasketElementResponse;
+import org.example.trendyolfinalproject.model.response.BasketSummaryResponse;
+import org.example.trendyolfinalproject.service.impl.BasketServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class BasketServiceImplTest {
+
+    @Mock
+    private BasketRepository basketRepository;
+
+    @Mock
+    private BasketElementRepository basketElementRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private AuditLogService auditLogService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @InjectMocks
+    private BasketServiceImpl basketService;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Mock current userId in request
+        ServletRequestAttributes attributes = mock(ServletRequestAttributes.class);
+        when(attributes.getRequest()).thenReturn(request);
+        when(request.getAttribute("userId")).thenReturn(1L);
+        RequestContextHolder.setRequestAttributes(attributes);
+    }
+
+    @Test
+    void testGetTotalAmount_withFinalAmount() {
+        Basket basket = new Basket();
+        basket.setId(1L);
+        basket.setFinalAmount(BigDecimal.valueOf(100));
+
+        User user = new User();
+        user.setId(1L);
+
+        when(basketRepository.findByUserId(1L)).thenReturn(Optional.of(basket));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        ApiResponse<BigDecimal> response = basketService.getTotalAmount();
+
+        assertEquals(200, response.getStatus());
+        assertEquals(BigDecimal.valueOf(100), response.getData());
+        verify(auditLogService, times(1)).createAuditLog(user, "Get total amount of basket", "Get total price of basket successfully. Basket id: " + basket.getId());
+    }
+
+    @Test
+    void testCalculateRawTotalAmount() {
+        Basket basket = new Basket();
+        basket.setId(1L);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setPrice(BigDecimal.valueOf(50));
+
+        BasketElement element = new BasketElement();
+        element.setBasket(basket);
+        element.setProductId(product);
+        element.setQuantity(2);
+
+        when(basketRepository.findByUserId(1L)).thenReturn(Optional.of(basket));
+        when(basketElementRepository.findByBasket_Id(1L)).thenReturn(List.of(element));
+
+        ApiResponse<BigDecimal> response = basketService.calculateRawTotalAmount();
+
+        assertEquals(BigDecimal.valueOf(100), response.getData());
+    }
+
+    @Test
+    void testNotifyAbandonedBaskets() {
+        User user1 = new User();
+        user1.setId(1L);
+
+        when(basketElementRepository.findAllUsersWithAbandonedBaskets(any())).thenReturn(List.of(user1));
+
+        int count = basketService.notifyAbandonedBaskets();
+
+        assertEquals(1, count);
+        verify(notificationService, times(1)).sendNotification(user1, "Your basket has been abandoned", NotificationType.ABANDONED_BASKET, null);
+    }
+
+    @Test
+    void testGetBasketSummary() {
+        Basket basket = new Basket();
+        basket.setId(1L);
+        basket.setDiscountAmount(BigDecimal.valueOf(10));
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(BigDecimal.valueOf(50));
+
+        BasketElement element = new BasketElement();
+        element.setId(1L);
+        element.setBasket(basket);
+        element.setProductId(product);
+        element.setQuantity(2);
+        element.setAddedAt(LocalDateTime.now());
+
+        User user = new User();
+        user.setId(1L);
+
+        when(basketRepository.findByUserId(1L)).thenReturn(Optional.of(basket));
+        when(basketElementRepository.findByBasket_Id(1L)).thenReturn(List.of(element));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        ApiResponse<BasketSummaryResponse> response = basketService.getBasketSummary();
+
+        assertEquals(200, response.getStatus());
+        BasketSummaryResponse summary = response.getData();
+        assertEquals(BigDecimal.valueOf(100), summary.getTotalAmount());
+        assertEquals(BigDecimal.valueOf(10), summary.getDiscountAmount());
+        assertEquals(BigDecimal.valueOf(90), summary.getFinalAmount());
+
+        assertEquals(1, summary.getBasketElements().size());
+        BasketElementResponse elementResponse = summary.getBasketElements().get(0);
+        assertEquals(50, elementResponse.getProductPrice().intValue());
+        assertEquals(100, elementResponse.getSubtotal().intValue());
+    }
+}
