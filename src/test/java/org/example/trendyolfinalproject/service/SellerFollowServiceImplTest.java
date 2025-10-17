@@ -71,11 +71,23 @@ class SellerFollowServiceImplTest {
 
         ApiResponse<String> response = sellerFollowService.follow(2L);
 
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getData().contains("SellerName"));
-        verify(auditLogService, times(1)).createAuditLog(user, "follow", "followed seller");
-        verify(notificationService, times(1)).sendNotification(user, "You have new follower John", NotificationType.NEW_FOLLOWER, user.getId());
+        assertEquals(201, response.getStatus());
+        assertEquals("You have followed SellerName", response.getMessage());
+
+        assertNull(response.getData());
+
+        verify(auditLogService, times(1))
+                .createAuditLog(user, "follow", "followed seller");
+
+        verify(notificationService, times(1))
+                .sendNotification(
+                        user,
+                        "You have new follower John",
+                        NotificationType.NEW_FOLLOWER,
+                        user.getId()
+                );
     }
+
 
     @Test
     void follow_fail_alreadyFollowed() {
@@ -103,18 +115,25 @@ class SellerFollowServiceImplTest {
         sellerUser.setName("SellerName");
         seller.setUser(sellerUser);
 
-        SellerFollow follow = SellerFollow.builder().seller(seller).follower(user).followedAt(LocalDateTime.now()).build();
+        SellerFollow follow = SellerFollow.builder()
+                .seller(seller)
+                .follower(user)
+                .followedAt(LocalDateTime.now())
+                .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(sellerRepository.findById(2L)).thenReturn(Optional.of(seller));
         when(sellerFollowRepository.findBySellerAndFollower(seller, user)).thenReturn(Optional.of(follow));
 
-        ApiResponse<String> response = sellerFollowService.unfollow(2L);
+        ApiResponse<Void> response = sellerFollowService.unfollow(2L);
 
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getData().contains("SellerName"));
+        assertEquals(204, response.getStatus());
+
+        assertNull(response.getData());
+
         verify(sellerFollowRepository, times(1)).delete(follow);
-        verify(auditLogService, times(1)).createAuditLog(user, "unfollow", "unfollowed seller");
+        verify(auditLogService, times(1))
+                .createAuditLog(user, "unfollow", "unfollowed seller");
     }
 
     @Test

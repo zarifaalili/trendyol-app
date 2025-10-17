@@ -11,7 +11,7 @@ public interface BasketElementService {
 
     ApiResponse<BasketElementResponse> createBasketElement(BasketElementRequest request);
 
-    ApiResponse<String> deleteBasketElement(DeleteBasketElementRequest request);
+    ApiResponse<Void> deleteBasketElement(DeleteBasketElementRequest request);
 
     ApiResponse<BasketElementResponse> decrieceQuantity(DeleteBasketElementRequest request);
 

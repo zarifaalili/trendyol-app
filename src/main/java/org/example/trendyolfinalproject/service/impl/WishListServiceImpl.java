@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +19,13 @@ import org.example.trendyolfinalproject.model.response.WishListResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.WishListService;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.util.List;
@@ -42,10 +45,11 @@ public class WishListServiceImpl implements WishListService {
     private static final String WISHLIST_KEY_PREFIX = "wishlist:";
 
     @Override
-    public ApiResponse<WishListResponse> addToFavorite(WishListCreateRequest request) {
+    public ApiResponse<WishListResponse> addToFavorite(WishListCreateRequest request) throws JsonProcessingException {
+
         var userId = getCurrentUserId();
         if (userId == null) {
-            throw new RuntimeException("You are not logged in");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"You are not logged in");
         }
         log.info("Actionlog.createWishList.start : userId={}", userId);
         var user = userRepository.findByIdAndRole(userId, Role.CUSTOMER).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -58,46 +62,57 @@ public class WishListServiceImpl implements WishListService {
         entity.setUser(user);
         entity.setProductVariant(productVariant);
         var saved = wishlistRepository.save(entity);
+
+//        redisTemplate.delete(WISHLIST_KEY_PREFIX + userId);
+        String cacheKey = WISHLIST_KEY_PREFIX + userId;
+        redisTemplate.delete(cacheKey);
+
+        var favorites = wishlistRepository.findByUser_Id(userId);
+        var mapper = wishListMapper.toResponseList(favorites);
+
+        String json = objectMapper.writeValueAsString(mapper);
+        redisTemplate.opsForValue().set(cacheKey, json, Duration.ofMinutes(10));
+        log.info("✅ Wishlist Redis-ə yeniləndi. Key: {}", cacheKey);
+
         var response = wishListMapper.toResponse(saved);
         auditLogService.createAuditLog(user, "Add to Favorite", "Created favorite with id: " + saved.getId());
         log.info("Actionlog.createWishList.end : userId={}", user);
 
         return ApiResponse
                 .<WishListResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Created favorite with id: " + saved.getId())
                 .data(response)
                 .build();
     }
 
     @Override
-    public ApiResponse<String> deleteFromFavorites(Long id) {
+    public ApiResponse<Void> deleteFromFavorites(Long id) {
         log.info("Actionlog.deleteFromFavorites.start : id={}", id);
         var userId = getCurrentUserId();
-        var favorite = wishlistRepository.findById(id).orElseThrow(() -> new RuntimeException("Favorite not found with id: " + id));
+        var favorite = wishlistRepository.findById(id).orElseThrow(() -> new NotFoundException("Favorite not found with id: " + id));
         if (!favorite.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You don't have permission to delete this favorite");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You don't have permission to delete this favorite");
         }
         wishlistRepository.deleteById(id);
+
+        redisTemplate.delete(WISHLIST_KEY_PREFIX + userId);
+
         auditLogService.createAuditLog(userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId)), "DELETE Favorite", "Deleted favorite with id: " + id);
         log.info("Actionlog.deleteFromFavorites.end : id={}", id);
 
-        return ApiResponse.<String>builder()
-                .status(200)
-                .message("Deleted favorite with id: " + id)
-                .build();
+        return ApiResponse.noContent();
     }
 
     @Override
-    public ApiResponse<List<WishListResponse>> getFavorites() {
+    public ApiResponse<List<WishListResponse>> getFavorites() throws JsonProcessingException {
 
         Long userId = getCurrentUserId();
         String cacheKey = WISHLIST_KEY_PREFIX + userId;
         var cached = redisTemplate.opsForValue().get(WISHLIST_KEY_PREFIX + getCurrentUserId());
         if (cached != null) {
             log.info("Actionlog.getFavorites.start : ");
-            var obj = objectMapper.convertValue(cached, new TypeReference<List<WishListResponse>>() {
-            });
+            var obj = objectMapper.readValue(cached.toString(), new TypeReference<List<WishListResponse>>() {});
             return ApiResponse.<List<WishListResponse>>builder()
                     .status(200)
                     .message("Get favorite successfully. User id: " + userId)
@@ -105,10 +120,11 @@ public class WishListServiceImpl implements WishListService {
                     .build();
         }
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-        var favorites = wishlistRepository.findByUser(user);
+        var favorites = wishlistRepository.findByUser_Id(userId);
         var mapper = wishListMapper.toResponseList(favorites);
-        redisTemplate.opsForValue().set(cacheKey, mapper, Duration.ofMinutes(10));
-        log.info("Actionlog.getFavorites.end : ");
+        String json = objectMapper.writeValueAsString(mapper);
+        redisTemplate.opsForValue().set(cacheKey, json, Duration.ofMinutes(10));
+        log.info("✅ Favorites cached in Redis. Key: {}", cacheKey);        log.info("Actionlog.getFavorites.end : ");
         auditLogService.createAuditLog(user, "Get Favorites", "Get favorite successfully. User id: " + user.getId());
         return ApiResponse.<List<WishListResponse>>builder()
                 .status(200)
@@ -163,7 +179,7 @@ public class WishListServiceImpl implements WishListService {
         var wishList = wishlistRepository.findById(wishListId)
                 .orElseThrow(() -> new NotFoundException("WishList not found"));
         if (!wishList.getUser().equals(user)) {
-            throw new NotFoundException("Access denied: You cannot share this wishlist");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied: You cannot share this wishlist");
         }
         if (!wishList.getSharedWith().contains(targetUser)) {
             wishList.getSharedWith().add(targetUser);

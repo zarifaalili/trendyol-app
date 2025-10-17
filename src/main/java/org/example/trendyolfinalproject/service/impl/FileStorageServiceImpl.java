@@ -30,6 +30,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         log.info("Actionlog.storeFile.start : ");
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         try {
+
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/" + fileName;
@@ -44,7 +45,10 @@ public class FileStorageServiceImpl implements FileStorageService {
         log.info("Actionlog.storeFile.start : ");
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         try {
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Path returnRequestsDir = this.fileStorageLocation.resolve("return_requests");
+            Files.createDirectories(returnRequestsDir);
+
+            Path targetLocation = returnRequestsDir.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/return_requests/" + fileName;
         } catch (IOException ex) {

@@ -19,9 +19,6 @@ public interface UserMapper {
     @Mapping(target = "isActive", constant = "true")
     User toEntity(UserRegisterRequest request);
 
-
-
-
     @Mapping(target = "fullName", expression = "java(user.getName() + \" \" + user.getSurname())")
     @Mapping(target = "username", source = "email")
     @Mapping(target = "addresses", ignore = true)
@@ -32,7 +29,6 @@ public interface UserMapper {
     UserProfileResponse toUserProfileResponse(User user);
 
     UserResponse toUserResponse(User user);
-
 
     List<UserResponse> toResponseList(List<User> users);
 

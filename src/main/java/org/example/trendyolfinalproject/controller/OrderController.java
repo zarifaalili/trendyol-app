@@ -5,13 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.model.request.OrderCreateRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.OrderResponse;
-import org.example.trendyolfinalproject.model.response.ReturnRequestResponse;
 import org.example.trendyolfinalproject.model.response.SellerRevenueResponse;
 import org.example.trendyolfinalproject.service.OrderService;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,52 +24,50 @@ public class OrderController {
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderCreateRequest request) {
-        return orderService.createOrder(request);
+    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody @Valid OrderCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(request));
     }
 
     @DeleteMapping("/cancel/{orderId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<String> cancelOrder(@PathVariable Long orderId) {
-        return orderService.cancelOrder(orderId);
+    public ResponseEntity<ApiResponse<Void>> cancelOrder(@PathVariable Long orderId) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(orderService.cancelOrder(orderId));
     }
-
 
     @GetMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<List<OrderResponse>> getOrders() {
-        return orderService.getOrders();
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrders() {
+        return ResponseEntity.ok().body(orderService.getOrders());
     }
-
 
     @GetMapping("/continued")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<List<OrderResponse>> getContinuedOrders() {
-        return orderService.getContinuedOrders();
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getContinuedOrders() {
+        return ResponseEntity.ok().body(orderService.getContinuedOrders());
     }
 
     @GetMapping("/cancelled")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<List<OrderResponse>> getCancelledOrdersByUserId() {
-        return orderService.getCancelledOrders();
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getCancelledOrdersByUserId() {
+        return ResponseEntity.ok().body(orderService.getCancelledOrders());
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<List<OrderResponse>> searchProductInOrders(@RequestParam("productName") String productName) {
-        return orderService.searchProductInOrders(productName);
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> searchProductInOrders(@RequestParam("productName") String productName) {
+        return ResponseEntity.ok().body(orderService.searchProductInOrders(productName));
     }
 
     @GetMapping("/seller/{sellerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<OrderResponse>> getOrdersBySellerId(@PathVariable Long sellerId) {
-        return orderService.getOrdersBySeller(sellerId);
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersBySellerId(@PathVariable Long sellerId) {
+        return ResponseEntity.ok().body(orderService.getOrdersBySeller(sellerId));
     }
 
     @GetMapping("/seller/{sellerId}/revenue")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<SellerRevenueResponse> getSellerRevenueStats(@PathVariable Long sellerId) {
-        return orderService.getSellerRevenueStats(sellerId);
+    public ResponseEntity<ApiResponse<SellerRevenueResponse>> getSellerRevenueStats(@PathVariable Long sellerId) {
+        return ResponseEntity.ok().body(orderService.getSellerRevenueStats(sellerId));
     }
 
 

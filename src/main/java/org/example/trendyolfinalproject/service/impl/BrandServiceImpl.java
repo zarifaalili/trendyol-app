@@ -43,31 +43,31 @@ public class BrandServiceImpl implements BrandService {
         auditLogService.createAuditLog(user, "Create Brand", "Brand created successfully. Brand id: " + saved.getName());
 
         return ApiResponse.<BrandResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Brand created successfully")
                 .data(response)
                 .build();
     }
 
-    @Override
-    @Transactional
-    public ApiResponse<String> deleteBrand(Long id) {
-        log.info("Actionlog.deleteBrand.start : id={}", id);
-        Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-
-        var brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found : " + id));
-        brandRepository.deleteById(id);
-        log.debug("Brand deleted successfully");
-        auditLogService.createAuditLog(user, "Delete Brand", "Brand deleted successfully. Brand id: " + brand.getName());
-        log.info("Actionlog.deleteBrand.end : id={}", id);
-
-        return ApiResponse.<String>builder()
-                .status(200)
-                .message("Brand deleted successfully")
-                .data("Brand with id " + id + " deleted successfully")
-                .build();
-    }
+//    @Override
+//    @Transactional
+//    public ApiResponse<String> deleteBrand(Long id) {
+//        log.info("Actionlog.deleteBrand.start : id={}", id);
+//        Long userId = getCurrentUserId();
+//        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+//
+//        var brand = brandRepository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found : " + id));
+//        brandRepository.deleteById(id);
+//        log.debug("Brand deleted successfully");
+//        auditLogService.createAuditLog(user, "Delete Brand", "Brand deleted successfully. Brand id: " + brand.getName());
+//        log.info("Actionlog.deleteBrand.end : id={}", id);
+//
+//        return ApiResponse.<String>builder()
+//                .status(204)
+//                .message("Brand deleted successfully")
+//                .data("Brand with id " + id + " deleted successfully")
+//                .build();
+//    }
 
     @Override
     public ApiResponse<BrandResponse> updateBrand(Long id, BrandCreateRequest request) {

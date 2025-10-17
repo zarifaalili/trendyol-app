@@ -10,7 +10,7 @@ public interface AdressService {
 
     ApiResponse<AdressResponse> createAdress(AdressCreateRequest request);
 
-    ApiResponse<String> deleteAdress(Long id);
+    ApiResponse<Void> deleteAdress(Long id);
 
     ApiResponse<List<AdressResponse>> getAdresses();
 

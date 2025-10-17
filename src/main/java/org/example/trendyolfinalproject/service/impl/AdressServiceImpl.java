@@ -1,9 +1,11 @@
 package org.example.trendyolfinalproject.service.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.Adress;
 import org.example.trendyolfinalproject.dao.repository.AdressRepository;
+import org.example.trendyolfinalproject.dao.repository.OrderRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
@@ -13,9 +15,11 @@ import org.example.trendyolfinalproject.model.response.AdressResponse;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.service.AdressService;
 import org.example.trendyolfinalproject.service.AuditLogService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -28,6 +32,7 @@ public class AdressServiceImpl implements AdressService {
     private final AdressMapper adressMapper;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final OrderRepository orderRepository;
 
     @Override
     public ApiResponse<AdressResponse> createAdress(AdressCreateRequest request) {
@@ -57,14 +62,15 @@ public class AdressServiceImpl implements AdressService {
         log.info("Actionlog.createAdress.end : userId={}", userId);
 
         return ApiResponse.<AdressResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Adress created successfully")
                 .data(response)
                 .build();
     }
 
     @Override
-    public ApiResponse<String> deleteAdress(Long id) {
+    @Transactional
+    public ApiResponse<Void> deleteAdress(Long id) {
 
         Long currentUserId = getCurrentUserId();
         log.info("Actionlog.deleteAdress.start : id={}", id);
@@ -73,8 +79,15 @@ public class AdressServiceImpl implements AdressService {
         );
         if (!adress.getUserId().getId().equals(currentUserId)) {
             log.error("You don't have permission to delete this Adress");
-            throw new RuntimeException("You don't have permission to delete this Adress");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You don't have permission to delete this Adress");
         }
+        orderRepository.findByBillingAddressId_Id(id)
+                .forEach(o -> o.setBillingAddressId(null));
+
+        orderRepository.findByBillingAddressId_Id(id)
+                .forEach(o -> o.setBillingAddressId(null));
+
+        orderRepository.flush();
         adressRepository.deleteById(id);
         var adreses = adressRepository.findAllByUserId_Id(currentUserId);
         if (adress.getIsDefault() == true && !adreses.isEmpty()) {
@@ -84,11 +97,7 @@ public class AdressServiceImpl implements AdressService {
         auditLogService.createAuditLog(adress.getUserId(), "Delete Adress", "Adress deleted successfully. Adress id: " + id);
         log.info("Actionlog.deleteAdress.end : id={}", id);
 
-        return ApiResponse.<String>builder()
-                .status(200)
-                .message("Adress deleted successfully")
-                .data(null)
-                .build();
+        return ApiResponse.noContent();
     }
 
     @Override
@@ -117,11 +126,11 @@ public class AdressServiceImpl implements AdressService {
         Long currentUserId = getCurrentUserId();
         log.info("Actionlog.updateAdress.start : id={}", id);
         var adress = adressRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("Adress not found with id: " + id)
+                () -> new NotFoundException("Adress not found with id: " + id)
         );
         if (!adress.getUserId().getId().equals(currentUserId)) {
             log.error("You don't have permission to update this Adress");
-            throw new RuntimeException("You don't have permission to update this Adress");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You don't have permission to update this Adress");
         }
         if (request.getCity() != null) adress.setCity(request.getCity());
         if (request.getState() != null) adress.setState(request.getState());

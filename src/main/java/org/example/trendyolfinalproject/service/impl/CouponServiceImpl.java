@@ -79,7 +79,7 @@ public class CouponServiceImpl implements CouponService {
 
         log.info("Actionlog.createCoupon.end : ");
 
-        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon created successfully", response);
+        return new ApiResponse<>(HttpStatus.CREATED.value(), "Coupon created successfully", response);
 
     }
 
@@ -94,7 +94,7 @@ public class CouponServiceImpl implements CouponService {
         couponRepository.deleteById(id);
         auditLogService.createAuditLog(user, "Delete Coupon", "Coupon deleted successfully. Coupon id: " + coupon.getCode());
         log.info("Actionlog.deleteCoupon.end : id={}", id);
-        return new ApiResponse<>(HttpStatus.OK.value(), "Coupon deleted successfully", null);
+        return ApiResponse.noContent();
 
     }
 

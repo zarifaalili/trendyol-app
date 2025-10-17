@@ -10,5 +10,4 @@ public interface GroupMessageService {
 
     String decryptGroupMessage(String encryptedBase64, ChatGroup group);
 
-
 }

@@ -13,7 +13,7 @@ public interface ProductQuestionService {
 
     ApiResponse<ProductQuestionResponse> answerProductQuestion(ProductAnswerRequest productAnswerRequest);
 
-    ApiResponse<String> deleteProductQuestion(Long id);
+    ApiResponse<Void> deleteProductQuestion(Long id);
 
     ApiResponse<String> deleteProductAnswer(Long id);
 

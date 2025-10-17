@@ -15,6 +15,5 @@ public interface MessageReadStatusMapper {
     @Mapping(target = "username", source = "user.name")
     MessageReadStatusResponse toResponse(MessageReadStatus readStatus);
 
-
     List<MessageReadStatusResponse> toResponseList(List<MessageReadStatus> readStatuses);
 }

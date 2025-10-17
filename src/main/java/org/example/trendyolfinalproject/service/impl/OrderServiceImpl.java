@@ -17,6 +17,7 @@ import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.OrderResponse;
 import org.example.trendyolfinalproject.model.response.SellerRevenueResponse;
 import org.example.trendyolfinalproject.service.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -180,7 +181,7 @@ public class OrderServiceImpl implements OrderService {
             notificationService.sendNotification(user, "Order created successfully. Order id: " + savedOrder.getId(), NotificationType.ORDER_CREATED, savedOrder.getId());
             log.info("Actionlog.createOrder.end : userId={}", userId);
             return ApiResponse.<OrderResponse>builder()
-                    .status(200)
+                    .status(201)
                     .message("Order created successfully.")
                     .data(mapper)
                     .build();
@@ -197,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ApiResponse<String> cancelOrder(Long orderId) {
+    public ApiResponse<Void> cancelOrder(Long orderId) {
         log.info("Actionlog.deleteOrder.end : orderId={}", orderId);
         Long userId = getCurrentUserId();
         var admin = 9L;
@@ -206,7 +207,7 @@ public class OrderServiceImpl implements OrderService {
                 () -> new NotFoundException("Order not found with id: " + orderId));
         var own = order.getUser().getId().equals(userId);
         if (!own) {
-            throw new RuntimeException("You can not cancel this order. Order id: " + orderId);
+            throw new AccessDeniedException("You can not cancel this order. Order id: " + orderId);
         }
         var status = order.getStatus();
         if (!(status.equals(Status.PENDING) || status.equals(Status.PROCESSING))) {
@@ -244,7 +245,7 @@ public class OrderServiceImpl implements OrderService {
         cardClient.transfer(adminpaymentMethod.getCardNumber(), userPayment.getCardNumber(), order.getTotalAmount());
         auditLogService.createAuditLog(order.getUser(), "Order", "Order cancelled successfully. Order id: " + orderId);
         paymentTransactionService.returnedPaymentTransaction(order, orderId);
-        return new ApiResponse<>(200, "Order cancelled successfully.", "Order id: " + orderId);
+        return ApiResponse.noContent();
     }
 
     @Override
@@ -296,7 +297,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("Actionlog.searchProductInOrders.start : userId={}", userId);
         var orders = orderRepository.findByUserId_Id(userId);
         if (orders.isEmpty()) {
-            throw new RuntimeException("Order not found with user id: " + userId);
+            throw new NotFoundException("Order not found with user id: " + userId);
         }
         var product = orderItemRepository.findOrdersByUserIdAndProductName(userId, productName);
         if (product.isEmpty()) {

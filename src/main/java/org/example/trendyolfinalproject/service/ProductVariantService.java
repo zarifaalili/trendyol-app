@@ -13,8 +13,6 @@ public interface ProductVariantService {
 
     ApiResponse<ProductVariantResponse> createProductVariant(ProductVariantCreateRequest request);
 
-//    ApiResponse<Void> deleteProductVariant(Long id);
-
     ApiResponse<ProductVariantResponse> getProductVariant(Long id);
 
     ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(Long id);

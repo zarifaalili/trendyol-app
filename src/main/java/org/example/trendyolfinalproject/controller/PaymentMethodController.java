@@ -9,6 +9,8 @@ import org.example.trendyolfinalproject.model.request.PaymentRequest;
 import org.example.trendyolfinalproject.model.response.*;
 import org.example.trendyolfinalproject.service.PaymentMethodService;
 import org.example.trendyolfinalproject.service.PaymentTransactionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,36 +26,36 @@ public class PaymentMethodController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
-    ApiResponse<PaymentMethodResponse> createPaymentMethod(@RequestBody @Valid PaymentMethodCreateRequest request) {
-        return paymentMethodService.createPaymentMethod(request);
+    public ResponseEntity<ApiResponse<PaymentMethodResponse>> createPaymentMethod(@RequestBody @Valid PaymentMethodCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentMethodService.createPaymentMethod(request));
     }
 
     @PostMapping("/add-balance")
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
-    public ApiResponse<String> addbalance(@RequestBody @Valid AddBalanceRequest request) {
-        return paymentMethodService.addbalance(request);
+    public ResponseEntity<ApiResponse<String>> addbalance(@RequestBody @Valid AddBalanceRequest request) {
+        return ResponseEntity.ok().body(paymentMethodService.addbalance(request));
     }
 
     @PostMapping("/default")
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
-    public ApiResponse<PaymentMethodResponse> changeDefaultPaymentMethod(@RequestBody @Valid ChangeDefaultPaymentMethod request) {
-        return paymentMethodService.changeDefaultPaymentMethod(request);
+    public ResponseEntity<ApiResponse<PaymentMethodResponse>> changeDefaultPaymentMethod(@RequestBody @Valid ChangeDefaultPaymentMethod request) {
+        return ResponseEntity.ok().body(paymentMethodService.changeDefaultPaymentMethod(request));
     }
 
     @GetMapping("/{paymentMethodId}/transactions")
-    public ApiResponse<List<TransactionResponse>> getTransactions(@PathVariable Long paymentMethodId) {
-        return paymentTransactionService.getPaymentTransaction(paymentMethodId);
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactions(@PathVariable Long paymentMethodId) {
+        return ResponseEntity.ok().body(paymentTransactionService.getPaymentTransaction(paymentMethodId));
 
     }
 
     @PostMapping("/pay")
-    public ApiResponse<PaymentResponse> pay(@RequestBody @Valid PaymentRequest request) {
-        return paymentMethodService.pay(request);
+    public ResponseEntity<ApiResponse<PaymentResponse>> pay(@RequestBody @Valid PaymentRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentMethodService.pay(request));
     }
 
     @GetMapping("/transactions")
-    public ApiResponse<List<TransactionResponse>> getAllTransactions() {
-        return paymentTransactionService.getAllTransactions();
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getAllTransactions() {
+        return ResponseEntity.ok().body(paymentTransactionService.getAllTransactions());
     }
 
 }

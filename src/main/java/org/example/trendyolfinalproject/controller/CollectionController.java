@@ -11,6 +11,8 @@ import org.example.trendyolfinalproject.model.response.CollectionItemFromWishLis
 import org.example.trendyolfinalproject.model.response.CollectionItemResponse;
 import org.example.trendyolfinalproject.model.response.CollectionResponse;
 import org.example.trendyolfinalproject.service.CollectionService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,27 +28,27 @@ public class CollectionController {
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<CollectionResponse> createCollection(@RequestBody @Valid CollectionCreateRequest request) {
-        return collectionService.createCollection(request);
+    public ResponseEntity<ApiResponse<CollectionResponse>> createCollection(@RequestBody @Valid CollectionCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(collectionService.createCollection(request));
     }
 
     @PostMapping("/items/add")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<CollectionItemResponse> addProductToCollection(@RequestBody @Valid CollectionItemRequest request) {
-        return collectionService.addProductToCollection(request);
+    public ResponseEntity<ApiResponse<CollectionItemResponse>> addProductToCollection(@RequestBody @Valid CollectionItemRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(collectionService.addProductToCollection(request));
     }
 
 
     @PostMapping("/items/add/from-wishlist")
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<CollectionItemFromWishListResponse> addProductToCollectionFromWishList(@RequestBody @Valid CollectionItemFromWishListRequest request) {
-        return collectionService.addProductToCollectionFromWishList(request);
+    public ResponseEntity<ApiResponse<CollectionItemFromWishListResponse>> addProductToCollectionFromWishList(@RequestBody @Valid CollectionItemFromWishListRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(collectionService.addProductToCollectionFromWishList(request));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    ApiResponse<List<CollectionResponse>> getAllCollections() {
-        return collectionService.getAllCollections();
+    public ResponseEntity<ApiResponse<List<CollectionResponse>>> getAllCollections() {
+        return ResponseEntity.ok().body(collectionService.getAllCollections());
     }
 
     @PostMapping("/{collectionId}/share/{targetUserId}")

@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.SellerMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Role;
@@ -42,7 +43,7 @@ public class SellerServiceImpl implements SellerService {
     public ApiResponse<SellerResponse> createSeller(SellerCreateRequest request) {
         log.info("Actionlog.createSeller.start : companyName={}", request.getCompanyName());
         Long sellerId = getCurrentUserId();
-        User user = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("User not found"));
         if (user.getRole().equals(Role.SELLER)) {
             throw new AlreadyException("User is already a seller");
         }
@@ -74,7 +75,7 @@ public class SellerServiceImpl implements SellerService {
         return ApiResponse.<SellerResponse>builder()
                 .data(response)
                 .message("Seller created successfully")
-                .status(200)
+                .status(201)
                 .build();
     }
 
@@ -98,7 +99,7 @@ public class SellerServiceImpl implements SellerService {
     @Override
     public ApiResponse<SellerResponse> getSeller(String companyName) {
         Seller seller = sellerRepository.findFirstByCompanyName(companyName)
-                .orElseThrow(() -> new RuntimeException("Seller not found with company name: " + companyName));
+                .orElseThrow(() -> new NotFoundException("Seller not found with company name: " + companyName));
         var response = sellerMapper.toResponse(seller);
         return ApiResponse.<SellerResponse>builder()
                 .data(response)

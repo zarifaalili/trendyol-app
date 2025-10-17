@@ -20,10 +20,12 @@ import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ProductVariantDetailResponse;
 import org.example.trendyolfinalproject.model.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -65,7 +67,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         var relatedProduct = product.getSeller().getUser().getId();
 
         if (!user.equals(relatedProduct)) {
-            throw new RuntimeException("You are not authorized to created this product");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You are not authorized to created this product");
         }
         var existingVariant = productVariantRepository.findBySku(request.getSku()).orElse(null);
         if (existingVariant != null) {
@@ -273,7 +275,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         var saved = productVariantRepository.save(variant);
         var mapper = productVariantMapper.toResponse(saved);
         return ApiResponse.<ProductVariantResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Images added successfully to product variant")
                 .data(mapper)
                 .build();

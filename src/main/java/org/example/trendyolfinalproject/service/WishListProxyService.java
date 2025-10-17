@@ -8,5 +8,4 @@ public interface WishListProxyService {
 
     ApiResponse<WishListResponse> getWishListForUser(Long wishListId, User currentUser);
 
-
 }

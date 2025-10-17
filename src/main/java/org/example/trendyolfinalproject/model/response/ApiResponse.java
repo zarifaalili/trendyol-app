@@ -52,5 +52,23 @@ public class ApiResponse<T> {
                 .data(null)
                 .build();
     }
+
+
+    public static <T> ApiResponse<T> noContent() {
+        return ApiResponse.<T>builder()
+                .status(204)
+                .message("No Content")
+                .data(null)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> successWithMessage(T data,String message) {
+        return ApiResponse.<T>builder()
+                .status(200)
+                .message(message)
+                .data(data)
+                .build();
+    }
+
 }
 

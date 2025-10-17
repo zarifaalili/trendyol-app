@@ -1,4 +1,0 @@
-package org.example.trendyolfinalproject.service;
-
-public interface CouponService {
-}

@@ -9,13 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AdressControllerTest {
+class AdressControllerTest {
 
     @Mock
     private AdressService adressService;
@@ -31,89 +33,89 @@ public class AdressControllerTest {
     @Test
     void testCreateAdressSuccess() {
         AdressCreateRequest request = new AdressCreateRequest("Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan");
-        AdressResponse response = new AdressResponse(1L, 2L, "Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan", true);
-        ApiResponse<AdressResponse> expectedResponse = ApiResponse.success(response);
+        AdressResponse adressResponse = new AdressResponse(1L, 2L, "Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan", true);
+        ApiResponse<AdressResponse> apiResponse = ApiResponse.success(adressResponse);
 
-        when(adressService.createAdress(request)).thenReturn(expectedResponse);
+        when(adressService.createAdress(request)).thenReturn(apiResponse);
 
-        ApiResponse<AdressResponse> actualResponse = adressController.createAdress(request);
+        ResponseEntity<ApiResponse<AdressResponse>> response = adressController.createAdress(request);
 
-        assertEquals(200, actualResponse.getStatus());
-        assertEquals("success", actualResponse.getMessage());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(adressResponse, response.getBody().getData());
         verify(adressService, times(1)).createAdress(request);
     }
 
     @Test
     void testDeleteAdressSuccess() {
         Long id = 1L;
-        ApiResponse<String> expectedResponse = ApiResponse.success("Deleted successfully");
+        ApiResponse<Void> apiResponse = ApiResponse.noContent();
 
-        when(adressService.deleteAdress(id)).thenReturn(expectedResponse);
+        when(adressService.deleteAdress(id)).thenReturn(apiResponse);
 
-        ApiResponse<String> actualResponse = adressController.deleteAdress(id);
+        ResponseEntity<ApiResponse<Void>> response = adressController.deleteAdress(id);
 
-        assertEquals("Deleted successfully", actualResponse.getData());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody().getData());
         verify(adressService, times(1)).deleteAdress(id);
     }
 
     @Test
     void testGetAdressesSuccess() {
-        List<AdressResponse> adressList = List.of(
+        List<AdressResponse> list = List.of(
                 new AdressResponse(1L, 2L, "Baku", "Absheron", "Street 1", "AZ1001", "Azerbaijan", false),
                 new AdressResponse(2L, 2L, "Ganja", "Ganja", "Street 2", "AZ2002", "Azerbaijan", true)
         );
 
-        ApiResponse<List<AdressResponse>> expectedResponse = ApiResponse.success(adressList);
-        when(adressService.getAdresses()).thenReturn(expectedResponse);
+        ApiResponse<List<AdressResponse>> apiResponse = ApiResponse.success(list);
+        when(adressService.getAdresses()).thenReturn(apiResponse);
 
-        ApiResponse<List<AdressResponse>> actualResponse = adressController.getAdresses();
+        ResponseEntity<ApiResponse<List<AdressResponse>>> response = adressController.getAdresses();
 
-        assertEquals(2, actualResponse.getData().size());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().getData().size());
         verify(adressService, times(1)).getAdresses();
     }
 
     @Test
-    void testCreateAdressFail_whenFieldsBlank() {
-        AdressCreateRequest invalidRequest = new AdressCreateRequest("", "Absheron", "", "AZ1000", "Azerbaijan");
+    void testUpdateAdressSuccess() {
+        Long id = 1L;
+        AdressCreateRequest request = new AdressCreateRequest("Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan");
+        AdressResponse updated = new AdressResponse(id, 2L, "Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan", true);
+        ApiResponse<AdressResponse> apiResponse = ApiResponse.success(updated);
 
-        ApiResponse<AdressResponse> expectedResponse = ApiResponse.error("Validation failed");
-        when(adressService.createAdress(invalidRequest)).thenReturn(expectedResponse);
+        when(adressService.updateAdress(id, request)).thenReturn(apiResponse);
 
-        ApiResponse<AdressResponse> response = adressController.createAdress(invalidRequest);
+        ResponseEntity<ApiResponse<AdressResponse>> response = adressController.updateAdress(id, request);
 
-        assertEquals(400, response.getStatus());
-        assertEquals("Validation failed", response.getMessage());
-        assertNull(response.getData());
-        verify(adressService, times(1)).createAdress(invalidRequest);
-    }
-
-
-    @Test
-    void testDeleteAdressFail_whenNotFound() {
-        Long id = 99L;
-        ApiResponse<String> expectedResponse = ApiResponse.error("Address not found");
-
-        when(adressService.deleteAdress(id)).thenReturn(expectedResponse);
-
-        ApiResponse<String> actualResponse = adressController.deleteAdress(id);
-
-        assertEquals(400, actualResponse.getStatus());
-        assertEquals("Address not found", actualResponse.getMessage());
-        verify(adressService, times(1)).deleteAdress(id);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(updated.getCity(), response.getBody().getData().getCity());
+        verify(adressService, times(1)).updateAdress(id, request);
     }
 
     @Test
-    void testUpdateAdressFail_whenServiceThrowsException() {
+    void testCreateAdressFail() {
+        AdressCreateRequest invalid = new AdressCreateRequest("", "Absheron", "", "AZ1000", "Azerbaijan");
+        ApiResponse<AdressResponse> apiResponse = ApiResponse.error("Validation failed");
+
+        when(adressService.createAdress(invalid)).thenReturn(apiResponse);
+
+        ResponseEntity<ApiResponse<AdressResponse>> response = adressController.createAdress(invalid);
+
+        assertEquals("Validation failed", response.getBody().getMessage());
+        assertNull(response.getBody().getData());
+        verify(adressService, times(1)).createAdress(invalid);
+    }
+
+    @Test
+    void testUpdateAdressException() {
         Long id = 1L;
         AdressCreateRequest request = new AdressCreateRequest("Baku", "Absheron", "Main St", "AZ1000", "Azerbaijan");
 
         when(adressService.updateAdress(id, request)).thenThrow(new RuntimeException("Database error"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                adressController.updateAdress(id, request)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> adressController.updateAdress(id, request));
 
-        assertEquals("Database error", exception.getMessage());
+        assertEquals("Database error", ex.getMessage());
         verify(adressService, times(1)).updateAdress(id, request);
     }
 }

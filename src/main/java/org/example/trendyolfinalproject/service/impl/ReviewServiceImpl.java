@@ -6,6 +6,7 @@ import org.example.trendyolfinalproject.dao.entity.OrderItem;
 import org.example.trendyolfinalproject.dao.entity.Review;
 import org.example.trendyolfinalproject.dao.entity.ReviewImage;
 import org.example.trendyolfinalproject.dao.repository.*;
+import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ReviewMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
@@ -18,6 +19,7 @@ import org.example.trendyolfinalproject.model.response.TopRatedProductResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.NotificationService;
 import org.example.trendyolfinalproject.service.ReviewService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -51,19 +53,19 @@ public class ReviewServiceImpl implements ReviewService {
         var matchingOrderItem = orderItem.stream()
                 .filter(item -> item.getOrderId().getUser().getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("You did not buy this product"));
+                .orElseThrow(() -> new AccessDeniedException("You did not buy this product"));
 
         var order1 = matchingOrderItem.getOrderId();
         var orderUser = order1.getUser();
         if (!orderUser.getId().equals(userId)) {
-            throw new RuntimeException("You can not add review to this product because you did not buy this product");
+            throw new AccessDeniedException("You can not add review to this product because you did not buy this product");
         }
         if (!order1.getStatus().equals(Status.DELIVERED)) {
-            throw new RuntimeException("Order is not delivered. You cant add review");
+            throw new AccessDeniedException("Order is not delivered. You cant add review");
         }
         var existingReview = reviewRepository.findByProductId_IdAndUserId_Id(request.getProductId(), userId);
         if (existingReview != null && !existingReview.getIsApproved()) {
-            throw new RuntimeException("You already have a non-approved review for this product.");
+            throw new AlreadyException("You already have a non-approved review for this product.");
         }
         var product = productRepository.findById(request.getProductId()).orElseThrow(() -> new NotFoundException("Product not found with id: " + request.getProductId()));
 
@@ -82,7 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
         notificationService.sendToAdmins("New Review", NotificationType.NEW_REVIEW, savedReview.getId());
         auditLogService.createAuditLog(user, "Review created", "Review created with id: " + savedReview.getId());
         log.info("Actionlog.createReview.end : productId={}", request.getProductId());
-        return ApiResponse.success("Review is waiting for approval");
+        return ApiResponse.created(null,"Review is waiting for approval");
     }
 
     @Override
@@ -111,6 +113,7 @@ public class ReviewServiceImpl implements ReviewService {
         log.info("Actionlog.getreviews.start : productId={}", productId);
         List<Review> productfromReview = reviewRepository.findByProduct_IdAndIsApproved(productId,true);
         if (productfromReview.isEmpty()) {
+            log.error("Product not found with id: {}", productId);
             throw new NotFoundException("Product not found with id: " + productId);
         }
         List<ReviewResponse> responselist = reviewMapper.toResponseList(productfromReview);

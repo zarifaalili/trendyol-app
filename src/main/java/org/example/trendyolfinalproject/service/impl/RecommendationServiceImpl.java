@@ -44,7 +44,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         redisTemplate.opsForZSet().removeRange(key, 0, -11);
         log.info("User view saved successfully");
         return ApiResponse.<Void>builder()
-                .status(200)
+                .status(201)
                 .message("User view saved successfully")
                 .data(null)
                 .build();
@@ -87,6 +87,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 product.getCategory().getId(), minPrice, maxPrice, product.getId()
         );
         if (similarVariants.isEmpty()) {
+            log.error("No similar products found");
             throw new NotFoundException("No similar products found");
         }
         var mapper = productVariantMapper.toResponseList(similarVariants);

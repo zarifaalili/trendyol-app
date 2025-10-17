@@ -3,6 +3,7 @@ package org.example.trendyolfinalproject.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.repository.*;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.ProductQuestionMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Status;
@@ -13,9 +14,12 @@ import org.example.trendyolfinalproject.model.response.ProductQuestionResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.NotificationService;
 import org.example.trendyolfinalproject.service.ProductQuestionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,7 +62,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         notificationService.sendNotification(sellerUserId, "You have a new question from " + user.getName() + " " + user.getSurname(), NotificationType.PRODUCT_QUESTION, productVariant.getId());
         log.info("Actionlog.createProductQuestion.end : ");
         return ApiResponse.<String>builder()
-                .status(200)
+                .status(201)
                 .message("Your question has been sent successfully")
                 .data("Your question has been sent successfully")
                 .build();
@@ -92,32 +96,28 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     }
 
     @Override
-    public ApiResponse<String> deleteProductQuestion(Long id) {
+    public ApiResponse<Void> deleteProductQuestion(Long id) {
         log.info("Actionlog.deleteProductQuestion.start : ");
         var userdId = getCurrentUserId();
-        var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
-        var question = productQuestionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        var user = userRepository.findById(userdId).orElseThrow(() -> new NotFoundException("User not found with id: " + userdId));
+        var question = productQuestionRepository.findById(id).orElseThrow(() -> new NotFoundException("Question not found with id: " + id));
         if (!question.getCustomer().getId().equals(user.getId())) {
             throw new RuntimeException("You can not delete this question.Because it is not your question");
         }
         productQuestionRepository.delete(question);
         auditLogService.createAuditLog(user, "ProductQuestion", "ProductQuestion deleted");
         log.info("Actionlog.deleteProductQuestion.end : ");
-        return ApiResponse.<String>builder()
-                .status(200)
-                .message("Question deleted successfully")
-                .data("Your question has been deleted successfully")
-                .build();
+        return ApiResponse.noContent();
     }
 
     @Override
     public ApiResponse<String> deleteProductAnswer(Long id) {
         log.info("Actionlog.deleteProductAnswer.start : ");
         var userdId = getCurrentUserId();
-        var user = userRepository.findById(userdId).orElseThrow(() -> new RuntimeException("User not found with id: " + userdId));
-        var question = productQuestionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        var user = userRepository.findById(userdId).orElseThrow(() -> new NotFoundException("User not found with id: " + userdId));
+        var question = productQuestionRepository.findById(id).orElseThrow(() -> new NotFoundException("Question not found with id: " + id));
         if (!question.getSeller().getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You can not delete this answer.Because it is not your answer");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You can not delete this answer.Because it is not your answer");
         }
         question.setAnswer(null);
         question.setAnsweredAt(null);
@@ -157,8 +157,8 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     public ApiResponse<List<ProductQuestionResponse>> getProductQuestionsWithStatus(Long productVariantId, String status) {
         log.info("Actionlog.getAnsweredProductQuestions.start : ");
         var userId = getCurrentUserId();
-        var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + productVariantId));
+        var seller = sellerRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        var productVariant = productVariantRepository.findById(productVariantId).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + productVariantId));
         var product = productVariant.getProduct();
         var seller2 = product.getSeller();
 

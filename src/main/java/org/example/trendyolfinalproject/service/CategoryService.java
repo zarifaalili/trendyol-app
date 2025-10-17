@@ -16,6 +16,4 @@ public interface CategoryService {
 
     ApiResponse<List<CategoryResponse>> getParentCategory();
 
-
-
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.NotificationResponse;
 import org.example.trendyolfinalproject.service.NotificationService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,34 +16,34 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ApiResponse<List<NotificationResponse>> getNotification() {
-        return notificationService.getAllNotificationsByUserId();
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getNotification() {
+        return ResponseEntity.ok().body(notificationService.getAllNotificationsByUserId());
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<NotificationResponse> readSingleNotification(@PathVariable Long id) {
-        return notificationService.readSingleNotification(id);
+    public ResponseEntity<ApiResponse<NotificationResponse>> readSingleNotification(@PathVariable Long id) {
+        return ResponseEntity.ok().body(notificationService.readSingleNotification(id));
     }
 
     @GetMapping("/unread")
-    public ApiResponse<List<NotificationResponse>> readUnreadNotification() {
-        return notificationService.getUnreadNotifications();
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> readUnreadNotification() {
+        return ResponseEntity.ok().body(notificationService.getUnreadNotifications());
     }
 
     @GetMapping("/search")
-    public ApiResponse<List<NotificationResponse>> searchNotification(@RequestParam String keyword) {
-        return notificationService.searchNotification(keyword);
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> searchNotification(@RequestParam String keyword) {
+        return ResponseEntity.ok().body(notificationService.searchNotification(keyword));
     }
 
     @PatchMapping("/mark-all-read")
-    public ApiResponse<String> markAllAsRead() {
-        return notificationService.markAllAsRead();
+    public ResponseEntity<ApiResponse<String>> markAllAsRead() {
+        return ResponseEntity.ok().body(notificationService.markAllAsRead());
     }
 
 
     @GetMapping("/unread/count")
-    public ApiResponse<Integer> getUnreadNotificationCount() {
-        return notificationService.getUnreadNotificationCount();
+    public ResponseEntity<ApiResponse<Integer>> getUnreadNotificationCount() {
+        return ResponseEntity.ok().body(notificationService.getUnreadNotificationCount());
     }
 
 }

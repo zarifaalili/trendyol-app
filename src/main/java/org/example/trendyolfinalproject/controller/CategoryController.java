@@ -6,6 +6,8 @@ import org.example.trendyolfinalproject.model.request.CategoryCreateRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.CategoryResponse;
 import org.example.trendyolfinalproject.service.CategoryService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,26 +21,26 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
-        return categoryService.createCategory(request);
+    public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(request));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    public ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id) {
-        return categoryService.getCategoryById(id);
+    public ResponseEntity<ApiResponse<CategoryResponse>> getCategoryById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(categoryService.getCategoryById(id));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    public ApiResponse<List<CategoryResponse>> getCategories() {
-        return categoryService.getCategories();
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategories() {
+        return ResponseEntity.ok().body(categoryService.getCategories());
     }
 
     @GetMapping("/parents")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<CategoryResponse>> getParentCategory() {
-        return categoryService.getParentCategory();
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getParentCategory() {
+        return ResponseEntity.ok().body(categoryService.getParentCategory());
     }
 
 

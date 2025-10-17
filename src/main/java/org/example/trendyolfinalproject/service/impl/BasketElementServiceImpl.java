@@ -76,7 +76,7 @@ public class BasketElementServiceImpl implements BasketElementService {
 
             log.info("Actionlog.createBasketElement.end : basketId={}", basket.getId());
             return ApiResponse.<BasketElementResponse>builder()
-                    .status(200)
+                    .status(201)
                     .message("Basket element created successfully")
                     .data(response)
                     .build();
@@ -111,7 +111,7 @@ public class BasketElementServiceImpl implements BasketElementService {
 
     @Transactional
     @Override
-    public ApiResponse<String> deleteBasketElement(DeleteBasketElementRequest request) {
+    public ApiResponse<Void> deleteBasketElement(DeleteBasketElementRequest request) {
         Long currentUserId = getCurrentUserId();
         var basket = basketRepository.findByUserId(currentUserId).orElseThrow(() -> new NotFoundException("Basket not found with User id: " + currentUserId));
         log.info("Actionlog.deleteBasketElement.start : basketId={}", basket.getId());
@@ -134,11 +134,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         log.debug("productvariant stock quantity updated");
         log.info("Actionlog.deleteBasketElement.end : basketId={}", basket.getId());
 
-        return ApiResponse.<String>builder()
-                .status(200)
-                .message("Basket element deleted successfully")
-                .data("Deleted element id: " + request.getBasketElementId())
-                .build();
+        return ApiResponse.noContent();
     }
 
     @Override
@@ -152,7 +148,7 @@ public class BasketElementServiceImpl implements BasketElementService {
         var product = basketElement.getProductId();
         var productVariant1 = basketElement.getProductVariantId();
         var exitingElement = basketElementRepository.findByBasket_IdAndProductId_IdAndProductVariantId_Id(basket.getId(), product.getId(), productVariant1.getId()).orElseThrow(
-                () -> new RuntimeException("Element not found"));
+                () -> new NotFoundException("Element not found"));
 
         var productVariant = productVariantRepository.findById(productVariant1.getId()).orElseThrow(() -> new NotFoundException("ProductVariant not found with id: " + productVariant1.getId()));
 

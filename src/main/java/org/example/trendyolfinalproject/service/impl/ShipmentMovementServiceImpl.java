@@ -13,6 +13,7 @@ import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.ShipmentMovementCreateRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.SellerFollowResponse;
 import org.example.trendyolfinalproject.model.response.ShipmentMovementResponse;
 import org.example.trendyolfinalproject.service.NotificationService;
 import org.example.trendyolfinalproject.service.ShipmentHistoryService;
@@ -22,6 +23,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -88,7 +90,12 @@ public class ShipmentMovementServiceImpl implements ShipmentMovementService {
         var response = shipmentMovementMapper.toResponse(entity);
         notificationService.sendNotification(user, "Shipment moved to " + actionNote, NotificationType.SHIPMENT_MOVEMENT, entity.getShipment().getId());
         log.info("Actionlog.addShipmentMovement.end : ");
-        return ApiResponse.success(response);
+//        return ApiResponse.success(response);
+        return ApiResponse.<ShipmentMovementResponse>builder()
+                .data(response)
+                .message("Shipment moved to " + actionNote)
+                .status(201)
+                .build();
 
     }
 

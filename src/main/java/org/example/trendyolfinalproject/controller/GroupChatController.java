@@ -25,7 +25,7 @@ public class GroupChatController {
     @PostMapping
     public ResponseEntity<ApiResponse<ChatGroupResponse>> createGroup(@RequestBody @Valid ChatGroupRequest chatGroupRequest) {
         ChatGroupResponse response = groupChatService.createGroupChat(chatGroupRequest);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response, "Group created"));
     }
 
     @PostMapping("/{groupId}/members")
@@ -46,7 +46,7 @@ public class GroupChatController {
     public ResponseEntity<ApiResponse<Void>> removeMember(@PathVariable Long groupId,
                                                           @PathVariable Long userId) {
         groupChatService.removeMember(groupId, userId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.noContent());
     }
 
     @PostMapping("/{groupId}/messages")
@@ -63,7 +63,7 @@ public class GroupChatController {
                                                            @PathVariable Long messageId,
                                                            @RequestParam String scope) {
         groupChatService.deleteMessage(groupId, messageId, scope);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.noContent());
     }
 
     @GetMapping("/{groupId}/messages")
@@ -117,7 +117,7 @@ public class GroupChatController {
     public ResponseEntity<ApiResponse<Void>> deleteJoinRequest(@PathVariable Long groupId,
                                                                @PathVariable Long requestId) {
         groupChatService.deleteJoinRequest(groupId, requestId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.noContent());
     }
 
 
@@ -131,7 +131,7 @@ public class GroupChatController {
     @DeleteMapping("/{groupId}/leave")
     public ResponseEntity<ApiResponse<Void>> leaveGroup(@PathVariable Long groupId) {
         groupChatService.leaveGroup(groupId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.noContent());
     }
 
     @PatchMapping("/{groupId}/message/{messageId}/pin")
@@ -146,7 +146,7 @@ public class GroupChatController {
     public ResponseEntity<ApiResponse<Void>> unpinMessage(@PathVariable Long groupId,
                                                           @PathVariable Long messageId) {
         groupChatService.unpinMessage(messageId, groupId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.noContent());
     }
 
 

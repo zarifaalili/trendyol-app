@@ -18,9 +18,11 @@ import org.example.trendyolfinalproject.model.response.CollectionResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.CollectionService;
 import org.example.trendyolfinalproject.service.NotificationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,7 +46,7 @@ public class CollectionServiceImpl implements CollectionService {
     public ApiResponse<CollectionResponse> createCollection(CollectionCreateRequest request) {
         log.info("Actionlog.createCollection.start : request={}", request);
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var exists = collectionRepository.findByUser_IdAndName(user.getId(), request.getName()).orElse(null);
         if (exists != null) {
             log.error("Collection name already exists");
@@ -64,7 +66,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         log.info("Actionlog.createCollection.end : request={}", request);
         return ApiResponse.<CollectionResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Collection created successfully")
                 .data(response)
                 .build();
@@ -74,7 +76,7 @@ public class CollectionServiceImpl implements CollectionService {
     public ApiResponse<CollectionItemResponse> addProductToCollection(CollectionItemRequest request) {
         log.info("Actionlog.addProductToCollection.start : productVariantId={}", request.getProductVariantId());
         Long userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var collection = collectionRepository.findById(request.getCollectionId()).orElseThrow(() -> new NotFoundException("Collection not found with id: " + request.getCollectionId()));
         if (!collection.getUser().getId().equals(userId)) {
             throw new RuntimeException("You don't have permission to add product to this collection");
@@ -97,7 +99,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         log.info("Actionlog.addProductToCollection.end : userId={}", request.getProductVariantId());
         return ApiResponse.<CollectionItemResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Product added to collection successfully")
                 .data(response)
                 .build();
@@ -137,7 +139,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         log.info("Actionlog.addProductToCollectionFromWishList.end : wishListId={}", request.getWishListId());
         return ApiResponse.<CollectionItemFromWishListResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Product added to collection from wishlist successfully")
                 .data(response)
                 .build();
@@ -198,7 +200,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .orElseThrow(() -> new NotFoundException("Collection not found"));
 
         if (!collection.getUser().getId().equals(ownerUserId)) {
-            throw new RuntimeException("You can only share your own collection");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only share your own collection");
         }
 
         var targetUser = userRepository.findById(targetUserId)
@@ -221,7 +223,7 @@ public class CollectionServiceImpl implements CollectionService {
     public ApiResponse<CollectionResponse> readSharedCollection(Long collectionId, Long userId) {
         log.info("Actionlog.readSharedCollection.start : collectionId={}", collectionId);
         var collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collection not found"));
+                .orElseThrow(() -> new NotFoundException("Collection not found"));
         var owner = collection.getUser();
         boolean isOwner = collection.getUser().getId().equals(userId);
         boolean isSharedWithUser = collection.getSharedWith().stream()
@@ -279,7 +281,7 @@ public class CollectionServiceImpl implements CollectionService {
         var collection = collectionRepository.findById(collectionId).orElseThrow(() -> new NotFoundException("Collection not found"));
         var user = collection.getUser();
         if (!user.getId().equals(getCurrentUserId())) {
-            throw new RuntimeException("You don't have permission to rename this collection");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to rename this collection");
         }
         collection.setName(newName);
         collection.setUpdatedAt(LocalDateTime.now());

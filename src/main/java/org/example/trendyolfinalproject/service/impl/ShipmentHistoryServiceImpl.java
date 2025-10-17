@@ -14,9 +14,11 @@ import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ShipmentHistoryResponse;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.ShipmentHistoryService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,7 +68,7 @@ public class ShipmentHistoryServiceImpl implements ShipmentHistoryService {
 
         var user = shipment.getOrder().getUser();
         if (!user.getId().equals(userId)) {
-            throw new RuntimeException("You can not get this shipment history");
+            throw new AccessDeniedException("You can not get this shipment history");
         }
         var shipmentHistories = shipmentHistoryRepository.findByShipmentId_Id(shipmentId);
         if (shipmentHistories.isEmpty()) {

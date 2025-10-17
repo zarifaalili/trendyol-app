@@ -11,7 +11,4 @@ public interface BookOrderService {
 
     ResponseEntity<Resource> readBookUnpaid(Long orderId);
 
-
-
-
 }

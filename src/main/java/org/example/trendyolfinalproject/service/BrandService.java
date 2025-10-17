@@ -8,15 +8,8 @@ public interface BrandService {
 
     ApiResponse<BrandResponse> createBrand(BrandCreateRequest request);
 
-    ApiResponse<String> deleteBrand(Long id);
-
     ApiResponse<BrandResponse> updateBrand(Long id, BrandCreateRequest request);
 
     ApiResponse<BrandResponse> getBrandbyName(String name);
-
-
-
-
-
 
 }

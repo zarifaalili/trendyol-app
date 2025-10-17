@@ -12,7 +12,9 @@ import org.example.trendyolfinalproject.model.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.ProductService;
 import org.example.trendyolfinalproject.service.ProductVariantService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,90 +32,84 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasRole('SELLER')")
-    ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
-        return productService.createProduct(request);
+    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(request));
     }
 
     @GetMapping
-    public ApiResponse<Page<ProductResponse>> getProducts(
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size) {
-        return productService.getProducts(page, size);
+        return ResponseEntity.ok().body(productService.getProducts(page, size));
     }
 
     @GetMapping("/search")
-    public ApiResponse<List<ProductResponse>> getProductByName(@RequestParam String name) {
-        return productService.getProductByName(name);
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductByName(@RequestParam String name) {
+        return ResponseEntity.ok().body(productService.getProductByName(name));
     }
 
     @PatchMapping("/update/{productId}/price")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<ProductResponse> updateProductPrice(@PathVariable Long productId, @RequestParam BigDecimal newPrice) {
-        return productService.updateProductPrice(productId, newPrice);
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProductPrice(@PathVariable Long productId, @RequestParam BigDecimal newPrice) {
+        return ResponseEntity.ok().body(productService.updateProductPrice(productId, newPrice));
     }
 
 
     @GetMapping("/seller")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<List<ProductResponse>> getSellerProducts() {
-        return productService.getSellerProducts();
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getSellerProducts() {
+        return ResponseEntity.ok().body(productService.getSellerProducts());
     }
 
 
     @GetMapping("/between-dates")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getTotalProductsBetweenDates(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size
             ) {
-        return productService.getTotalProductsBetweenDates(startDate, endDate, page, size);
+        return ResponseEntity.ok().body(productService.getTotalProductsBetweenDates(startDate, endDate, page, size));
     }
 
 
     @PostMapping("/variants")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<ProductVariantResponse> createProductVariant(@RequestBody @Valid ProductVariantCreateRequest requess) {
-        return productVariantService.createProductVariant(requess);
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> createProductVariant(@RequestBody @Valid ProductVariantCreateRequest requess) {
+        return ResponseEntity.ok().body(productVariantService.createProductVariant(requess));
     }
 
     @PostMapping(value = "/variants/{variantId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<ProductVariantResponse> addImagesToVariant(
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> addImagesToVariant(
             @PathVariable Long variantId,
             @RequestPart("images") List<MultipartFile> images) {
-        return productVariantService.addImages(variantId, images);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productVariantService.addImages(variantId, images));
     }
 
 
-//    @DeleteMapping("/variants/{id}")
-//    @PreAuthorize("hasRole('SELLER')")
-//    public ApiResponse<Void> deleteProductVariant(@PathVariable Long id) {
-//        return productVariantService.deleteProductVariant(id);
-//    }
-
     @GetMapping("/variants/{id}")
-    public ApiResponse<ProductVariantResponse> getProductVariant(@PathVariable Long id) {
-        return productVariantService.getProductVariant(id);
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> getProductVariant(@PathVariable Long id) {
+        return ResponseEntity.ok().body(productVariantService.getProductVariant(id));
     }
 
     @GetMapping("/variants/filter")
-    public ApiResponse<List<ProductVariantResponse>> getVariantsByFilter(
+    public ResponseEntity<ApiResponse<List<ProductVariantResponse>>> getVariantsByFilter(
             @ModelAttribute ProductVariantFilterRequest filter) {
-        return productVariantService.getProductVariantsByFilter(filter);
+        return ResponseEntity.ok().body(productVariantService.getProductVariantsByFilter(filter));
     }
 
     @GetMapping("/variants/{id}/details")
-    public ApiResponse<ProductVariantDetailResponse> getProductVariantDetails(@PathVariable Long id) {
-        return productVariantService.getProductVariantDetails(id);
+    public ResponseEntity<ApiResponse<ProductVariantDetailResponse>> getProductVariantDetails(@PathVariable Long id) {
+        return ResponseEntity.ok().body(productVariantService.getProductVariantDetails(id));
     }
 
 
     @PatchMapping("/variants/{productVariantId}/stock")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<ProductVariantResponse> updateProductVariantStock(@PathVariable Long productVariantId, @RequestParam Integer newStock) {
-        return productVariantService.updateProductVariantStock(productVariantId, newStock);
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> updateProductVariantStock(@PathVariable Long productVariantId, @RequestParam Integer newStock) {
+        return ResponseEntity.ok().body(productVariantService.updateProductVariantStock(productVariantId, newStock));
     }
 
 

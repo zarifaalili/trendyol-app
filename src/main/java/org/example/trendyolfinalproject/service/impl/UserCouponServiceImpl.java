@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.BasketElement;
 import org.example.trendyolfinalproject.dao.entity.UserCoupon;
 import org.example.trendyolfinalproject.dao.repository.*;
+import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.CouponUsageLimitExceededException;
 import org.example.trendyolfinalproject.exception.customExceptions.MinimumOrderAmountNotMetException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
@@ -44,7 +45,7 @@ public class UserCouponServiceImpl implements UserCouponService {
     public ApiResponse<String> useUserCoupon(Long couponId) {
         var userId = getCurrentUserId();
         log.info("Actionlog.useUserCoupon.start : userId={}, couponId={}", userId, couponId);
-        var coupon = couponRepository.findById(couponId).orElseThrow(() -> new RuntimeException("Coupon not found with id: " + couponId));
+        var coupon = couponRepository.findById(couponId).orElseThrow(() -> new NotFoundException("Coupon not found with id: " + couponId));
         var basket = basketRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Basket not found"));
         if (Boolean.TRUE.equals(coupon.getFirstOrderOnly())) {
@@ -60,7 +61,7 @@ public class UserCouponServiceImpl implements UserCouponService {
             throw new RuntimeException("You cant use this coupon");
         }
         if (basket.getDiscountAmount() != null && basket.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
-            throw new RuntimeException("A coupon has already been applied to this basket. Please cancel it before applying a new one.");
+            throw new AlreadyException("A coupon has already been applied to this basket. Please cancel it before applying a new one.");
         }
         if (!coupon.getIsActive() || coupon.getEndDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Coupon is not active or expired");
@@ -135,11 +136,16 @@ public class UserCouponServiceImpl implements UserCouponService {
         auditLogService.createAuditLog(user, "Use Coupon", "Used coupon with id " + couponId);
         log.info("Actionlog.useUserCoupon.end : userId={}, couponId={}", userId, couponId);
 
-        return ApiResponse.success("Coupon applied successfully");
+//        return ApiResponse.success("Coupon applied successfully");
+        return ApiResponse.<String>builder()
+                .data(null)
+                .message("coupon applied successfully")
+                .status(201)
+                .build();
     }
 
     @Override
-    public ApiResponse<String> cancelUserCoupon(Long couponId) {
+    public ApiResponse<Void> cancelUserCoupon(Long couponId) {
         var userId = getCurrentUserId();
 
         log.info("Actionlog.cancelUserCoupon.start : userId={}, couponId={}", userId, couponId);
@@ -172,7 +178,8 @@ public class UserCouponServiceImpl implements UserCouponService {
         }
         auditLogService.createAuditLog(user, "CANCEL COUPON", "Coupon cancelled");
         log.info("Actionlog.cancelUserCoupon.end : userId={}, couponId={}", userId, couponId);
-        return ApiResponse.success("Coupon cancelled successfully");
+//        return ApiResponse.success("Coupon cancelled successfully");
+        return ApiResponse.noContent();
     }
 
     @Override

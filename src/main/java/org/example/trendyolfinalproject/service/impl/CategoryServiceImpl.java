@@ -40,7 +40,7 @@ public class CategoryServiceImpl implements CategoryService {
         auditLogService.createAuditLog(null, "Create Category", "Create Category successfully. Category id: " + saved.getId());
         log.info("Actionlog.createCategory.end : ");
         return ApiResponse.<CategoryResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Category created successfully")
                 .data(response)
                 .build();

@@ -12,8 +12,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PaymentTransactionMapper {
 
-
-
     @Mapping(source = "order.id", target = "orderId")
     @Mapping(source = "payment.id", target = "paymentMethodId")
     @Mapping(source = "payment.cardNumber", target = "maskedCardNumber", qualifiedByName = "maskLast4Digits")

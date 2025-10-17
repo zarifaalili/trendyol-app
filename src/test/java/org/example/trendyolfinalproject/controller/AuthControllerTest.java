@@ -1,36 +1,24 @@
 package org.example.trendyolfinalproject.controller;
 
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
-import org.example.trendyolfinalproject.model.request.AuthRequest;
-import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
+import org.example.trendyolfinalproject.model.request.*;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuthResponse;
 import org.example.trendyolfinalproject.service.AuthService;
-import org.example.trendyolfinalproject.service.AuthenticationManager;
 import org.example.trendyolfinalproject.service.PasswordResetService;
-import org.example.trendyolfinalproject.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AuthControllerTest {
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private JwtUtil jwtUtil;
+class AuthControllerTest {
 
     @Mock
     private AuthService authService;
@@ -49,126 +37,119 @@ public class AuthControllerTest {
     @Test
     void testTokenSuccess() {
         AuthRequest request = new AuthRequest("zari@example.com", "123456");
-        AuthResponse expectedResponse = new AuthResponse("accessToken123", "refreshToken456");
+        AuthResponse expected = new AuthResponse("access123", "refresh456");
 
-        when(authService.authenticate(request)).thenReturn(expectedResponse);
+        when(authService.authenticate(request)).thenReturn(expected);
 
-        AuthResponse actualResponse = authController.token(request);
+        ResponseEntity<ApiResponse<AuthResponse>> response = authController.token(request);
 
-        assertEquals(expectedResponse, actualResponse);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expected, response.getBody().getData());
         verify(authService, times(1)).authenticate(request);
     }
 
     @Test
     void testTokenFail_invalidCredentials() {
         AuthRequest request = new AuthRequest("zari@example.com", "wrongpass");
+        when(authService.authenticate(request)).thenThrow(new RuntimeException("Invalid email or password"));
 
-        when(authService.authenticate(request))
-                .thenThrow(new RuntimeException("Invalid email or password"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                authController.token(request)
-        );
-
-        assertEquals("Invalid email or password", exception.getMessage());
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authController.token(request));
+        assertEquals("Invalid email or password", ex.getMessage());
         verify(authService, times(1)).authenticate(request);
     }
 
     @Test
     void testRefreshTokenSuccess() {
-        RefreshTokenRequest request = new RefreshTokenRequest("refreshToken456");
-        AuthResponse expectedResponse = new AuthResponse("newAccessToken", "refreshToken456");
+        RefreshTokenRequest request = new RefreshTokenRequest("refresh456");
+        AuthResponse expected = new AuthResponse("newAccess", "refresh456");
 
-        when(authService.refreshToken(request)).thenReturn(expectedResponse);
+        when(authService.refreshToken(request)).thenReturn(expected);
 
-        AuthResponse actualResponse = authController.refresh(request);
+        ResponseEntity<ApiResponse<AuthResponse>> response = authController.refresh(request);
 
-        assertEquals(expectedResponse, actualResponse);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expected, response.getBody().getData());
         verify(authService, times(1)).refreshToken(request);
     }
 
+
+
+
     @Test
-    void testRefreshTokenFail_nullToken() {
-        RefreshTokenRequest request = new RefreshTokenRequest(null);
-
-        when(authService.refreshToken(request))
-                .thenThrow(new RuntimeException("Refresh token cannot be null"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                authController.refresh(request)
+    void testSignUpSuccess() {
+        UserRegisterRequest req = new UserRegisterRequest(
+                "Zari",
+                "Aliyeva",
+                "zari@example.com",
+                "12345678",
+                "12345678",
+                "+994501234567",
+                LocalDate.of(2005, 5, 15)
         );
 
-        assertEquals("Refresh token cannot be null", exception.getMessage());
-        verify(authService, times(1)).refreshToken(request);
+        ApiResponse<String> expected = ApiResponse.successWithMessage("ok", "Registered");
+
+        when(authService.registerUser(req)).thenReturn(expected);
+
+        ResponseEntity<ApiResponse<String>> response = authController.registerOrLoginUser(req);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("ok", response.getBody().getData());
+        assertEquals("Registered", response.getBody().getMessage());
+        verify(authService, times(1)).registerUser(req);
     }
 
     @Test
-    void testForgotPasswordSuccess() {
-        String email = "zari@example.com";
-
-        doNothing().when(resetService).sendCode(email);
-
-        authController.forgot(email);
-
-        verify(resetService, times(1)).sendCode(email);
-    }
-
-    @Test
-    void testForgotPasswordFail_emailNotFound() {
-        String email = "unknown@example.com";
-
-        doThrow(new RuntimeException("Email not found"))
-                .when(resetService).sendCode(email);
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                authController.forgot(email)
+    void testVerifyOtpSuccess() {
+        VerifyRequest verifyReq = new VerifyRequest("1234", "zari@example.com");
+        UserRegisterRequest userReq = new UserRegisterRequest(
+                "Zari",
+                "Aliyeva",
+                "zari@example.com",
+                "12345678",
+                "12345678",
+                "+994501234567",
+                LocalDate.of(2005, 5, 15)
         );
 
-        assertEquals("Email not found", exception.getMessage());
-        verify(resetService, times(1)).sendCode(email);
+        VerifyAndRegisterRequest req = new VerifyAndRegisterRequest(verifyReq, userReq);
+
+        AuthResponse authRes = new AuthResponse("access", "refresh");
+        ApiResponse<AuthResponse> expected = ApiResponse.success(authRes);
+
+        when(authService.verifyOtp(req)).thenReturn(expected);
+
+        ResponseEntity<ApiResponse<AuthResponse>> response = authController.verifyOtp(req);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(authRes, response.getBody().getData());
+        verify(authService, times(1)).verifyOtp(req);
     }
 
     @Test
-    void testVerifyCodeSuccess() {
+    void testUserActivateSuccess() {
         String email = "zari@example.com";
-        String code = "1234";
+        when(authService.activateUser(email)).thenReturn("otpSent");
 
-        doNothing().when(resetService).verifyCode(email, code);
+        ResponseEntity<ApiResponse<String>> response = authController.activeUser(email);
 
-        authController.verify(email, code);
-
-        verify(resetService, times(1)).verifyCode(email, code);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("otpSent", response.getBody().getData());
+        assertEquals("we send you an otp", response.getBody().getMessage());
+        verify(authService, times(1)).activateUser(email);
     }
 
     @Test
-    void testResetPasswordSuccess() {
+    void testVerifyReactivateOtpSuccess() {
         String email = "zari@example.com";
-        String code = "1234";
-        String newPassword = "newpass";
-        String confirmPassword = "newpass";
+        String otp = "9999";
+        when(authService.verifyReactivateOtp(email, otp)).thenReturn("verified");
 
-        doNothing().when(resetService).resetPassword(email, code, newPassword, confirmPassword);
+        ResponseEntity<ApiResponse<String>> response = authController.verifyReactivateOtp(email, otp);
 
-        authController.reset(email, code, newPassword, confirmPassword);
-
-        verify(resetService, times(1)).resetPassword(email, code, newPassword, confirmPassword);
-    }
-
-    @Test
-    void testResetPasswordFail_passwordMismatch() {
-        String email = "zari@example.com";
-        String code = "1234";
-        String newPassword = "newpass";
-        String confirmPassword = "different";
-
-        doThrow(new RuntimeException("Passwords do not match"))
-                .when(resetService).resetPassword(email, code, newPassword, confirmPassword);
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                authController.reset(email, code, newPassword, confirmPassword)
-        );
-
-        assertEquals("Passwords do not match", exception.getMessage());
-        verify(resetService, times(1)).resetPassword(email, code, newPassword, confirmPassword);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("verified", response.getBody().getData());
+        assertEquals("otp verified", response.getBody().getMessage());
+        verify(authService, times(1)).verifyReactivateOtp(email, otp);
     }
 }

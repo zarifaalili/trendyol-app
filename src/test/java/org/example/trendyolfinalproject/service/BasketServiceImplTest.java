@@ -1,18 +1,17 @@
 package org.example.trendyolfinalproject.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.trendyolfinalproject.dao.entity.Basket;
-import org.example.trendyolfinalproject.dao.entity.BasketElement;
-import org.example.trendyolfinalproject.dao.entity.Product;
-import org.example.trendyolfinalproject.dao.entity.User;
-import org.example.trendyolfinalproject.dao.repository.BasketElementRepository;
-import org.example.trendyolfinalproject.dao.repository.BasketRepository;
-import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.dao.entity.*;
+import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.mapper.BasketElementMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
+import org.example.trendyolfinalproject.model.request.BasketElementRequest;
+import org.example.trendyolfinalproject.model.request.DeleteBasketElementRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.BasketElementResponse;
 import org.example.trendyolfinalproject.model.response.BasketSummaryResponse;
+import org.example.trendyolfinalproject.service.impl.BasketElementServiceImpl;
 import org.example.trendyolfinalproject.service.impl.BasketServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +52,21 @@ class BasketServiceImplTest {
 
     @Mock
     private HttpServletRequest request;
+
+//    @Mock
+//    private final BasketElementService basketElementService = mock(BasketElementService.class);
+
+    @Mock
+    private final ProductVariantRepository productVariantRepository = mock(ProductVariantRepository.class);
+
+    @Mock
+    private final ProductRepository productRepository=mock(ProductRepository.class);
+
+    @Mock
+    private final BasketElementMapper basketElementMapper=mock(BasketElementMapper.class);
+
+    @InjectMocks
+    private BasketElementServiceImpl basketElementService;
 
     @BeforeEach
     void setUp() {
@@ -201,4 +215,31 @@ class BasketServiceImplTest {
 
         assertThrows(NotFoundException.class, () -> basketService.calculateRawTotalAmount());
     }
+
+
+
+
+    @Test
+    void getBasketElements_success() {
+        Basket basket = new Basket();
+        basket.setId(1L);
+
+        BasketElement element = new BasketElement();
+        element.setId(10L);
+        element.setBasket(basket);
+
+        BasketElementResponse responseDto = new BasketElementResponse();
+
+        when(basketRepository.findByUserId(1L)).thenReturn(Optional.of(basket));
+        when(basketElementRepository.findByBasket_Id(1L)).thenReturn(List.of(element));
+        when(basketElementMapper.toResponseList(List.of(element))).thenReturn(List.of(responseDto));
+
+        ApiResponse<List<BasketElementResponse>> response = basketElementService.getBasketElements();
+
+        assertEquals(200, response.getStatus());
+        assertEquals(1, response.getData().size());
+        verify(basketElementRepository, times(1)).findByBasket_Id(1L);
+    }
+
+
 }

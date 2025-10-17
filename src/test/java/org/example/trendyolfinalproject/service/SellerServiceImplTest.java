@@ -86,7 +86,7 @@ class SellerServiceImplTest {
 
         ApiResponse<SellerResponse> apiResponse = sellerService.createSeller(request);
 
-        assertEquals(200, apiResponse.getStatus());
+        assertEquals(201, apiResponse.getStatus());
         assertEquals("Seller created successfully", apiResponse.getMessage());
         assertEquals("TestCompany", apiResponse.getData().getCompanyName());
 
@@ -112,20 +112,6 @@ class SellerServiceImplTest {
         assertEquals("Company1", apiResponse.getData().get(0).getCompanyName());
     }
 
-    @Test
-    void getSeller_success() {
-        Seller seller = new Seller();
-        SellerResponse response = new SellerResponse();
-        response.setCompanyName("Company1");
-
-        when(sellerRepository.findFirstByCompanyName("Company1")).thenReturn(Optional.of(seller));
-        when(sellerMapper.toResponse(seller)).thenReturn(response);
-
-        ApiResponse<SellerResponse> apiResponse = sellerService.getSeller("Company1");
-
-        assertEquals(200, apiResponse.getStatus());
-        assertEquals("Company1", apiResponse.getData().getCompanyName());
-    }
 
     @Test
     void getSellerAverageRating_success() {

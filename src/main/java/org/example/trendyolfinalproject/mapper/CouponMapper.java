@@ -28,7 +28,6 @@ public interface CouponMapper {
     @Mapping(target="firstOrderOnly", source = "firstOrderOnly")
     Coupon toEntity(CouponCreateRequest request);
 
-
     CouponResponse toResponse(Coupon coupon);
 
     List<CouponResponse> toResponseList(List<Coupon> coupons);

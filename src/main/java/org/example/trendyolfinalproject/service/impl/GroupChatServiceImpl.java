@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -62,6 +63,7 @@ public class GroupChatServiceImpl implements GroupChatService {
 
 
     @Override
+    @Transactional
     public ChatGroupResponse createGroupChat(ChatGroupRequest chatGroupRequest) {
         log.info("ActionLog.createGroupChat.start : ");
         var userId = getCurrentUserId();
@@ -90,10 +92,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         if (chatGroupRequest.getMemberIds() != null) {
             for (Long memberId : chatGroupRequest.getMemberIds()) {
                 if (!memberId.equals(userId)) {
-//                    var existingMember=groupMemberRepository.findByGroupAndUser_Id(groupChat,memberId).orElse(null);
-//                    if(existingMember!=null){
-//                        continue;
-//                    }
+
                     GroupMember member = new GroupMember();
                     member.setGroup(groupChat);
                     member.setUser(userRepository.findById(memberId).orElseThrow(() -> new NotFoundException("User not found with id: " + memberId)));
@@ -230,6 +229,7 @@ public class GroupChatServiceImpl implements GroupChatService {
     }
 
     @Override
+    @Transactional
     public void sendMessage(Long groupId, ChatMessageRequest dto) {
         log.info("ActionLog.sendMessage.start memberId: {}, groupId: {}, message: {}", getCurrentUserId(), groupId, dto.getText());
         var user = userRepository.findById(getCurrentUserId()).orElseThrow(() -> new NotFoundException("User not found with id: " + getCurrentUserId()));
@@ -343,7 +343,7 @@ public class GroupChatServiceImpl implements GroupChatService {
                 }
                 log.info("Message {} deleted for all by {}", messageId, user.getId());
             } else {
-                throw new RuntimeException("Only admin or owner can delete message for all");
+                throw new AccessDeniedException("Only admin or owner can delete message for all");
             }
         }
     }
@@ -408,6 +408,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         }
 
         if (group.getVisibility().equals(GroupVisibility.PRIVATE)) {
+            log.error("This group is private");
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This group is private");
         }
 
@@ -441,6 +442,7 @@ public class GroupChatServiceImpl implements GroupChatService {
         var existingRequest = joinRequestRepository.findByGroupAndRequester(group, user);
 
         if (existingRequest.isPresent()) {
+            log.error("You have already sent a join request to this group.");
             throw new AlreadyException("You have already sent a join request to this group.");
         }
 
@@ -533,10 +535,10 @@ public class GroupChatServiceImpl implements GroupChatService {
             throw new RuntimeException("Request isnt related with id: " + groupId);
         }
         if (!group.getOwner().equals(owner)) {
-            throw new RuntimeException("You are not the owner of this group.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of this group.");
         }
         if (!request.getStatus().equals(RequestStatus.PENDING)) {
-            throw new RuntimeException("You cant reject this request, cause it is not pending.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You cant reject this request, cause it is not pending.");
         }
 
         request.setStatus(RequestStatus.REJECTED);

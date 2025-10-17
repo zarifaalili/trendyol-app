@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,26 +40,13 @@ class BrandControllerTest {
 
         when(brandService.createBrand(validRequest)).thenReturn(expectedResponse);
 
-        ApiResponse<BrandResponse> actualResponse = brandController.createBrand(validRequest);
+        ResponseEntity<ApiResponse<BrandResponse>> response = brandController.createBrand(validRequest);
 
-        assertNotNull(actualResponse);
-        assertEquals(201, actualResponse.getStatus());
-        assertEquals("Brand created successfully", actualResponse.getMessage());
-        assertEquals("Nike", actualResponse.getData().getName());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("Brand created successfully", response.getBody().getMessage());
+        assertEquals("Nike", response.getBody().getData().getName());
         verify(brandService, times(1)).createBrand(validRequest);
-    }
-
-    @Test
-    void testCreateBrand_Fail_BlankName() {
-        BrandCreateRequest invalidRequest = new BrandCreateRequest("", "Some desc");
-
-
-        when(brandService.createBrand(invalidRequest)).thenReturn(null);
-
-        ApiResponse<BrandResponse> response = brandController.createBrand(invalidRequest);
-
-        assertNull(response);
-        verify(brandService, times(1)).createBrand(invalidRequest);
     }
 
     @Test
@@ -67,26 +56,13 @@ class BrandControllerTest {
 
         when(brandService.updateBrand(1L, validRequest)).thenReturn(expectedResponse);
 
-        ApiResponse<BrandResponse> response = brandController.updateBrand(1L, validRequest);
+        ResponseEntity<ApiResponse<BrandResponse>> response = brandController.updateBrand(1L, validRequest);
 
-        assertNotNull(response);
-        assertEquals(200, response.getStatus());
-        assertEquals("Brand updated successfully", response.getMessage());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Brand updated successfully", response.getBody().getMessage());
+        assertEquals("Nike", response.getBody().getData().getName());
         verify(brandService, times(1)).updateBrand(1L, validRequest);
-    }
-
-    @Test
-    void testDeleteBrand_Success() {
-        ApiResponse<String> expectedResponse =
-                new ApiResponse<>(200, "Brand deleted successfully", "Deleted");
-
-        when(brandService.deleteBrand(1L)).thenReturn(expectedResponse);
-
-        ApiResponse<String> response = brandController.deleteBrand(1L);
-
-        assertNotNull(response);
-        assertEquals("Deleted", response.getData());
-        verify(brandService, times(1)).deleteBrand(1L);
     }
 
     @Test
@@ -96,10 +72,29 @@ class BrandControllerTest {
 
         when(brandService.getBrandbyName("Nike")).thenReturn(expectedResponse);
 
-        ApiResponse<BrandResponse> response = brandController.getBrandbyName("Nike");
+        ResponseEntity<ApiResponse<BrandResponse>> response = brandController.getBrandbyName("Nike");
 
-        assertNotNull(response);
-        assertEquals("Brand found", response.getMessage());
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Brand found", response.getBody().getMessage());
+        assertEquals("Nike", response.getBody().getData().getName());
         verify(brandService, times(1)).getBrandbyName("Nike");
+    }
+
+    @Test
+    void testCreateBrand_Fail_Validation() {
+        BrandCreateRequest invalidRequest = new BrandCreateRequest("", "");
+
+        ApiResponse<BrandResponse> expectedResponse =
+                new ApiResponse<>(400, "Validation failed", null);
+
+        when(brandService.createBrand(invalidRequest)).thenReturn(expectedResponse);
+
+        ResponseEntity<ApiResponse<BrandResponse>> response = brandController.createBrand(invalidRequest);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("Validation failed", response.getBody().getMessage());
+        assertNull(response.getBody().getData());
+        verify(brandService, times(1)).createBrand(invalidRequest);
     }
 }

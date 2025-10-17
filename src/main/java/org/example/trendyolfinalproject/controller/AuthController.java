@@ -23,33 +23,37 @@ public class AuthController {
     private final PasswordResetService resetService;
 
     @PostMapping("/token")
-    public AuthResponse token(@RequestBody @Valid AuthRequest request) {
-        return authService.authenticate(request);
+    public ResponseEntity<ApiResponse<AuthResponse>> token(@RequestBody @Valid AuthRequest request) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.authenticate(request)));
     }
 
     @PostMapping("/token/refresh")
-    public AuthResponse refresh(@RequestBody @Valid RefreshTokenRequest request) {
-        return authService.refreshToken(request);
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.refreshToken(request)));
     }
 
     @PostMapping("/forgot-password")
-    public void forgot(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Void>> forgot(@RequestParam String email) {
         resetService.sendCode(email);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
     }
 
 
     @PostMapping("/verify-code")
-    public void verify(@RequestParam String email, @RequestParam String code) {
+    public ResponseEntity<ApiResponse<Void>> verify(@RequestParam String email, @RequestParam String code) {
         resetService.verifyCode(email, code);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
     }
 
 
     @PostMapping("/reset-password")
-    public void reset(@RequestParam String email,
+    public ResponseEntity<ApiResponse<Void>> reset(@RequestParam String email,
                       @RequestParam String code,
                       @RequestParam String newPassword,
                       @RequestParam String confirmPassword) {
         resetService.resetPassword(email, code, newPassword, confirmPassword);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
+
     }
 
 
@@ -68,13 +72,13 @@ public class AuthController {
     }
 
     @PostMapping("/user-activate")
-    public ApiResponse<String> activeUser(@PathParam("email") String email) {
-        return ApiResponse.success(authService.activateUser(email));
+    public ResponseEntity<ApiResponse<String>> activeUser(@RequestParam("email") String email) {
+        return ResponseEntity.ok().body(ApiResponse.successWithMessage(authService.activateUser(email), "we send you an otp"));
     }
 
     @PatchMapping("/verify-reactivate-otp")
-    public ApiResponse<String> verifyReactivateOtp(@PathParam("email") String email, @RequestParam("otp") String otp) {
-        return ApiResponse.success(authService.verifyReactivateOtp(email, otp));
+    public ResponseEntity<ApiResponse<String>> verifyReactivateOtp(@RequestParam("email") String email, @RequestParam("otp") String otp) {
+        return ResponseEntity.ok().body(ApiResponse.successWithMessage(authService.verifyReactivateOtp(email, otp), "otp verified"));
     }
 
 

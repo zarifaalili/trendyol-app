@@ -25,5 +25,4 @@ public interface CouponService {
     ApiResponse<String> checkValidCoupon(String code);
 
 
-
 }

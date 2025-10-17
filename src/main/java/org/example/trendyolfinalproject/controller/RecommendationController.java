@@ -5,6 +5,8 @@ import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ProductVariantResponse;
 import org.example.trendyolfinalproject.service.ProductVariantService;
 import org.example.trendyolfinalproject.service.RecommendationService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,26 +21,26 @@ public class RecommendationController {
 
 
     @PostMapping("/view/{userId}/{productId}")
-    public ApiResponse<String> saveView(@PathVariable Long userId, @PathVariable Long productId) {
+    public ResponseEntity<ApiResponse<String>> saveView(@PathVariable Long userId, @PathVariable Long productId) {
         var product = productVariantService.getProductVariant(productId);
         recommendationService.saveUserView(userId, product.getData().getProductId());
-        return ApiResponse.success("View saved successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null, "View saved"));
     }
 
 
     @GetMapping("/personalized")
-    public ApiResponse<List<ProductVariantResponse>> getUserRecommendations() {
-        return productVariantService.getUserRecommendations();
+    public ResponseEntity<ApiResponse<List<ProductVariantResponse>>> getUserRecommendations() {
+        return ResponseEntity.ok().body(productVariantService.getUserRecommendations());
     }
 
     @GetMapping("/similar/{productId}")
-    public ApiResponse<List<ProductVariantResponse>> getSimilarProducts(@PathVariable Long productId) {
-        return recommendationService.getSimilarProduct(productId);
+    public ResponseEntity<ApiResponse<List<ProductVariantResponse>>> getSimilarProducts(@PathVariable Long productId) {
+        return ResponseEntity.ok().body(recommendationService.getSimilarProduct(productId));
     }
 
 
     @GetMapping("/trending")
-    public ApiResponse<List<ProductVariantResponse>> getTrendingProducts() {
-        return recommendationService.getTrendingProducts();
+    public ResponseEntity<ApiResponse<List<ProductVariantResponse>>> getTrendingProducts() {
+        return ResponseEntity.ok().body(recommendationService.getTrendingProducts());
     }
 }

@@ -24,63 +24,63 @@ public class UserController {
     private final UserService userService;
 
     @PutMapping
-    public ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
-        return userService.updateUser(userRequest);
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody @Valid UserRequest userRequest) {
+        return ResponseEntity.ok().body(userService.updateUser(userRequest));
     }
 
     @PatchMapping
-    public ApiResponse<UserResponse> patchUpdateUser(@RequestBody UserRequest userRequest) {
-        return userService.patchUpdateUser(userRequest);
+    public ResponseEntity<ApiResponse<UserResponse>> patchUpdateUser(@RequestBody UserRequest userRequest) {
+        return ResponseEntity.ok().body(userService.patchUpdateUser(userRequest));
     }
 
     @PostMapping("/update/{newEmail}")
-    public ApiResponse<String> updateEmail(@PathVariable String newEmail) {
-        return userService.updateEmail(newEmail);
+    public ResponseEntity<ApiResponse<String>> updateEmail(@PathVariable String newEmail) {
+        return ResponseEntity.ok().body(userService.updateEmail(newEmail));
     }
 
     @PatchMapping("/verifyEmail/{email}/{otp}")
-    public ApiResponse<String> verifyEmail(@PathVariable String email, @PathVariable String otp) {
-        return userService.verifyEmail(email, otp);
+    public ResponseEntity<ApiResponse<String>> verifyEmail(@PathVariable String email, @PathVariable String otp) {
+        return ResponseEntity.ok().body(userService.verifyEmail(email, otp));
     }
 
     @PatchMapping("/deactivate-me")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<Void> deactivateMe() {
+    public ResponseEntity<ApiResponse<Void>> deactivateMe() {
         userService.deleteUser();
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(ApiResponse.success(null));
     }
 
     @GetMapping("/profile")
-    public ApiResponse<UserProfileResponse> getUserProfile() {
-        return userService.getUserProfile();
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile() {
+        return ResponseEntity.ok().body(userService.getUserProfile());
     }
 
     @PatchMapping("/deactivate/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> deactiveUser(@PathVariable Long userId) {
-        return userService.deactiveUser(userId);
+    public ResponseEntity<ApiResponse<String>> deactiveUser(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(userService.deactiveUser(userId));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Page<UserResponse>> searchUser(@RequestParam("keyword") String keyword,
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> searchUser(@RequestParam("keyword") String keyword,
                                                       @RequestParam("page") int page,
                                                       @RequestParam("size") int size) {
-        return userService.searchUser(keyword, page, size);
+        return ResponseEntity.ok().body(userService.searchUser(keyword, page, size));
     }
 
     @GetMapping("/followed-sellers")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<List<SellerResponse>> getFollowedSellers() {
-        return userService.getFollowedSellers();
+    public ResponseEntity<ApiResponse<List<SellerResponse>>> getFollowedSellers() {
+        return ResponseEntity.ok().body(userService.getFollowedSellers());
     }
 
 
 
     @PostMapping("/{email}/refer")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> refer(@PathVariable String email) throws MessagingException {
-        return userService.referTrendyol(email);
+    public ResponseEntity<ApiResponse<String>> refer(@PathVariable String email) throws MessagingException {
+        return ResponseEntity.ok().body(userService.referTrendyol(email));
     }
 
 }

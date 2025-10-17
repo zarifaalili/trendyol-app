@@ -1,5 +1,6 @@
 package org.example.trendyolfinalproject.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.model.request.WishListCreateRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
@@ -9,11 +10,11 @@ import java.util.List;
 
 public interface WishListService {
 
-    ApiResponse<WishListResponse> addToFavorite(WishListCreateRequest request);
+    ApiResponse<WishListResponse> addToFavorite(WishListCreateRequest request) throws JsonProcessingException;
 
-    ApiResponse<String> deleteFromFavorites(Long id);
+    ApiResponse<Void> deleteFromFavorites(Long id);
 
-    ApiResponse<List<WishListResponse>> getFavorites();
+    ApiResponse<List<WishListResponse>> getFavorites() throws JsonProcessingException;
 
     ApiResponse<List<WishListResponse>> serchWishList(String productName);
 

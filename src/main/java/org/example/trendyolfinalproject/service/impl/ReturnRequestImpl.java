@@ -5,21 +5,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.client.CardClient;
 import org.example.trendyolfinalproject.client.TransactionClient;
 import org.example.trendyolfinalproject.dao.entity.ReturnRequest;
-import org.example.trendyolfinalproject.dao.repository.*;
+import org.example.trendyolfinalproject.dao.repository.OrderItemRepository;
+import org.example.trendyolfinalproject.dao.repository.PaymentMethodRepository;
+import org.example.trendyolfinalproject.dao.repository.ReturnRequestRepository;
+import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
-import org.example.trendyolfinalproject.mapper.OrderItemMapper;
-import org.example.trendyolfinalproject.mapper.OrderMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.request.TransactionRequest;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.ReturnRequestResponse;
 import org.example.trendyolfinalproject.service.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,26 +35,12 @@ import java.util.List;
 @Slf4j
 public class ReturnRequestImpl implements ReturnRequestService {
 
-
-    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final OrderMapper orderMapper;
-    private final OrderItemMapper orderItemMapper;
     private final UserRepository userRepository;
-    private final AdressRepository adressRepository;
     private final PaymentMethodRepository paymentMethodRepository;
-    private final BasketRepository basketRepository;
-    private final BasketElementRepository basketElementRepository;
-    private final PaymentTransactionRepository paymentTransactionRepository;
     private final PaymentTransactionService paymentTransactionService;
-    private final ShipmentService shipmentService;
-    private final ProductVariantRepository productVariantRepository;
-    private final ProductRepository productRepository;
     private final NotificationService notificationService;
-    private final EmailService emailService;
     private final AuditLogService auditLogService;
-    private final SellerPaymentLogRepository sellerPaymentLogRepository;
-    private final SellerRepository sellerRepository;
     private final ReturnRequestRepository returnRequestRepository;
     private final FileStorageService fileStorageService;
     private final TransactionClient transactionClient;
@@ -65,7 +56,7 @@ public class ReturnRequestImpl implements ReturnRequestService {
         var returnRequest = returnRequestRepository.findById(returnRequestId)
                 .orElseThrow(() -> new NotFoundException("ReturnRequest not found with id: " + returnRequestId));
         if (returnRequest.isApproved()){
-            throw new RuntimeException("ReturnRequest already approved");
+            throw new AlreadyException("ReturnRequest already approved");
         }
             returnRequest.setApproved(true);
         returnRequestRepository.save(returnRequest);
@@ -171,10 +162,10 @@ public class ReturnRequestImpl implements ReturnRequestService {
 
         var existingReturnRequest = returnRequestRepository.findByOrderItem_IdAndUser_Id(orderItemId, userId).orElse(null);
         if (existingReturnRequest != null) {
-            throw new RuntimeException("You have already sent return request for this order item. Order item id: " + orderItemId);
+            throw new AlreadyException("You have already sent return request for this order item. Order item id: " + orderItemId);
         }
         if (!userId.equals(orderItem.getOrderId().getUser().getId())) {
-            throw new RuntimeException("You cannot send return request for this order item. Order item id: " + orderItemId);
+            throw new AccessDeniedException("You cannot send return request for this order item. Order item id: " + orderItemId);
         }
         if (!orderItem.getOrderId().getStatus().equals(Status.DELIVERED)) {
             throw new RuntimeException("Order item is not delivered. You cannot send return request. Order item id: " + orderItemId);
@@ -198,7 +189,7 @@ public class ReturnRequestImpl implements ReturnRequestService {
         notificationService.sendNotification(user, "Your return request has been sent successfully. Please wait for admin approval.", NotificationType.RETURN_REQUEST, returnRequest.getId());
         log.info("Actionlog.sendReturnRequest.end : orderItem={}", orderItemId);
         return ApiResponse.<String>builder()
-                .status(200)
+                .status(201)
                 .message("Return request sent successfully.")
                 .data("Your return request has been sent successfully. Please wait for admin approval.")
                 .build();
@@ -212,7 +203,7 @@ public class ReturnRequestImpl implements ReturnRequestService {
         var returnRequest = returnRequestRepository.findById(returnRequestId)
                 .orElseThrow(() -> new NotFoundException("ReturnRequest not found with id: " + returnRequestId));
         if (!user.getId().equals(returnRequest.getUser().getId())) {
-            throw new RuntimeException("You can not get this return request status. Return request id: " + returnRequestId);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You can not get this return request status. Return request id: " + returnRequestId);
         }
         log.info("Actionlog.getReturnRequestStatus.end : returnRequestId={}", returnRequestId);
         String status = returnRequest.isApproved() ? "Approved" : "Pending";

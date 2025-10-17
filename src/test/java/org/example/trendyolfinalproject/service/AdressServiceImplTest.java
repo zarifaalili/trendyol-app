@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.trendyolfinalproject.dao.entity.Adress;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.AdressRepository;
+import org.example.trendyolfinalproject.dao.repository.OrderRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
 import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
@@ -39,6 +40,10 @@ class AdressServiceImplTest {
     @InjectMocks
     private AdressServiceImpl adressService;
 
+    @Mock
+    private OrderRepository orderRepository;
+
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -70,7 +75,7 @@ class AdressServiceImplTest {
 
         ApiResponse<AdressResponse> result = adressService.createAdress(requestDto);
 
-        assertEquals(200, result.getStatus());
+        assertEquals(201, result.getStatus());
         assertEquals(response, result.getData());
         verify(adressRepository).save(entity);
         verify(auditLogService).createAuditLog(user, "Create Adress",
@@ -99,10 +104,11 @@ class AdressServiceImplTest {
         assertThrows(AlreadyException.class, () -> adressService.createAdress(requestDto));
     }
 
-
     @Test
     void testDeleteAdress_Success() {
-        User user = new User(); user.setId(1L);
+        User user = new User();
+        user.setId(1L);
+
         Adress adress = new Adress();
         adress.setId(5L);
         adress.setUserId(user);
@@ -112,12 +118,18 @@ class AdressServiceImplTest {
         when(adressRepository.findAllByUserId_Id(1L))
                 .thenReturn(List.of(new Adress()));
 
-        ApiResponse<String> result = adressService.deleteAdress(5L);
+        ApiResponse<Void> result = adressService.deleteAdress(5L);
 
-        assertEquals(200, result.getStatus());
+        assertEquals(204, result.getStatus());
+
+        assertNull(result.getData());
+
         verify(adressRepository).deleteById(5L);
-        verify(auditLogService).createAuditLog(user, "Delete Adress",
-                "Adress deleted successfully. Adress id: 5");
+        verify(auditLogService).createAuditLog(
+                user,
+                "Delete Adress",
+                "Adress deleted successfully. Adress id: 5"
+        );
     }
 
     @Test

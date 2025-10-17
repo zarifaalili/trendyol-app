@@ -24,7 +24,6 @@ public interface PaymentTransactionService {
 
     void returnedPaymentTransaction(Order order, Long orderId);
 
-//        ApiResponse<List<PaymentTransactionResponse>> getPaymentTransaction(Long paymentMethodId);
     ApiResponse<List<TransactionResponse>> getPaymentTransaction(Long paymentMethodId);
 
     ApiResponse<List<TransactionResponse>> getAllTransactions();

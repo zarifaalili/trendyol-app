@@ -59,6 +59,4 @@ public interface WheelMapper {
     SpinWheelResponse toResponse(UserWheel userWheel);
 
 
-
-
 }

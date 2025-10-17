@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.dao.repository.BookOrderRepository;
 import org.example.trendyolfinalproject.dao.repository.BookRepository;
 import org.example.trendyolfinalproject.dao.repository.PaymentMethodRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.service.AuditLogService;
 import org.example.trendyolfinalproject.service.BookOrderService;
@@ -49,7 +50,7 @@ public class BookOrderServiceImpl implements BookOrderService {
 
         var userId = getCurrentUserId();
         var seller = book.getSeller().getUser().getId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         var paymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(user.getId(), true).orElseThrow(() -> new RuntimeException("Payment method not found"));
 
         if (paymentMethod.getBalance().compareTo(BigDecimal.valueOf(book.getPrice())) < 0) {
@@ -80,9 +81,9 @@ public class BookOrderServiceImpl implements BookOrderService {
     public ResponseEntity<Resource> readBook(Long orderId) {
         log.info("Actionlog.readBook.start : orderId={}", orderId);
         var userId = getCurrentUserId();
-        var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         BookOrder order = bookOrderRepository.findByIdAndUserIdAndIsPaidTrue(orderId, user.getId())
-                .orElseThrow(() -> new RuntimeException("Order not paid or not found"));
+                .orElseThrow(() -> new NotFoundException("Order not paid or not found"));
         Path path = Paths.get(System.getProperty("user.dir") + order.getBook().getFilePath());
         Resource resource;
         try {
@@ -93,7 +94,7 @@ public class BookOrderServiceImpl implements BookOrderService {
         }
         auditLogService.createAuditLog(user, "Book read", "Book read successfully. Book id: " + order.getBook().getId());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle() + "\"");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle() + ".pdf\"");
         log.info("Actionlog.readBook.end : orderId={}", orderId);
         return ResponseEntity.ok()
                 .headers(headers)
@@ -107,7 +108,7 @@ public class BookOrderServiceImpl implements BookOrderService {
     public ResponseEntity<Resource> readBookUnpaid(Long orderId) {
         log.info("Actionlog.readBookUnpaid.start : orderId={}", orderId);
         BookOrder order = bookOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not paid or not found"));
+                .orElseThrow(() -> new NotFoundException("Order not paid or not found"));
 
         Path path = Paths.get(System.getProperty("user.dir") + order.getBook().getFilePath());
         Resource resource;
@@ -119,7 +120,7 @@ public class BookOrderServiceImpl implements BookOrderService {
         }
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle() + "\"");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + order.getBook().getTitle()  + ".pdf\"");
         log.info("Actionlog.readBookUnpaid.end : orderId={}", orderId);
         return ResponseEntity.ok()
                 .headers(headers)

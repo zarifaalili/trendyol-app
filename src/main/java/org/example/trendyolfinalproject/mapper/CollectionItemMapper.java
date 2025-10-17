@@ -24,7 +24,6 @@ public interface CollectionItemMapper {
     @Mapping(source = "productVariant.product.name", target = "productName")
     CollectionItemResponse toResponse(CollectionItem item);
 
-
     List<CollectionItemResponse> toResponseList(Set<CollectionItem> items);
 
     @Mapping(source = "id", target = "id")

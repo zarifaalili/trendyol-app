@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.WishlistRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.WishListMapper;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.WishListResponse;
@@ -23,7 +24,7 @@ public class WishListProxyServiceImpl implements WishListProxyService {
     public ApiResponse<WishListResponse> getWishListForUser(Long wishListId, User currentUser) {
         log.info("Actionlog.getWishListForUser.start : ");
         var wishList = wishListRepository.findById(wishListId)
-                .orElseThrow(() -> new RuntimeException("WishList not found"));
+                .orElseThrow(() -> new NotFoundException("WishList not found"));
         if (!wishList.getUser().equals(currentUser) &&
                 !wishList.getSharedWith().contains(currentUser)) {
             throw new AccessDeniedException("Access denied: You cannot view this wishlist");

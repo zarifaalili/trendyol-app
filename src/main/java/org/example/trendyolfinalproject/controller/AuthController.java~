@@ -1,0 +1,85 @@
+package org.example.trendyolfinalproject.controller;
+
+import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
+import lombok.RequiredArgsConstructor;
+import org.example.trendyolfinalproject.model.request.AuthRequest;
+import org.example.trendyolfinalproject.model.request.RefreshTokenRequest;
+import org.example.trendyolfinalproject.model.request.UserRegisterRequest;
+import org.example.trendyolfinalproject.model.request.VerifyAndRegisterRequest;
+import org.example.trendyolfinalproject.model.response.ApiResponse;
+import org.example.trendyolfinalproject.model.response.AuthResponse;
+import org.example.trendyolfinalproject.service.AuthService;
+import org.example.trendyolfinalproject.service.PasswordResetService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+    private final PasswordResetService resetService;
+
+    @PostMapping("/token")
+    public ResponseEntity<ApiResponse<AuthResponse>> token(@RequestBody @Valid AuthRequest request) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.authenticate(request)));
+    }
+
+    @PostMapping("/token/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.refreshToken(request)));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgot(@RequestParam String email) {
+        resetService.sendCode(email);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
+    }
+
+
+    @PostMapping("/verify-code")
+    public ResponseEntity<ApiResponse<Void>> verify(@RequestParam String email, @RequestParam String code) {
+        resetService.verifyCode(email, code);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
+    }
+
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> reset(@RequestParam String email,
+                      @RequestParam String code,
+                      @RequestParam String newPassword,
+                      @RequestParam String confirmPassword) {
+        resetService.resetPassword(email, code, newPassword, confirmPassword);
+        return ResponseEntity.ok().body(ApiResponse.success(null));
+
+    }
+
+
+    @PostMapping("/signUp")
+    public ResponseEntity<ApiResponse<String>> registerOrLoginUser(@RequestBody @Valid UserRegisterRequest userRegisterRequest) {
+        ApiResponse<String> response = authService.registerUser(userRegisterRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+
+    @PostMapping("/signUp/verify-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @RequestBody @Valid VerifyAndRegisterRequest verifyRequest) {
+        ApiResponse<AuthResponse> response = authService.verifyOtp(verifyRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+    @PostMapping("/user-activate")
+    public ResponseEntity<ApiResponse<String>> activeUser(@RequestParam("email") String email) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.activateUser(email)));
+    }
+
+    @PatchMapping("/verify-reactivate-otp")
+    public ResponseEntity<ApiResponse<String>> verifyReactivateOtp(@RequestParam("email") String email, @RequestParam("otp") String otp) {
+        return ResponseEntity.ok().body(ApiResponse.success(authService.verifyReactivateOtp(email, otp)));
+    }
+
+
+}

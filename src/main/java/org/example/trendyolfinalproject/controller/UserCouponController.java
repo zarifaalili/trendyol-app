@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.UserCouponResponse;
 import org.example.trendyolfinalproject.service.UserCouponService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,21 +19,19 @@ public class UserCouponController {
 
     @PostMapping("/{couponId}/use")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> useUserCoupon(@PathVariable Long couponId) {
-
-        return userCouponService.useUserCoupon(couponId);
+    public ResponseEntity<ApiResponse<String>> useUserCoupon(@PathVariable Long couponId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userCouponService.useUserCoupon(couponId));
     }
 
-    @PostMapping("/{couponId}/cancel")
+    @DeleteMapping("/{couponId}/cancel")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> cancelUserCoupon(@PathVariable Long couponId) {
-        return userCouponService.cancelUserCoupon(couponId);
+    public ResponseEntity<ApiResponse<Void>> cancelUserCoupon(@PathVariable Long couponId) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(userCouponService.cancelUserCoupon(couponId));
     }
 
     @GetMapping("/history/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<UserCouponResponse>> getUserCouponHistory(@PathVariable Long userId) {
-
-        return userCouponService.getUserCouponHistory(userId);
+    public ResponseEntity<ApiResponse<List<UserCouponResponse>>> getUserCouponHistory(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(userCouponService.getUserCouponHistory(userId));
     }
 }

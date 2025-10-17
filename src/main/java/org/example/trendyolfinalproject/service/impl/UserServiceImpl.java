@@ -44,15 +44,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final BasketRepository basketRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final WishlistRepository wishlistRepository;
     private final OrderRepository orderRepository;
     private final SellerFollowRepository sellerFollowRepository;
-    private PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final UserMapper userMapper;
-    private final JwtUtil jwtUtil;
     private final NotificationService notificationService;
     private final AdressRepository adressRepository;
     private final EmailClient emailClient;

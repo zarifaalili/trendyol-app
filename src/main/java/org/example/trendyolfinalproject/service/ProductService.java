@@ -21,8 +21,4 @@ public interface ProductService {
 
     ApiResponse<Page<ProductResponse>> getTotalProductsBetweenDates(  String startDateStr, String endDateStr, int page, int size);
 
-
-
-
-
 }

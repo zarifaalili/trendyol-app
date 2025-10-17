@@ -55,4 +55,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countById(Long id);
 
     long countByUser_Id(Long userId);
+
+    Iterable<Order> findByBillingAddressId_Id(Long billingAddressIdId);
 }

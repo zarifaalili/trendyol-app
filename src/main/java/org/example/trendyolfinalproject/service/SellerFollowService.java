@@ -11,7 +11,7 @@ public interface SellerFollowService {
 
     ApiResponse<List<SellerFollowResponse>> getAllFollowers();
 
-    ApiResponse<String> unfollow(Long sellerId);
+    ApiResponse<Void> unfollow(Long sellerId);
 
 
 }

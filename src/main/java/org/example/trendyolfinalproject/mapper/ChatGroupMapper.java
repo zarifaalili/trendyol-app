@@ -15,8 +15,6 @@ public interface ChatGroupMapper {
     @Mapping(source="owner.id", target = "ownerId")
     ChatGroupResponse toResponse(ChatGroup chatGroup);
 
-
-
     ChatGroup toEntity(ChatGroupRequest chatGroupRequest);
 
     List<ChatGroupResponse> toResponseList(List<ChatGroup> chatGroups);

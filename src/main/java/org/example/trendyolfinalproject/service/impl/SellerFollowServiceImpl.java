@@ -50,7 +50,7 @@ public class SellerFollowServiceImpl implements SellerFollowService {
         notificationService.sendNotification(user, "You have new follower " + user.getName(), NotificationType.NEW_FOLLOWER, user.getId());
 
         log.info("Actionlog.follow.end : sellerId={}", sellerId);
-        return ApiResponse.success("You have followed " + seller.getUser().getName());
+        return ApiResponse.created(null,"You have followed " + seller.getUser().getName());
     }
 
     @Override
@@ -76,7 +76,7 @@ public class SellerFollowServiceImpl implements SellerFollowService {
     }
 
     @Override
-    public ApiResponse<String> unfollow(Long sellerId) {
+    public ApiResponse<Void> unfollow(Long sellerId) {
         log.info("Actionlog.unfollow.start : sellerId={}", sellerId);
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
@@ -87,7 +87,8 @@ public class SellerFollowServiceImpl implements SellerFollowService {
         auditLogService.createAuditLog(user, "unfollow", "unfollowed seller");
         notificationService.sendNotification(seller.getUser(), "Follower " + user.getName() + " has unfollowed you", NotificationType.UNFOLLOWER, user.getId());
         log.info("Actionlog.unfollow.end : sellerId={}", sellerId);
-        return ApiResponse.success("You have unfollowed " + seller.getUser().getName());
+//        return ApiResponse.success("You have unfollowed " + seller.getUser().getName());
+        return ApiResponse.noContent();
     }
 
     private Long getCurrentUserId() {

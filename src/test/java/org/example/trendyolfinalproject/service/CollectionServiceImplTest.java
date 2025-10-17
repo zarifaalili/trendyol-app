@@ -98,7 +98,7 @@ class CollectionServiceImplTest {
 
         ApiResponse<CollectionResponse> apiResponse = collectionService.createCollection(req);
 
-        assertEquals(200, apiResponse.getStatus());
+        assertEquals(201, apiResponse.getStatus());
         assertEquals("My Collection", apiResponse.getData().getName());
     }
 
@@ -135,7 +135,7 @@ class CollectionServiceImplTest {
 
         ApiResponse<CollectionItemResponse> apiResponse = collectionService.addProductToCollection(req);
 
-        assertEquals(200, apiResponse.getStatus());
+        assertEquals(201, apiResponse.getStatus());
         assertEquals(10L, apiResponse.getData().getProductVariantId());
     }
 
@@ -231,7 +231,7 @@ class CollectionServiceImplTest {
         assertEquals(200, apiResponse.getStatus());
         assertEquals(1L, apiResponse.getData().getId());
         assertEquals(1, apiResponse.getData().getItems().size());
-        assertEquals(1, collection.getViewCount()); // viewCount artmalı
+        assertEquals(1, collection.getViewCount());
     }
 
 

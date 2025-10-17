@@ -28,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
         String username = authentication.getName();
         if (!user.getIsActive()) {
-            throw new RuntimeException("User is deactivated");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"User is deactivated");
         }
         String token = jwtUtil.generateAccessToken(username, user.getId());
         String refresh = jwtUtil.generateRefreshToken(username, user.getId());
@@ -68,14 +69,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         if (jwtUtil.isTokenExpired(refreshTokenRequest.getRefreshToken())) {
-            throw new RuntimeException("Refresh token is expired");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token is expired");
         }
         var username = jwtUtil.extractUsername(refreshTokenRequest.getRefreshToken());
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getIsActive()) {
-            throw new RuntimeException("User is deactivated");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"User is deactivated");
         }
         var token = jwtUtil.generateAccessToken(username, user.getId());
         var refreshToken = jwtUtil.generateRefreshToken(username, user.getId());
@@ -175,7 +176,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (user.getIsActive()) {
             log.warn("User is already active");
-            throw new RuntimeException("User is already active");
+            throw new AlreadyException("User is already active");
         }
         String otp = generateOtp();
         ResetCode resetCode = new ResetCode();
@@ -197,7 +198,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
 
         ResetCode resetCode = resetCodeRepository.findByEmailAndCode(email, otp)
-                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,("Invalid OTP")));
 
         if (resetCode.getExpireTime().isBefore(LocalDateTime.now())) {
             log.error("OTP expired");

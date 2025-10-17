@@ -8,6 +8,8 @@ import org.example.trendyolfinalproject.model.response.SellerFollowResponse;
 import org.example.trendyolfinalproject.model.response.SellerResponse;
 import org.example.trendyolfinalproject.service.SellerFollowService;
 import org.example.trendyolfinalproject.service.SellerService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,46 +24,46 @@ public class SellerController {
     private final SellerFollowService sellerFollowService;
 
     @PostMapping
-    public ApiResponse<SellerResponse> createSeller(@RequestBody @Valid SellerCreateRequest request) {
-        return sellerService.createSeller(request);
+    public ResponseEntity<ApiResponse<SellerResponse>> createSeller(@RequestBody @Valid SellerCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(sellerService.createSeller(request));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<SellerResponse>> getSellers() {
-        return sellerService.getSellers();
+    public ResponseEntity<ApiResponse<List<SellerResponse>>> getSellers() {
+        return ResponseEntity.ok().body(sellerService.getSellers());
     }
 
 
     @GetMapping("/{companyName}")
     @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
-    public ApiResponse<SellerResponse> getSeller(@PathVariable String companyName) {
-        return sellerService.getSeller(companyName);
+    public ResponseEntity<ApiResponse<SellerResponse>> getSeller(@PathVariable String companyName) {
+        return ResponseEntity.ok().body(sellerService.getSeller(companyName));
     }
 
 
     @PostMapping("/{sellerId}/follow")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> follow(@PathVariable Long sellerId) {
-        return sellerFollowService.follow(sellerId);
+    public ResponseEntity<ApiResponse<String>> follow(@PathVariable Long sellerId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(sellerFollowService.follow(sellerId));
     }
 
 
     @GetMapping("/followers")
     @PreAuthorize("hasRole('SELLER')")
-    public ApiResponse<List<SellerFollowResponse>> getAllFollowers() {
-        return sellerFollowService.getAllFollowers();
+    public ResponseEntity<ApiResponse<List<SellerFollowResponse>>> getAllFollowers() {
+        return ResponseEntity.ok().body(sellerFollowService.getAllFollowers());
     }
 
 
     @GetMapping("/{sellerId}/raiting")
-    public ApiResponse<Double> getRaiting(@PathVariable Long sellerId) {
-        return sellerService.getSellerAverageRating(sellerId);
+    public ResponseEntity<ApiResponse<Double>> getRaiting(@PathVariable Long sellerId) {
+        return ResponseEntity.ok().body(sellerService.getSellerAverageRating(sellerId));
     }
 
     @DeleteMapping("/{sellerId}/unfollow")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ApiResponse<String> unfollowSeller(@PathVariable Long sellerId) {
-        return sellerFollowService.unfollow(sellerId);
+    public ResponseEntity<ApiResponse<Void>> unfollowSeller(@PathVariable Long sellerId) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(sellerFollowService.unfollow(sellerId));
     }
 }

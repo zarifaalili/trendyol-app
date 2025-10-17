@@ -8,6 +8,7 @@ import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.repository.PaymentMethodRepository;
 import org.example.trendyolfinalproject.dao.repository.PaymentTransactionRepository;
 import org.example.trendyolfinalproject.dao.repository.UserRepository;
+import org.example.trendyolfinalproject.exception.customExceptions.AlreadyException;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
 import org.example.trendyolfinalproject.mapper.PaymentMethodMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
@@ -59,7 +60,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         boolean exists = paymentMethodRepository.findByCardNumber(request.getCardNumber()).isPresent();
 
         if (exists) {
-            throw new RuntimeException("PaymentMethod already exists");
+            throw new AlreadyException("PaymentMethod already exists");
         }
         var balance = cardClient.getBalance(request.getCardNumber());
         var entity = paymentMethodMapper.toEntity(request);
@@ -75,7 +76,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         auditLogService.createAuditLog(user, "PaymentMethod created", "PaymentMethod created successfully. PaymentMethod id: " + saved.getId());
         log.info("Actionlog.createPaymentMethod.end : ");
         return ApiResponse.<PaymentMethodResponse>builder()
-                .status(200)
+                .status(201)
                 .message("PaymentMethod created successfully")
                 .data(response)
                 .build();
@@ -115,14 +116,14 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         log.info("Actionlog.changeDefaultPaymentMethod.start : ");
         var userId = getCurrentUserId();
         var user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found with id: " + userId));
+                () -> new NotFoundException("User not found with id: " + userId));
         var paymentMethod = paymentMethodRepository.findById(request.getPaymentMethodId()).orElseThrow(
-                () -> new RuntimeException("PaymentMethod not found with id: " + request.getPaymentMethodId()));
+                () -> new NotFoundException("PaymentMethod not found with id: " + request.getPaymentMethodId()));
         if (!paymentMethod.getUserId().getId().equals(userId)) {
             throw new RuntimeException("PaymentMethod dont relate with user");
         }
         if (paymentMethod.getIsDefault()) {
-            throw new RuntimeException("PaymentMethod already default");
+            throw new AlreadyException("PaymentMethod already default");
         }
         var userPaymentMethods = paymentMethodRepository.findByUserId_Id(userId);
         userPaymentMethods.forEach(pm -> pm.setIsDefault(false));
@@ -149,8 +150,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
             var paymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(seller.getUser().getId(), true).orElseThrow(
                     () -> new NotFoundException("PaymentMethod not found for seller: " + seller.getUser().getName())
             );
-            var admin = userRepository.findById(3L).orElseThrow(
-                    () -> new NotFoundException("User not found with id: " + (3L))
+            var admin = userRepository.findById(9L).orElseThrow(
+                    () -> new NotFoundException("User not found with id: " + (9L))
             );
             var adminPaymentMethod = paymentMethodRepository.findByUserId_IdAndIsDefault(admin.getId(), true).orElseThrow(
                     () -> new NotFoundException("PaymentMethod not found for admin: " + admin.getName())
@@ -256,7 +257,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         log.info("Actionlog.pay.end : ");
 
         return ApiResponse.<PaymentResponse>builder()
-                .status(200)
+                .status(201)
                 .message("Payment successful")
                 .data(response)
                 .build();

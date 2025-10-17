@@ -40,7 +40,7 @@ public class WheelController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<SpinWheelResponse>> spinWheel(@PathVariable Long wheelId) {
         SpinWheelResponse response = wheelService.spinWheel(wheelId);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response, "Wheel spun"));
     }
 
 
@@ -53,7 +53,6 @@ public class WheelController {
     @PostMapping("/{userWheelId}/use-wheel-price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Void>> useWheelPrice(@PathVariable Long userWheelId) {
-
         wheelService.useWheelPrice(userWheelId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -62,7 +61,6 @@ public class WheelController {
     @PostMapping("/{userWheelId}/cancel-wheel-price")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Void>> cancelUseWheelPrice(@PathVariable Long userWheelId) {
-
         wheelService.cancelWheelPrize(userWheelId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }

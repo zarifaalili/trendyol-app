@@ -6,12 +6,14 @@ import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.mapper.UserMapper;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Role;
 import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.response.ApiResponse;
 import org.example.trendyolfinalproject.model.response.AuditLogResponse;
 import org.example.trendyolfinalproject.model.response.SalesReportResponse;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.example.trendyolfinalproject.service.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,7 @@ public class AdminServiceImpl implements AdminService {
     private final OrderRepository orderRepository;
     private final AuditLogRepository auditLogRepository;
     private final AuditLogService auditLogService;
+    private final UserMapper userMapper;
 
 
     @Override
@@ -65,7 +68,7 @@ public class AdminServiceImpl implements AdminService {
         }
         notificationService.sendNotification(user, "Your seller account has been approved", NotificationType.SELLER_APPROVED, sellerId);
         log.info("Actionlog.approveSeller.end : sellerId={}", sellerId);
-        return new ApiResponse<>(200, "Seller approved successfully", null);
+        return new ApiResponse<>(201, "Seller approved successfully", null);
     }
 
     @Override
@@ -98,15 +101,16 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public ApiResponse<List<User>> getAllAdmins() {
+    public ApiResponse<List<UserResponse>> getAllAdmins() {
         log.info("Actionlog.getAllAdmins.start : ");
         List<User> admins = userRepository.findAllByRole(Role.ADMIN);
         if (admins.isEmpty()) {
             log.error("No admins found");
             throw new NotFoundException("No admins found");
         }
+        var response=userMapper.toResponseList(admins);
         log.info("Actionlog.getAllAdmins.end : ");
-        return new ApiResponse<>(200, "Admins fetched successfully", admins);
+        return new ApiResponse<>(200, "Admins fetched successfully", response);
     }
 
 

@@ -30,12 +30,12 @@ public class Handler {
     public ResponseEntity<Response> handle(BadCredentialsException e) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(new Response("Password is incorrect", "401"));
+                .body(new Response(e.getMessage(), "401"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Response> handle(AccessDeniedException e) {
-        Response response = new Response("Access Denied", "403");
+        Response response = new Response(e.getMessage(), "403");
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(response);

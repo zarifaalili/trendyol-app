@@ -15,8 +15,6 @@ import java.util.Optional;
 @Mapper(componentModel = "spring")
 public interface WishListMapper {
 
-
-
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "productVariant", ignore = true)
@@ -32,7 +30,6 @@ public interface WishListMapper {
     @Mapping(source="productVariant.product.previousPrice", target = "previousPrice")
     @Mapping(target = "productImageUrl", expression = "java(getFirstVariantImageUrl(wishList.getProductVariant() != null ? wishList.getProductVariant().getProduct() : null))")
     WishListResponse toResponse(WishList wishList);
-
 
 
     List<WishListResponse> toResponseList(List<WishList> wishLists);
@@ -51,7 +48,6 @@ public interface WishListMapper {
         return (name + " " + surname).trim();
     }
 
-
     default String getFirstVariantImageUrl(Product product) {
         if (product == null || product.getVariants() == null || product.getVariants().isEmpty()) {
             return null;
@@ -62,8 +58,5 @@ public interface WishListMapper {
                 .map(v -> v.getVariantImages().iterator().next().getImageUrl())
                 .orElse(null);
     }
-
-
-
 
 }

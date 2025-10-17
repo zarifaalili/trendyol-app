@@ -5,9 +5,11 @@ import org.example.trendyolfinalproject.dao.entity.Seller;
 import org.example.trendyolfinalproject.dao.entity.User;
 import org.example.trendyolfinalproject.dao.repository.*;
 import org.example.trendyolfinalproject.exception.customExceptions.NotFoundException;
+import org.example.trendyolfinalproject.mapper.UserMapper;
 import org.example.trendyolfinalproject.model.enums.Status;
 import org.example.trendyolfinalproject.model.enums.NotificationType;
 import org.example.trendyolfinalproject.model.enums.Role;
+import org.example.trendyolfinalproject.model.response.UserResponse;
 import org.example.trendyolfinalproject.service.impl.AdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AdminServiceImplTest {
@@ -52,6 +53,8 @@ class AdminServiceImplTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private UserMapper userMapper;
     @InjectMocks
     private AdminServiceImpl adminService;
 
@@ -86,12 +89,23 @@ class AdminServiceImplTest {
 
         var response = adminService.approveSeller(10L);
 
-        assertEquals(200, response.getStatus());
+        assertEquals(201, response.getStatus());
         assertEquals("Seller approved successfully", response.getMessage());
-        verify(notificationService, times(1))
-                .sendNotification(sellerUser, "Your seller account has been approved",
-                        NotificationType.SELLER_APPROVED, 10L);
+        assertNull(response.getData());
+
+        assertEquals(Status.ACTIVE, seller.getStatus());
+        assertTrue(sellerUser.getIsActive());
+
+        verify(sellerRepository, times(1)).save(seller);
+        verify(userRepository, times(1)).save(sellerUser);
+        verify(notificationService, times(1)).sendNotification(
+                sellerUser,
+                "Your seller account has been approved",
+                NotificationType.SELLER_APPROVED,
+                10L
+        );
     }
+
 
     @Test
     void approveSeller_fail_notAdmin() {
@@ -191,12 +205,20 @@ class AdminServiceImplTest {
     @Test
     void getAllAdmins_success() {
         List<User> admins = List.of(new User(), new User());
+        List<UserResponse> mappedResponses = List.of(new UserResponse(), new UserResponse());
+
         when(userRepository.findAllByRole(Role.ADMIN)).thenReturn(admins);
+        when(userMapper.toResponseList(admins)).thenReturn(mappedResponses);
 
         var response = adminService.getAllAdmins();
 
         assertEquals(200, response.getStatus());
+        assertEquals("Admins fetched successfully", response.getMessage());
+        assertNotNull(response.getData());
         assertEquals(2, response.getData().size());
+
+        verify(userRepository, times(1)).findAllByRole(Role.ADMIN);
+        verify(userMapper, times(1)).toResponseList(admins);
     }
 
     @Test
